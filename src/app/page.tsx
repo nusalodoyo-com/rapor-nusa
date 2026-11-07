@@ -124,7 +124,17 @@ export default function HomePage() {
     }
   };
 
-  const handleSwitchMadrasah = () => {
+  const handleSwitchMadrasah = (targetMid?: MadrasahId) => {
+    if (currentUser && currentUser.role === "admin") {
+      const nextMid: MadrasahId = targetMid || (selectedMadrasah === "mts" ? "ma" : "mts");
+      setSelectedMadrasah(nextMid);
+      setCurrentUser({
+        ...currentUser,
+        madrasah_id: nextMid,
+      });
+      localStorage.setItem("rapor_nusa_active_mid", nextMid);
+      return;
+    }
     setCurrentUser(null);
     setSelectedMadrasah(null);
     localStorage.removeItem("rapor_nusa_active_mid");
@@ -332,7 +342,7 @@ export default function HomePage() {
           {/* Header Box Retro */}
           <div className="p-5 sm:p-6 text-center text-white relative bg-[#06330b] border-b-3 border-retro-border">
             <button
-              onClick={handleSwitchMadrasah}
+              onClick={() => handleSwitchMadrasah()}
               className="absolute top-4 left-4 btn-retro bg-white text-retro-black px-2.5 py-1 text-[11px] flex items-center gap-1 shadow-retro-sm"
               title="Ganti Lembaga"
             >
@@ -408,50 +418,40 @@ export default function HomePage() {
             </form>
 
             {/* Quick Demo Access Badges (Retro Stamp Stickers) */}
-            <div className="pt-4 border-t-2 border-dashed border-slate-300">
-              <span className="text-[10px] uppercase font-black text-slate-500 block mb-2">
-                Akses Instan & Kredensial Guru:
+            <div className="pt-4 border-t-2 border-dashed border-slate-300 space-y-2">
+              <span className="text-[10px] uppercase font-black text-slate-500 block">
+                Akses Instan & Kredensial Pengguna:
               </span>
+              {/* Super Admin Unified Button */}
+              <button
+                type="button"
+                onClick={() => quickLoginAs("admin", "123")}
+                className="w-full p-2.5 rounded-lg bg-emerald-500 text-white border-2 border-retro-border shadow-retro-sm hover:bg-emerald-600 text-left text-xs font-black transition active:translate-x-0.5 flex items-center justify-between"
+              >
+                <div>
+                  <span className="block text-[11px] font-black uppercase">👑 Login Admin Utama (MTs & MA)</span>
+                  <span className="block text-[9px] text-emerald-100 font-bold">Username: <strong>admin</strong> • Sandi: <strong>123</strong> (Akses Semua Data)</span>
+                </div>
+                <span className="badge-retro bg-retro-yellow text-retro-black text-[9px]">Super Admin</span>
+              </button>
+
               <div className="grid grid-cols-2 gap-2">
-                {isMts ? (
-                  <>
-                    <button
-                      type="button"
-                      onClick={() => quickLoginAs("admin_mts", "123")}
-                      className="p-2 rounded-lg bg-white border-2 border-retro-border shadow-retro-sm hover:bg-slate-50 text-left text-[11px] font-black transition active:translate-x-0.5"
-                    >
-                      ⚡ <strong>admin_mts</strong>
-                      <span className="block text-[9px] text-slate-600 font-semibold">Operator MTs</span>
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => quickLoginAs("a_munawir", "Matsamuda22")}
-                      className="p-2 rounded-lg bg-retro-yellow border-2 border-retro-border shadow-retro-sm hover:bg-amber-300 text-left text-[11px] font-black transition active:translate-x-0.5"
-                    >
-                      👨‍🏫 <strong>a_munawir</strong>
-                      <span className="block text-[9px] text-slate-800 font-semibold">Guru MTs (87 Guru)</span>
-                    </button>
-                  </>
-                ) : (
-                  <>
-                    <button
-                      type="button"
-                      onClick={() => quickLoginAs("admin_ma", "123")}
-                      className="p-2 rounded-lg bg-white border-2 border-retro-border shadow-retro-sm hover:bg-slate-50 text-left text-[11px] font-black transition active:translate-x-0.5"
-                    >
-                      ⚡ <strong>admin_ma</strong>
-                      <span className="block text-[9px] text-slate-600 font-semibold">Operator MA</span>
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => quickLoginAs("a_munawir", "Matsamuda22")}
-                      className="p-2 rounded-lg bg-retro-yellow border-2 border-retro-border shadow-retro-sm hover:bg-amber-300 text-left text-[11px] font-black transition active:translate-x-0.5"
-                    >
-                      👨‍🏫 <strong>a_munawir</strong>
-                      <span className="block text-[9px] text-slate-800 font-semibold">Guru MA (87 Guru)</span>
-                    </button>
-                  </>
-                )}
+                <button
+                  type="button"
+                  onClick={() => quickLoginAs(isMts ? "admin_mts" : "admin_ma", "123")}
+                  className="p-2 rounded-lg bg-white border-2 border-retro-border shadow-retro-sm hover:bg-slate-50 text-left text-[11px] font-black transition active:translate-x-0.5"
+                >
+                  ⚡ <strong>{isMts ? "admin_mts" : "admin_ma"}</strong>
+                  <span className="block text-[9px] text-slate-600 font-semibold">Operator {isMts ? "MTs" : "MA"}</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => quickLoginAs("a_munawir", "Matsamuda22")}
+                  className="p-2 rounded-lg bg-retro-yellow border-2 border-retro-border shadow-retro-sm hover:bg-amber-300 text-left text-[11px] font-black transition active:translate-x-0.5"
+                >
+                  👨‍🏫 <strong>a_munawir</strong>
+                  <span className="block text-[9px] text-slate-800 font-semibold">Akun Guru (87 Guru)</span>
+                </button>
               </div>
               <div className="p-2 bg-emerald-50 border-2 border-brand-500 rounded-lg mt-3 text-[10px] text-brand-900 font-bold">
                 ✓ Seluruh 87 Guru MTs & MA telah aktif dengan password: <code className="bg-white px-1 py-0.5 border border-retro-border rounded font-black text-brand-700">Matsamuda22</code>
@@ -530,6 +530,7 @@ export default function HomePage() {
             allKelas={dropdowns.kelas}
             allMapel={dropdowns.mapel}
             onConfigUpdated={cfg => setSchoolConfig(cfg)}
+            onSwitchMadrasah={handleSwitchMadrasah}
           />
         )}
 

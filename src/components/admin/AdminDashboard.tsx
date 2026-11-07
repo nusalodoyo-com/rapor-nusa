@@ -40,7 +40,9 @@ import {
   clearSyncLogs,
   buildSiNusaPayloads,
   DEFAULT_SINUSA_CONFIG,
+  saveKamadTtd,
 } from "@/lib/storage";
+import { downloadBulkLeggerExcel } from "@/lib/excel/excelHandler";
 import {
   Users,
   BookOpen,
@@ -77,6 +79,12 @@ import {
   Lock,
   Unlock,
   CloudLightning,
+  Upload,
+  Download,
+  FileSpreadsheet,
+  HelpCircle,
+  Copy,
+  ArrowLeftRight,
 } from "lucide-react";
 
 interface Props {
@@ -85,6 +93,7 @@ interface Props {
   allKelas: string[];
   allMapel: { kode: string; nama: string; kelompok?: string; kkm?: number }[];
   onConfigUpdated: (cfg: SchoolConfig) => void;
+  onSwitchMadrasah?: (mid?: MadrasahId) => void;
 }
 
 export default function AdminDashboard({
@@ -93,6 +102,7 @@ export default function AdminDashboard({
   allKelas,
   allMapel,
   onConfigUpdated,
+  onSwitchMadrasah,
 }: Props) {
   const [activeTab, setActiveTab] = useState<
     "visualisasi" | "guru" | "wali" | "siswa" | "monitoring" | "logs" | "pengaturan" | "integrasi"
@@ -176,6 +186,16 @@ export default function AdminDashboard({
   const [syncLogSearch, setSyncLogSearch] = useState("");
   const [syncLogFilterStatus, setSyncLogFilterStatus] = useState<"all" | "SUCCESS" | "FAILED">("all");
   const [previewSamplePayload, setPreviewSamplePayload] = useState<SiNusaStudentPayload | null>(null);
+
+  // TTD Kepala Madrasah & Bulk Download State
+  const [kamadTtdBase64, setKamadTtdBase64] = useState<string>(config.ttd_kamad_url || "");
+  const [isDownloadingBulk, setIsDownloadingBulk] = useState(false);
+  const [activeApiDocTab, setActiveApiDocTab] = useState<"laravel" | "express" | "curl" | "json">("laravel");
+  const [copiedSnippet, setCopiedSnippet] = useState(false);
+
+  useEffect(() => {
+    setKamadTtdBase64(config.ttd_kamad_url || "");
+  }, [config, madrasahId]);
 
   const refreshData = () => {
     const t = getTeachers(madrasahId);
@@ -478,6 +498,68 @@ export default function AdminDashboard({
     }
   };
 
+  // Upload Tanda Tangan Kepala Madrasah
+  const handleUploadKamadTtd = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 3 * 1024 * 1024) {
+      setMessage({ type: "error", text: "Ukuran file tanda tangan maksimal 3MB!" });
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = ev => {
+      if (ev.target?.result) {
+        const base64 = String(ev.target.result);
+        setKamadTtdBase64(base64);
+        const updatedCfg = saveKamadTtd(madrasahId, base64);
+        onConfigUpdated(updatedCfg);
+        setMessage({
+          type: "success",
+          text: `Tanda tangan digital Kepala ${config.jenjang} (${config.kepala_madrasah}) berhasil disimpan dan otomatis disematkan pada seluruh cetak rapor!`,
+        });
+      }
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleRemoveKamadTtd = () => {
+    if (confirm(`Apakah Anda yakin ingin menghapus tanda tangan digital Kepala ${config.jenjang}?`)) {
+      setKamadTtdBase64("");
+      const updatedCfg = saveKamadTtd(madrasahId, "");
+      onConfigUpdated(updatedCfg);
+      setMessage({ type: "success", text: `Tanda tangan Kepala ${config.jenjang} berhasil direset.` });
+    }
+  };
+
+  // Unduh Massal Seluruh Legger Nilai (Multi-Sheet Excel)
+  const handleDownloadBulkLegger = async () => {
+    setIsDownloadingBulk(true);
+    try {
+      const curActive = getActivePeriod(madrasahId);
+      await downloadBulkLeggerExcel(
+        madrasahId,
+        curActive.tahun,
+        curActive.semester,
+        sortedKelas,
+        config
+      );
+      setMessage({
+        type: "success",
+        text: `Berhasil mengunduh seluruh leger nilai ${config.jenjang} (${sortedKelas.length} kelas) dalam file Excel multi-sheet (.xlsx)!`,
+      });
+    } catch (err: any) {
+      setMessage({ type: "error", text: "Gagal mendownload backup seluruh leger: " + err.message });
+    } finally {
+      setIsDownloadingBulk(false);
+    }
+  };
+
+  const handleCopySnippet = (codeText: string) => {
+    navigator.clipboard.writeText(codeText);
+    setCopiedSnippet(true);
+    setTimeout(() => setCopiedSnippet(false), 2000);
+  };
+
   // Data Filtering: Guru
   const filteredTeachers = useMemo(() => {
     const q = searchTeacher.trim().toLowerCase();
@@ -647,18 +729,65 @@ export default function AdminDashboard({
           </div>
         </div>
 
-        {/* Quick Stats Badges */}
+        {/* Quick Actions & Super Admin Switcher */}
         <div className="flex flex-wrap items-center gap-2.5 text-xs">
-          <div className="bg-white border-2 border-retro-border px-3.5 py-1.5 rounded-lg shadow-retro-sm">
-            <span className="text-slate-500 block text-[9px] font-black uppercase">Guru Terdaftar</span>
-            <span className="font-black text-retro-black text-sm">{teachers.length} Personel</span>
+          {/* Switcher Lembaga untuk Super Admin */}
+          {onSwitchMadrasah && (
+            <div className="flex items-center bg-white border-2 border-retro-border rounded-lg p-1 shadow-retro-sm gap-1">
+              <span className="text-[9px] font-black uppercase text-slate-500 px-1 hidden sm:inline">Pindah:</span>
+              <button
+                type="button"
+                onClick={() => onSwitchMadrasah("mts")}
+                className={`px-2.5 py-1 rounded text-xs font-black uppercase transition ${
+                  madrasahId === "mts"
+                    ? "bg-brand-500 text-white shadow-retro-sm"
+                    : "text-slate-600 hover:bg-slate-100"
+                }`}
+                title="Beralih ke Data MTs Ma'arif NU 2"
+              >
+                MTs
+              </button>
+              <button
+                type="button"
+                onClick={() => onSwitchMadrasah("ma")}
+                className={`px-2.5 py-1 rounded text-xs font-black uppercase transition ${
+                  madrasahId === "ma"
+                    ? "bg-brand-500 text-white shadow-retro-sm"
+                    : "text-slate-600 hover:bg-slate-100"
+                }`}
+                title="Beralih ke Data MA Ma'arif Nurus Salam"
+              >
+                MA
+              </button>
+            </div>
+          )}
+
+          {/* Tombol Unduh Seluruh Legger Nilai (Backup Massal Excel) */}
+          <button
+            type="button"
+            onClick={handleDownloadBulkLegger}
+            disabled={isDownloadingBulk}
+            className="btn-retro bg-emerald-600 hover:bg-emerald-500 text-white py-2 px-3 text-xs flex items-center gap-1.5 shadow-retro-sm disabled:opacity-50"
+            title="Unduh seluruh legger nilai semua kelas dalam format Excel (.xlsx)"
+          >
+            {isDownloadingBulk ? (
+              <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+            ) : (
+              <FileSpreadsheet className="w-3.5 h-3.5 text-amber-300" />
+            )}
+            <span>{isDownloadingBulk ? "Membuat Excel..." : "Unduh Seluruh Leger"}</span>
+          </button>
+
+          <div className="bg-white border-2 border-retro-border px-3 py-1.5 rounded-lg shadow-retro-sm hidden md:block">
+            <span className="text-slate-500 block text-[9px] font-black uppercase">Guru</span>
+            <span className="font-black text-retro-black text-sm">{teachers.length}</span>
           </div>
-          <div className="bg-retro-yellow border-2 border-retro-border px-3.5 py-1.5 rounded-lg shadow-retro-sm">
-            <span className="text-retro-black block text-[9px] font-black uppercase">Total Rombel</span>
-            <span className="font-black text-retro-black text-sm">{allKelas.length} Kelas</span>
+          <div className="bg-retro-yellow border-2 border-retro-border px-3 py-1.5 rounded-lg shadow-retro-sm hidden md:block">
+            <span className="text-retro-black block text-[9px] font-black uppercase">Rombel</span>
+            <span className="font-black text-retro-black text-sm">{allKelas.length}</span>
           </div>
-          <div className="bg-brand-500 text-white border-2 border-retro-border px-3.5 py-1.5 rounded-lg shadow-retro-sm">
-            <span className="text-brand-100 block text-[9px] font-black uppercase">Progres Nilai</span>
+          <div className="bg-brand-500 text-white border-2 border-retro-border px-3 py-1.5 rounded-lg shadow-retro-sm">
+            <span className="text-brand-100 block text-[9px] font-black uppercase">Progres</span>
             <span className="font-black text-sm">{matriksOverview?.rata_rata_persen || 0}%</span>
           </div>
         </div>
@@ -1918,6 +2047,102 @@ export default function AdminDashboard({
               </div>
             </form>
           </div>
+
+          {/* Box 3: Upload Tanda Tangan Resmi Kepala Madrasah (MTs & MA) */}
+          <div className="card-retro p-5 sm:p-6 space-y-4 bg-white">
+            <div className="border-b-2 border-retro-border pb-3 flex flex-wrap items-center justify-between gap-3">
+              <div>
+                <h4 className="text-sm font-black text-retro-black uppercase tracking-wider flex items-center gap-1.5">
+                  <Edit3 className="w-4 h-4 text-brand-600" />
+                  <span>Tanda Tangan Digital Kepala Madrasah ({config.jenjang})</span>
+                </h4>
+                <p className="text-[11px] text-slate-600 font-bold">
+                  Unggah file gambar tanda tangan transparan (PNG/JPG) untuk <strong>{config.kepala_madrasah}</strong>. Tanda tangan ini otomatis disematkan pada seluruh lembar cetak Rapor Tengah Semester.
+                </p>
+              </div>
+              <span className="badge-retro bg-retro-yellow text-retro-black text-[10px]">
+                Jenjang {config.jenjang}
+              </span>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-center">
+              {/* Pratinjau TTD & Stempel */}
+              <div className="bg-retro-cream p-4 rounded-xl border-2 border-retro-border text-center space-y-2">
+                <span className="text-[10px] font-black uppercase text-slate-500 block">
+                  Pratinjau Tampilan Cetak Rapor:
+                </span>
+
+                <div className="relative h-20 bg-white border-2 border-dashed border-slate-300 rounded-lg flex items-center justify-center overflow-hidden max-w-xs mx-auto">
+                  {/* Stempel Layer */}
+                  <div className="absolute inset-0 flex items-center justify-center pointer-events-none opacity-30 rotate-[-8deg] z-0">
+                    <div className="w-14 h-14 rounded-full border-2 border-dashed border-[#006e14] flex flex-col items-center justify-center text-[5.5px] font-black text-[#006e14] leading-none p-0.5 text-center bg-emerald-50/40">
+                      <span>MADRASAH</span>
+                      <span className="my-0.5 text-[6px] text-amber-700">★ RESMI ★</span>
+                      <span>{config.id === "mts" ? "MTSM NU 2" : "MA NURUS SALAM"}</span>
+                    </div>
+                  </div>
+
+                  {/* Signature Layer */}
+                  {kamadTtdBase64 ? (
+                    <img
+                      src={kamadTtdBase64}
+                      alt="Tanda Tangan Kepala Madrasah"
+                      className="max-h-16 max-w-[150px] object-contain relative z-10"
+                    />
+                  ) : (
+                    <div className="relative z-10 font-serif text-slate-400 italic text-base font-bold tracking-widest select-none">
+                      (Belum ada tanda tangan)
+                    </div>
+                  )}
+                </div>
+
+                <div className="text-xs font-bold text-retro-black">
+                  <p className="font-black underline uppercase">{config.kepala_madrasah}</p>
+                  <p className="text-[10px] text-slate-500 font-mono">NIP: {config.nip_kepala || "-"}</p>
+                </div>
+              </div>
+
+              {/* Upload Controls */}
+              <div className="space-y-3 font-bold">
+                <div>
+                  <label className="text-xs font-black text-retro-black uppercase block mb-1.5">
+                    Unggah File Tanda Tangan:
+                  </label>
+                  <label className="flex flex-col items-center justify-center p-4 rounded-xl border-2 border-dashed border-retro-border bg-retro-cream hover:bg-brand-50 cursor-pointer shadow-retro-sm transition text-center">
+                    <Upload className="w-6 h-6 text-brand-600 mb-1" />
+                    <span className="text-xs font-black text-retro-black uppercase">
+                      {kamadTtdBase64 ? "Ganti File Tanda Tangan" : "Pilih File Tanda Tangan (PNG / JPG)"}
+                    </span>
+                    <span className="text-[10px] text-slate-500 font-semibold mt-0.5">
+                      Gunakan latar belakang transparan / putih bersih (Maks. 3MB)
+                    </span>
+                    <input
+                      type="file"
+                      accept="image/png,image/jpeg,image/webp"
+                      onChange={handleUploadKamadTtd}
+                      className="hidden"
+                    />
+                  </label>
+                </div>
+
+                {kamadTtdBase64 && (
+                  <button
+                    type="button"
+                    onClick={handleRemoveKamadTtd}
+                    className="w-full py-2 btn-retro bg-red-100 text-red-800 hover:bg-red-200 border-red-300 text-xs font-black uppercase flex items-center justify-center gap-1.5 shadow-retro-sm"
+                  >
+                    <Trash2 className="w-3.5 h-3.5 text-red-700" />
+                    <span>Hapus Tanda Tangan Kepala Madrasah</span>
+                  </button>
+                )}
+
+                <div className="p-3 bg-emerald-50 border border-emerald-300 rounded-lg text-[10px] text-emerald-900 font-bold space-y-0.5">
+                  <div>✓ Tanda tangan tersimpan khusus untuk jenjang <strong>{config.jenjang}</strong>.</div>
+                  <div>✓ Otomatis terpasang di kolom TTD Kepala Madrasah saat mencetak rapor siswa.</div>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       )}
 
@@ -2392,6 +2617,284 @@ export default function AdminDashboard({
                   )}
                 </tbody>
               </table>
+            </div>
+          </div>
+
+          {/* Bagian 4: Panduan Integrasi REST API untuk Tim Developer SI-NUSA */}
+          <div className="card-retro p-5 sm:p-6 bg-white space-y-4">
+            <div className="border-b-2 border-retro-border pb-3 flex flex-wrap items-center justify-between gap-3">
+              <div>
+                <h4 className="text-sm font-black text-retro-black uppercase tracking-wider flex items-center gap-1.5">
+                  <BookOpen className="w-4 h-4 text-emerald-700" />
+                  <span>Panduan & Spesifikasi REST API untuk Tim Developer SI-NUSA</span>
+                </h4>
+                <p className="text-[11px] text-slate-600 font-bold">
+                  Dokumentasi teknis resmi implementasi receiver endpoint pada web target <code>https://si-nusa.com</code>.
+                </p>
+              </div>
+              <span className="badge-retro bg-brand-500 text-white text-[10px]">
+                API v1 Spec
+              </span>
+            </div>
+
+            {/* Protocol Summary Cards */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
+              <div className="p-3 bg-retro-cream border-2 border-retro-border rounded-lg space-y-1">
+                <span className="text-[10px] font-black uppercase text-slate-500 block">HTTP Method</span>
+                <span className="font-mono font-black text-retro-black text-sm text-emerald-700">POST</span>
+                <p className="text-[10px] text-slate-600 font-bold">Dikirim otomatis per-siswa / batch</p>
+              </div>
+
+              <div className="p-3 bg-retro-cream border-2 border-retro-border rounded-lg space-y-1">
+                <span className="text-[10px] font-black uppercase text-slate-500 block">Header Keamanan</span>
+                <span className="font-mono font-black text-retro-black text-xs truncate block">Authorization: Bearer</span>
+                <p className="text-[10px] text-slate-600 font-bold">Secret token rahasia</p>
+              </div>
+
+              <div className="p-3 bg-retro-cream border-2 border-retro-border rounded-lg space-y-1">
+                <span className="text-[10px] font-black uppercase text-slate-500 block">Format Payload</span>
+                <span className="font-mono font-black text-retro-black text-xs">application/json</span>
+                <p className="text-[10px] text-slate-600 font-bold">Standard UTF-8 JSON</p>
+              </div>
+            </div>
+
+            {/* Code Snippet Tabs */}
+            <div className="space-y-2">
+              <div className="flex flex-wrap items-center gap-1.5 border-b-2 border-retro-border pb-2">
+                <button
+                  type="button"
+                  onClick={() => setActiveApiDocTab("laravel")}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-black uppercase transition ${
+                    activeApiDocTab === "laravel"
+                      ? "bg-brand-500 text-white shadow-retro-sm"
+                      : "bg-slate-100 text-retro-black hover:bg-slate-200"
+                  }`}
+                >
+                  Laravel (PHP)
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setActiveApiDocTab("express")}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-black uppercase transition ${
+                    activeApiDocTab === "express"
+                      ? "bg-brand-500 text-white shadow-retro-sm"
+                      : "bg-slate-100 text-retro-black hover:bg-slate-200"
+                  }`}
+                >
+                  Express.js (Node)
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setActiveApiDocTab("curl")}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-black uppercase transition ${
+                    activeApiDocTab === "curl"
+                      ? "bg-brand-500 text-white shadow-retro-sm"
+                      : "bg-slate-100 text-retro-black hover:bg-slate-200"
+                  }`}
+                >
+                  cURL Tester
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setActiveApiDocTab("json")}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-black uppercase transition ${
+                    activeApiDocTab === "json"
+                      ? "bg-brand-500 text-white shadow-retro-sm"
+                      : "bg-slate-100 text-retro-black hover:bg-slate-200"
+                  }`}
+                >
+                  Skema JSON
+                </button>
+              </div>
+
+              {/* Snippet Code Container */}
+              <div className="relative rounded-xl overflow-hidden border-2 border-retro-border bg-slate-900 shadow-retro-sm text-xs font-mono">
+                <div className="flex items-center justify-between px-4 py-2 bg-slate-800 border-b border-slate-700 text-slate-300">
+                  <span className="text-[11px] font-bold">
+                    {activeApiDocTab === "laravel" && "app/Http/Controllers/Api/SyncGradesController.php"}
+                    {activeApiDocTab === "express" && "server.js (Node.js / Express)"}
+                    {activeApiDocTab === "curl" && "Terminal / Command Prompt (Testing)"}
+                    {activeApiDocTab === "json" && "Payload Specification (RFC 8259)"}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const snippet =
+                        activeApiDocTab === "laravel"
+                          ? `<?php\n\nnamespace App\\Http\\Controllers\\Api;\n\nuse App\\Http\\Controllers\\Controller;\nuse Illuminate\\Http\\Request;\nuse Illuminate\\Support\\Facades\\Log;\n\nclass SyncGradesController extends Controller\n{\n    public function syncGrades(Request $request)\n    {\n        // 1. Validasi Bearer Token\n        $token = $request->bearerToken();\n        $expectedToken = config('services.sinusa.api_secret', '${inputSecretToken}');\n\n        if (!$token || $token !== $expectedToken) {\n            return response()->json([\n                'success' => false,\n                'message' => 'Unauthorized: Token Bearer tidak valid.'\n            ], 401);\n        }\n\n        // 2. Baca Payload Siswa & Nilai\n        $academicYear = $request->input('academic_year');\n        $semester     = $request->input('semester');\n        $student      = $request->input('student');\n        $grades       = $request->input('grades', []);\n\n        if (!$student || empty($student['nisn'])) {\n            return response()->json([\n                'success' => false,\n                'message' => 'NISN siswa wajib disertakan.'\n            ], 422);\n        }\n\n        // TODO: Simpan ke tabel database SI-NUSA\n        Log::info("Sinkronisasi rapor berhasil untuk {$student['name']}");\n\n        return response()->json([\n            'success' => true,\n            'message' => "Data nilai siswa {$student['name']} berhasil diterima SI-NUSA.",\n            'synced_at' => now()->toIso8601String(),\n        ], 200);\n    }\n}`
+                          : activeApiDocTab === "express"
+                          ? `const express = require('express');\nconst app = express();\napp.use(express.json());\n\nconst SECRET_TOKEN = process.env.SINUSA_SECRET_TOKEN || '${inputSecretToken}';\n\napp.post('/api/v1/sync-grades', async (req, res) => {\n  const authHeader = req.headers['authorization'];\n  const token = authHeader && authHeader.split(' ')[1];\n\n  if (!token || token !== SECRET_TOKEN) {\n    return res.status(401).json({ success: false, message: 'Unauthorized: Token Bearer tidak cocok!' });\n  }\n\n  const { academic_year, semester, student, grades } = req.body;\n  if (!student || !student.nisn) {\n    return res.status(400).json({ success: false, message: 'Payload tidak lengkap.' });\n  }\n\n  console.log(\`Sinkronisasi nilai \${student.name} (\${student.class_name}) - \${grades.length} mapel diterima.\`);\n  return res.status(200).json({\n    success: true,\n    message: \`Data rapor siswa \${student.name} berhasil disimpan di SI-NUSA.\`\n  });\n});\n\napp.listen(3000, () => console.log('SI-NUSA receiver running on port 3000'));`
+                          : activeApiDocTab === "curl"
+                          ? `curl -X POST ${inputEndpointUrl} \\\n  -H "Content-Type: application/json" \\\n  -H "Authorization: Bearer ${inputSecretToken}" \\\n  -d '{\n    "academic_year": "2026/2027",\n    "semester": "1",\n    "student": {\n      "nisn": "0081234567",\n      "nis": "1234",\n      "name": "Ahmad Siswa",\n      "class_name": "XI RPL 1"\n    },\n    "grades": [\n      {\n        "subject_code": "MTK",\n        "subject_name": "Matematika",\n        "score_knowledge": 85,\n        "score_skill": 88,\n        "predicate": "B",\n        "description": "Menunjukkan penguasaan baik pada materi fungsi kuadrat."\n      }\n    ]\n  }'`
+                          : `{\n  "academic_year": "2026/2027",\n  "semester": "1",\n  "student": {\n    "nisn": "0081234567",\n    "nis": "1234",\n    "name": "Ahmad Siswa",\n    "class_name": "XI RPL 1"\n  },\n  "grades": [\n    {\n      "subject_code": "MTK",\n      "subject_name": "Matematika",\n      "score_knowledge": 85,\n      "score_skill": 88,\n      "predicate": "B",\n      "description": "Menunjukkan penguasaan baik pada materi fungsi kuadrat."\n    }\n  ]\n}`;
+                      handleCopySnippet(snippet);
+                    }}
+                    className="flex items-center gap-1 text-[11px] text-amber-400 hover:text-amber-300 font-bold"
+                  >
+                    <Copy className="w-3.5 h-3.5" />
+                    <span>{copiedSnippet ? "Tersalin!" : "Salin Kode"}</span>
+                  </button>
+                </div>
+
+                <div className="p-4 overflow-x-auto text-emerald-400 max-h-72">
+                  <pre className="leading-relaxed">
+                    {activeApiDocTab === "laravel" &&
+`<?php
+
+namespace App\\Http\\Controllers\\Api;
+
+use App\\Http\\Controllers\\Controller;
+use Illuminate\\Http\\Request;
+use Illuminate\\Support\\Facades\\Log;
+
+class SyncGradesController extends Controller
+{
+    /**
+     * Receiver Webhook dari Rapor Madrasah (rapor-nusa.vercel.app)
+     * Endpoint: POST /api/v1/sync-grades
+     */
+    public function syncGrades(Request $request)
+    {
+        // 1. Validasi Bearer Token
+        $token = $request->bearerToken();
+        $expectedToken = config('services.sinusa.api_secret', '${inputSecretToken}');
+
+        if (!$token || $token !== $expectedToken) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Unauthorized: Token Bearer tidak valid.'
+            ], 401);
+        }
+
+        // 2. Ambil data payload rapor siswa
+        $academicYear = $request->input('academic_year'); // "2026/2027"
+        $semester     = $request->input('semester');      // "1"
+        $student      = $request->input('student');       // nisn, nis, name, class_name
+        $grades       = $request->input('grades', []);    // array nilai per-mapel
+
+        if (!$student || empty($student['nisn'])) {
+            return response()->json([
+                'success' => false,
+                'message' => 'NISN siswa wajib disertakan.'
+            ], 422);
+        }
+
+        // 3. Simpan / Perbarui data ke Database SI-NUSA
+        // Siswa::updateOrCreate(['nisn' => $student['nisn']], [...]);
+        // foreach ($grades as $g) { ... }
+
+        Log::info("Sinkronisasi rapor berhasil untuk {$student['name']}");
+
+        return response()->json([
+            'success' => true,
+            'message' => "Data nilai siswa {$student['name']} berhasil diterima SI-NUSA.",
+            'synced_at' => now()->toIso8601String(),
+        ], 200);
+    }
+}`}
+                    {activeApiDocTab === "express" &&
+`const express = require('express');
+const app = express();
+app.use(express.json());
+
+const SECRET_TOKEN = process.env.SINUSA_SECRET_TOKEN || '${inputSecretToken}';
+
+app.post('/api/v1/sync-grades', async (req, res) => {
+  const authHeader = req.headers['authorization'];
+  const token = authHeader && authHeader.split(' ')[1];
+
+  if (!token || token !== SECRET_TOKEN) {
+    return res.status(401).json({ success: false, message: 'Unauthorized: Token Bearer tidak cocok!' });
+  }
+
+  const { academic_year, semester, student, grades } = req.body;
+  if (!student || !student.nisn) {
+    return res.status(400).json({ success: false, message: 'Payload tidak lengkap.' });
+  }
+
+  // TODO: Simpan ke database SI-NUSA
+  console.log(\`Sinkronisasi nilai \${student.name} (\${student.class_name}) - \${grades.length} mapel diterima.\`);
+
+  return res.status(200).json({
+    success: true,
+    message: \`Data rapor siswa \${student.name} berhasil disimpan di SI-NUSA.\`
+  });
+});
+
+app.listen(3000, () => console.log('SI-NUSA receiver running on port 3000'));`}
+                    {activeApiDocTab === "curl" &&
+`curl -X POST ${inputEndpointUrl} \\
+  -H "Content-Type: application/json" \\
+  -H "Authorization: Bearer ${inputSecretToken}" \\
+  -d '{
+    "academic_year": "2026/2027",
+    "semester": "1",
+    "student": {
+      "nisn": "0081234567",
+      "nis": "1234",
+      "name": "Ahmad Siswa",
+      "class_name": "XI RPL 1"
+    },
+    "grades": [
+      {
+        "subject_code": "MTK",
+        "subject_name": "Matematika",
+        "score_knowledge": 85,
+        "score_skill": 88,
+        "predicate": "B",
+        "description": "Menunjukkan penguasaan baik pada materi fungsi kuadrat."
+      }
+    ]
+  }'`}
+                    {activeApiDocTab === "json" &&
+`{
+  "academic_year": "2026/2027",
+  "semester": "1",
+  "student": {
+    "nisn": "0081234567",
+    "nis": "1234",
+    "name": "Ahmad Siswa",
+    "class_name": "XI RPL 1"
+  },
+  "grades": [
+    {
+      "subject_code": "MTK",
+      "subject_name": "Matematika",
+      "score_knowledge": 85,
+      "score_skill": 88,
+      "predicate": "B",
+      "description": "Menunjukkan penguasaan baik pada materi fungsi kuadrat."
+    }
+  ]
+}`}
+                  </pre>
+                </div>
+              </div>
+
+              {/* Status Code Reference Table */}
+              <div className="pt-2">
+                <span className="text-[11px] font-black uppercase text-slate-700 block mb-1">
+                  Referensi Kode Status Respon HTTP yang Diharapkan:
+                </span>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-[10px]">
+                  <div className="p-2 rounded bg-emerald-50 border border-emerald-300">
+                    <span className="font-bold text-emerald-900 block font-mono">200 OK</span>
+                    <span className="text-emerald-700">Data berhasil diproses & disimpan.</span>
+                  </div>
+                  <div className="p-2 rounded bg-emerald-50 border border-emerald-300">
+                    <span className="font-bold text-emerald-900 block font-mono">201 Created</span>
+                    <span className="text-emerald-700">Record nilai baru berhasil dibuat.</span>
+                  </div>
+                  <div className="p-2 rounded bg-amber-50 border border-amber-300">
+                    <span className="font-bold text-amber-900 block font-mono">401 Unauthorized</span>
+                    <span className="text-amber-800">Token Bearer salah / tidak dikirim.</span>
+                  </div>
+                  <div className="p-2 rounded bg-red-50 border border-red-300">
+                    <span className="font-bold text-red-900 block font-mono">422 Unprocessable</span>
+                    <span className="text-red-800">Format JSON payload salah / NISN kosong.</span>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>

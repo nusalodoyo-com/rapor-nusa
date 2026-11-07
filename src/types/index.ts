@@ -13,6 +13,7 @@ export interface User {
   role: UserRole;
   kelas_diampu?: string; // Jika wali kelas
   ttd_url?: string;
+  is_super_admin?: boolean;
 }
 
 // Penugasan Guru Mengajar (Admin Setting)
@@ -170,6 +171,7 @@ export interface SiswaLegger {
   nisn?: string;
   nama: string;
   nama_ortu?: string;
+  jenis_kelamin?: string;
   no_absen?: number;
   scores: Record<string, number>; // kode_mapel -> nilai_akhir
   mapelDetails: Record<string, MapelDetail>;
@@ -275,6 +277,7 @@ export interface SchoolConfig {
   semester_aktif?: "1" | "2";
   logo_url?: string;
   stempel_url?: string;
+  ttd_kamad_url?: string;
   email?: string;
   telp?: string;
   website?: string;

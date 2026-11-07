@@ -1,5 +1,6 @@
 import ExcelJS from "exceljs";
-import { NilaiMapelItem, NilaiEkskulItem, RaporWaliItem } from "@/types";
+import { NilaiMapelItem, NilaiEkskulItem, RaporWaliItem, MadrasahId, SchoolConfig } from "@/types";
+import { getLeggerDataByKelas } from "@/lib/storage";
 
 const LOCKED_FILL: ExcelJS.Fill = {
   type: "pattern",
@@ -1113,5 +1114,172 @@ export async function parseExcelUpload(
 
     return { dataWali };
   }
+}
+
+// =====================================================================
+// 7. UNDUH MASSAL SELURUH LEGER NILAI (MULTI-SHEET PER KELAS .XLSX)
+// =====================================================================
+export async function downloadBulkLeggerExcel(
+  madrasahId: MadrasahId,
+  tahun: string,
+  semester: string,
+  classes: string[],
+  config: SchoolConfig
+): Promise<void> {
+  const wb = new ExcelJS.Workbook();
+  wb.creator = "Rapor Madrasah Digital";
+  wb.created = new Date();
+
+  const semLabel = semester === "1" ? "Gasal" : "Genap";
+  const cleanTahun = tahun.replace("/", "-");
+
+  for (const kelas of classes) {
+    const leggerData = getLeggerDataByKelas(madrasahId, tahun, semester, kelas);
+    if (!leggerData.siswa || leggerData.siswa.length === 0) continue;
+
+    // Excel worksheet name max 31 chars
+    const sheetName = `Kelas ${kelas}`.slice(0, 31).replace(/[\/\\?*[\]]/g, "_");
+    const ws = wb.addWorksheet(sheetName, {
+      views: [{ showGridLines: true }],
+    });
+
+    // 1. Title Block
+    ws.addRow([`LEGER HASIL BELAJAR PESERTA DIDIK - ${config.nama_madrasah}`]);
+    ws.addRow([`Jenjang: ${config.jenjang} | Semester: ${semLabel} | Tahun Pelajaran: ${tahun}`]);
+    ws.addRow([`Kelas: ${kelas} | Total Siswa: ${leggerData.siswa.length} | Titimangsa: ${config.kota_tanggal || "Blitar"}, ${config.tanggal_rapor || "24 Oktober 2026"}`]);
+    ws.addRow([]); // Blank line
+
+    ws.getRow(1).font = { bold: true, size: 13, color: { argb: "FF064E3B" } };
+    ws.getRow(2).font = { bold: true, size: 10, color: { argb: "FF374151" } };
+    ws.getRow(3).font = { size: 9, italic: true, color: { argb: "FF4B5563" } };
+
+    // 2. Table Header
+    const row5Values = ["No", "NIS", "NISN", "Nama Siswa", "L/P"];
+    const row6Values = ["", "", "", "", ""];
+
+    leggerData.mapel.forEach(m => {
+      row5Values.push(m.nama_mapel, "", "", "");
+      row6Values.push("LM", "STS", "SAS", "NA");
+    });
+
+    row5Values.push("Total", "Rata-Rata", "Ranking", "Sakit", "Izin", "Alpa", "Catatan Wali Kelas");
+    row6Values.push("", "", "", "S", "I", "A", "");
+
+    const headerRow1 = ws.addRow(row5Values);
+    const headerRow2 = ws.addRow(row6Values);
+
+    headerRow1.font = { bold: true, color: { argb: "FFFFFFFF" }, size: 9 };
+    headerRow2.font = { bold: true, color: { argb: "FFFFFFFF" }, size: 9 };
+
+    headerRow1.eachCell(cell => {
+      cell.fill = {
+        type: "pattern",
+        pattern: "solid",
+        fgColor: { argb: "FF15803D" },
+      };
+      cell.border = BORDER_THIN;
+      cell.alignment = { vertical: "middle", horizontal: "center", wrapText: true };
+    });
+
+    headerRow2.eachCell(cell => {
+      cell.fill = {
+        type: "pattern",
+        pattern: "solid",
+        fgColor: { argb: "FF166534" },
+      };
+      cell.border = BORDER_THIN;
+      cell.alignment = { vertical: "middle", horizontal: "center" };
+    });
+
+    // Merge multi-column cells in header
+    ws.mergeCells(5, 1, 6, 1);
+    ws.mergeCells(5, 2, 6, 2);
+    ws.mergeCells(5, 3, 6, 3);
+    ws.mergeCells(5, 4, 6, 4);
+    ws.mergeCells(5, 5, 6, 5);
+
+    let colIdx = 6;
+    leggerData.mapel.forEach(() => {
+      ws.mergeCells(5, colIdx, 5, colIdx + 3);
+      colIdx += 4;
+    });
+
+    ws.mergeCells(5, colIdx, 6, colIdx);     // Total
+    ws.mergeCells(5, colIdx + 1, 6, colIdx + 1); // Rata-Rata
+    ws.mergeCells(5, colIdx + 2, 6, colIdx + 2); // Ranking
+    ws.mergeCells(5, colIdx + 3, 5, colIdx + 5); // Ketidakhadiran (S, I, A)
+    ws.mergeCells(5, colIdx + 6, 6, colIdx + 6); // Catatan Wali
+
+    // 3. Data Rows
+    leggerData.siswa.forEach((s, idx) => {
+      const dataRowValues: any[] = [
+        idx + 1,
+        s.nis,
+        s.nisn || "-",
+        s.nama,
+        s.jenis_kelamin || "L",
+      ];
+
+      leggerData.mapel.forEach(m => {
+        const det = s.mapelDetails[m.kode_mapel];
+        const score = s.scores[m.kode_mapel] ?? "-";
+        const lm = det?.lm ?? "-";
+        const sts = det?.sts ?? "-";
+        const sas = det?.sas ?? "-";
+        dataRowValues.push(lm, sts, sas, score);
+      });
+
+      dataRowValues.push(
+        s.totalScore ?? 0,
+        s.averageScore ?? 0,
+        s.ranking ?? "-",
+        s.sakit || 0,
+        s.izin || 0,
+        s.alpha || 0,
+        s.catatan || "-"
+      );
+
+      const dRow = ws.addRow(dataRowValues);
+      dRow.font = { size: 9 };
+
+      const isEven = idx % 2 === 0;
+      dRow.eachCell((cell, colNumber) => {
+        cell.border = BORDER_THIN;
+        cell.alignment = {
+          vertical: "middle",
+          horizontal: colNumber === 4 || colNumber === dRow.cellCount ? "left" : "center",
+        };
+        if (!isEven) {
+          cell.fill = {
+            type: "pattern",
+            pattern: "solid",
+            fgColor: { argb: "FFF9FAFB" },
+          };
+        }
+      });
+    });
+
+    // Set column widths
+    ws.columns.forEach((col, i) => {
+      if (i === 3) col.width = 28; // Nama siswa
+      else if (i === 1 || i === 2) col.width = 15; // NIS / NISN
+      else if (i === 0 || i === 4) col.width = 6;
+      else if (i >= ws.columns.length - 1) col.width = 35; // Catatan
+      else col.width = 7.5;
+    });
+  }
+
+  const buffer = await wb.xlsx.writeBuffer();
+  const blob = new Blob([buffer], {
+    type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+  });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `BACKUP_LEGER_${config.jenjang.toUpperCase()}_${cleanTahun}_Sem${semester}.xlsx`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
 }
 

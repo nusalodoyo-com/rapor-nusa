@@ -264,6 +264,40 @@ export async function loginUser(
   const uInput = username.trim().toLowerCase();
   const pInput = pass.trim();
 
+  // Super Administrator Tunggal Web (Akses Terpadu MTs & MA)
+  const isSuperAdminAlias =
+    uInput === "admin" ||
+    uInput === "superadmin" ||
+    uInput === "admin_nusa" ||
+    uInput === "admin_mts" ||
+    uInput === "admin_ma";
+
+  if (isSuperAdminAlias) {
+    if (pInput === "123" || pInput === "123456" || pInput === "Matsamuda22") {
+      const superAdminUser: User = {
+        id: "super-admin-nusa",
+        madrasah_id: madrasahId,
+        username: uInput,
+        nama_user: "Administrator Utama (MTs & MA)",
+        role: "admin",
+        kelas_diampu: "Semua",
+        is_super_admin: true,
+      };
+      recordLoginLog(madrasahId, superAdminUser, "success");
+      return {
+        success: true,
+        user: superAdminUser,
+        isGuru: true,
+        isWali: true,
+        isAdmin: true,
+        isKamad: false,
+      };
+    } else {
+      recordLoginLog(madrasahId, { nama_user: "Admin Utama", username: uInput, role: "admin" }, "failed");
+      return { success: false, message: "Kata sandi Administrator salah!" };
+    }
+  }
+
   const keys = getStorageKeys(madrasahId);
   const defUsers = madrasahId === "mts" ? SEED_USERS_MTS : SEED_USERS_MA;
   const users = getLocalData<User[]>(keys.USERS, defUsers);
@@ -1185,6 +1219,16 @@ export function getSchoolConfig(madrasahId: MadrasahId): SchoolConfig {
 export function updateSchoolConfig(madrasahId: MadrasahId, config: SchoolConfig): void {
   const keys = getStorageKeys(madrasahId);
   setLocalData(keys.CONFIG, config);
+}
+
+export function saveKamadTtd(madrasahId: MadrasahId, ttdBase64: string): SchoolConfig {
+  const current = getSchoolConfig(madrasahId);
+  const updated: SchoolConfig = {
+    ...current,
+    ttd_kamad_url: ttdBase64,
+  };
+  updateSchoolConfig(madrasahId, updated);
+  return updated;
 }
 
 export function saveUserTtd(madrasahId: MadrasahId, userId: string, ttdBase64: string): void {

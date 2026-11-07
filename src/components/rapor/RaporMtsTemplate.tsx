@@ -62,7 +62,7 @@ export default function RaporMtsTemplate({
     );
   });
 
-  // Mapel Kelompok B (SBK, PJOK, INF, BJAWA, ASWAJA, AI)
+  // Mapel Kelompok B (Keterampilan, Seni, Olahraga, Mulok)
   const mapelB = allMapel.filter(m => {
     if (isPai(m)) return false;
     if (mapelANonPai.some(a => a.kode_mapel === m.kode_mapel)) return false;
@@ -70,12 +70,12 @@ export default function RaporMtsTemplate({
   });
 
   return (
-    <div className="rapor-single-page bg-white text-slate-900 mx-auto select-text font-sans p-1 sm:p-2">
+    <div className="rapor-single-page bg-white text-slate-900 mx-auto select-text font-sans p-0 leading-tight">
       {/* ================= 1. KOP RESMI MTS MA'ARIF NU 2 SUTOJAYAN ================= */}
-      <div className="w-full text-center pb-0.5 mb-1">
-        <div className="flex items-center justify-between px-1 mb-1 gap-2">
+      <div className="w-full text-center pb-1">
+        <div className="flex items-center justify-between px-1 mb-1 gap-3">
           {/* Logo LP Ma'arif NU Transparan (Kiri) */}
-          <div className="w-12 h-12 flex items-center justify-center p-0.5 flex-shrink-0">
+          <div className="w-[18mm] h-[18mm] flex items-center justify-center flex-shrink-0">
             <img
               src="/logo.png"
               alt="Logo LP Ma'arif NU"
@@ -83,27 +83,27 @@ export default function RaporMtsTemplate({
             />
           </div>
 
-          {/* Teks Lembaga & Identitas Madrasah */}
+          {/* Teks Lembaga & Identitas Madrasah MTs */}
           <div className="flex-1 text-center px-1">
-            <h4 className="text-[9px] font-bold tracking-wider text-slate-900 uppercase leading-none font-serif">
+            <h4 className="text-[9pt] font-bold tracking-wider text-slate-900 uppercase leading-none font-serif">
               LEMBAGA PENDIDIKAN MA&apos;ARIF NU
             </h4>
-            <h3 className="text-[10.5px] font-black tracking-wide text-slate-900 uppercase leading-tight font-serif mt-0.5">
+            <h3 className="text-[10.5pt] font-black tracking-wide text-slate-900 uppercase leading-tight font-serif mt-0.5">
               BADAN HUKUM PERKUMPULAN NAHDLATUL ULAMA&apos;
             </h3>
-            <p className="text-[7px] text-slate-600 font-medium leading-none mt-0.5">
+            <p className="text-[7.5pt] text-slate-600 font-medium leading-none mt-0.5">
               (SK Menteri Hukum dan Hak Asasi Manusia No. AHU-119.AH.01.08.Tahun 2013)
             </p>
-            <h2 className="text-xs sm:text-sm font-black text-[#006e14] tracking-wide uppercase leading-tight mt-0.5 font-serif">
+            <h2 className="text-[13pt] sm:text-[14pt] font-black text-[#006e14] tracking-wide uppercase leading-tight mt-0.5 font-serif">
               MADRASAH TSANAWIYAH MA&apos;ARIF NU 2 SUTOJAYAN
             </h2>
-            <p className="text-[7.5px] text-slate-700 leading-tight mt-0.5">
+            <p className="text-[8pt] text-slate-700 leading-tight mt-0.5">
               Jl. Diponegoro No. 105 Telp. 0342-443278 Kedungbunder Sutojayan Blitar
             </p>
           </div>
 
           {/* Logo MTs Ma'arif NU 2 Sutojayan Transparan (Kanan) */}
-          <div className="w-12 h-12 flex items-center justify-center p-0.5 flex-shrink-0">
+          <div className="w-[18mm] h-[18mm] flex items-center justify-center flex-shrink-0">
             <img
               src="/logo-mts.png"
               alt="Logo MTs Ma'arif NU 2 Sutojayan"
@@ -113,90 +113,101 @@ export default function RaporMtsTemplate({
         </div>
 
         {/* Pita Hijau Akreditasi MTs */}
-        <div className="w-full bg-[#006e14] text-white py-0.5 px-2.5 flex items-center justify-between text-[7.5px] font-bold font-mono tracking-tight leading-none rounded-xs">
-          <span>NSM : 121235050045</span>
+        <div className="w-full bg-[#006e14] text-white py-1 px-3 flex items-center justify-between text-[8pt] font-sans font-medium tracking-normal leading-none rounded-xs">
+          <span><strong>NSM :</strong> 121235050045</span>
           <span>/</span>
-          <span>NPSN : 20584989</span>
+          <span><strong>NPSN :</strong> 20584989</span>
           <span>/</span>
-          <span>AKREDITASI : A</span>
+          <span><strong>AKREDITASI :</strong> A (Unggul)</span>
           <span>/</span>
-          <span>Email : matsamnu2_stj@yahoo.co.id</span>
+          <span><strong>Email :</strong> matsamnu2_stj@yahoo.co.id</span>
         </div>
-        <div className="w-full border-b border-slate-900 mt-0.5"></div>
+
+        {/* Garis Ganda Pemisah Kop (Tebal + Tipis) */}
+        <div className="w-full border-b-2 border-emerald-950 mt-1"></div>
+        <div className="w-full border-b border-emerald-950 mt-[1.5px]"></div>
       </div>
 
       {/* ================= 2. JUDUL DOKUMEN ================= */}
-      <div className="text-center my-0.5">
-        <div className="border-t border-b border-slate-900 py-0.5 w-full">
-          <h3 className="text-[11px] font-black uppercase tracking-wider text-slate-900 leading-none">
+      <div className="text-center my-1">
+        <div className="border-t border-b border-slate-900 py-1 w-full bg-slate-50/50">
+          <h3 className="text-[12pt] sm:text-[13pt] font-black uppercase tracking-widest text-slate-900 leading-none">
             RAPOR TENGAH SEMESTER
           </h3>
         </div>
       </div>
 
-      {/* ================= 3. IDENTITAS SISWA (2 KOLOM) ================= */}
-      <div className="grid grid-cols-2 text-[8.5px] text-slate-900 my-1 pb-1 border-b border-slate-900 leading-snug">
+      {/* ================= 3. IDENTITAS SISWA (2 KOLOM RAPI & SEJAJAR) ================= */}
+      <div className="grid grid-cols-2 text-[8.5pt] text-slate-900 my-1 pb-1.5 border-b border-slate-900 leading-normal gap-6">
         <div className="space-y-0.5">
-          <div className="grid grid-cols-12">
-            <span className="col-span-4">No. Absen</span>
-            <span className="col-span-1 text-center">:</span>
-            <span className="col-span-7 font-bold font-mono">{siswa.no_absen || 1}</span>
+          <div className="flex items-center">
+            <span className="w-24 flex-shrink-0 text-slate-700">No. Absen</span>
+            <span className="w-3 text-center">:</span>
+            <span className="font-bold font-mono text-slate-950">{siswa.no_absen || 1}</span>
           </div>
-          <div className="grid grid-cols-12">
-            <span className="col-span-4">No. Induk/NISN</span>
-            <span className="col-span-1 text-center">:</span>
-            <span className="col-span-7 font-bold font-mono">{siswa.nis} / {siswa.nisn || "-"}</span>
+          <div className="flex items-center">
+            <span className="w-24 flex-shrink-0 text-slate-700">No. Induk / NISN</span>
+            <span className="w-3 text-center">:</span>
+            <span className="font-bold font-mono text-slate-950">{siswa.nis} / {siswa.nisn || "-"}</span>
           </div>
-          <div className="grid grid-cols-12">
-            <span className="col-span-4">Nama Siswa</span>
-            <span className="col-span-1 text-center">:</span>
-            <span className="col-span-7 font-black uppercase text-slate-950 truncate">{siswa.nama}</span>
+          <div className="flex items-center">
+            <span className="w-24 flex-shrink-0 text-slate-700">Nama Siswa</span>
+            <span className="w-3 text-center">:</span>
+            <span className="font-black uppercase text-slate-950 truncate text-[9pt]">{siswa.nama}</span>
           </div>
         </div>
 
-        <div className="space-y-0.5 pl-4">
-          <div className="grid grid-cols-12">
-            <span className="col-span-5">Kelas</span>
-            <span className="col-span-1 text-center">:</span>
-            <span className="col-span-6 font-bold">{kelas}</span>
+        <div className="space-y-0.5">
+          <div className="flex items-center">
+            <span className="w-28 flex-shrink-0 text-slate-700">Kelas / Fase</span>
+            <span className="w-3 text-center">:</span>
+            <span className="font-bold text-slate-950">{kelas} (Fase D)</span>
           </div>
-          <div className="grid grid-cols-12">
-            <span className="col-span-5">Semester</span>
-            <span className="col-span-1 text-center">:</span>
-            <span className="col-span-6 font-bold">{semLabel}</span>
+          <div className="flex items-center">
+            <span className="w-28 flex-shrink-0 text-slate-700">Semester</span>
+            <span className="w-3 text-center">:</span>
+            <span className="font-bold text-slate-950">{semLabel}</span>
           </div>
-          <div className="grid grid-cols-12">
-            <span className="col-span-5">Tahun Pelajaran</span>
-            <span className="col-span-1 text-center">:</span>
-            <span className="col-span-6 font-bold font-mono">{cleanTahun}</span>
+          <div className="flex items-center">
+            <span className="w-28 flex-shrink-0 text-slate-700">Tahun Pelajaran</span>
+            <span className="w-3 text-center">:</span>
+            <span className="font-bold font-mono text-slate-950">{cleanTahun}</span>
           </div>
         </div>
       </div>
 
       {/* ================= 4. A. CAPAIAN PEMBELAJARAN (TABEL NILAI) ================= */}
       <div className="mb-1">
-        <h4 className="text-[9px] font-black text-slate-900 mb-0.5 uppercase tracking-wide">
+        <h4 className="text-[9pt] font-black text-slate-900 mb-1 uppercase tracking-wide">
           A. CAPAIAN PEMBELAJARAN
         </h4>
 
-        <table className="w-full text-[7.8px] border border-slate-900 border-collapse table-fixed leading-tight">
+        <table className="w-full text-[8.5pt] border border-slate-900 border-collapse table-fixed leading-tight">
+          <colgroup>
+            <col style={{ width: "7mm" }} />
+            <col style={{ width: "50mm" }} />
+            <col style={{ width: "11mm" }} />
+            <col style={{ width: "11mm" }} />
+            <col style={{ width: "11mm" }} />
+            <col />
+          </colgroup>
           <thead>
-            <tr className="bg-slate-100 text-slate-900 border-b border-slate-900 font-bold text-center">
-              <th className="border border-slate-900 py-0.5 px-0.5 w-6" rowSpan={2}>No</th>
-              <th className="border border-slate-900 py-0.5 px-1 text-left w-44" rowSpan={2}>Mata Pelajaran</th>
-              <th className="border border-slate-900 py-0.5 px-0.5 w-24 text-center" colSpan={3}>Capaian Nilai</th>
-              <th className="border border-slate-900 py-0.5 px-1 text-left" rowSpan={2}>Lingkup Materi</th>
+            <tr className="bg-emerald-50/80 text-slate-900 border-b border-slate-900 font-bold text-center">
+              <th className="border border-slate-900 py-1 px-1" rowSpan={2}>No</th>
+              <th className="border border-slate-900 py-1 px-2 text-left" rowSpan={2}>Mata Pelajaran</th>
+              <th className="border border-slate-900 py-0.5 px-1 text-center" colSpan={3}>Capaian Nilai</th>
+              <th className="border border-slate-900 py-1 px-2 text-left" rowSpan={2}>Lingkup Materi</th>
             </tr>
-            <tr className="bg-slate-100 text-slate-900 border-b border-slate-900 font-bold text-center text-[7.2px]">
-              <th className="border border-slate-900 py-0.5 px-0.5 w-8">LM</th>
-              <th className="border border-slate-900 py-0.5 px-0.5 w-8">STS</th>
-              <th className="border border-slate-900 py-0.5 px-0.5 w-8">SAS</th>
+            <tr className="bg-emerald-50/80 text-slate-900 border-b border-slate-900 font-bold text-center text-[8pt]">
+              <th className="border border-slate-900 py-0.5 px-1">LM</th>
+              <th className="border border-slate-900 py-0.5 px-1">STS</th>
+              <th className="border border-slate-900 py-0.5 px-1">SAS</th>
             </tr>
           </thead>
           <tbody>
             {/* - Kelompok A */}
             <tr className="bg-slate-100 font-bold text-slate-900">
-              <td colSpan={6} className="border border-slate-900 py-[1px] px-1.5 text-[7.8px]">
+              <td colSpan={6} className="border border-slate-900 py-0.5 px-2 text-[8pt]">
                 - Kelompok A
               </td>
             </tr>
@@ -205,10 +216,10 @@ export default function RaporMtsTemplate({
             {paiMapel.length > 0 && (
               <>
                 <tr>
-                  <td className="border border-slate-900 py-[1px] text-center font-mono font-bold align-top" rowSpan={paiMapel.length + 1}>
+                  <td className="border border-slate-900 py-0.5 text-center font-mono font-bold align-top" rowSpan={paiMapel.length + 1}>
                     1
                   </td>
-                  <td colSpan={5} className="border border-slate-900 py-[1px] px-1.5 font-bold text-slate-900 bg-slate-50 text-[7.8px]">
+                  <td colSpan={5} className="border border-slate-900 py-0.5 px-2 font-bold text-slate-900 bg-slate-50 text-[8pt]">
                     Pendidikan Agama Islam
                   </td>
                 </tr>
@@ -218,13 +229,15 @@ export default function RaporMtsTemplate({
                   const stsVal = det?.sts ? det.sts : (siswa.scores[m.kode_mapel] || "-");
                   const sasVal = det?.sas ? det.sas : "-";
                   return (
-                    <tr key={m.kode_mapel} className="border-b border-slate-800">
-                      <td className="border border-slate-900 py-[1px] px-1.5 pl-3 text-slate-800 truncate">{m.nama_mapel}</td>
-                      <td className="border border-slate-900 py-[1px] text-center font-mono font-bold">{lmVal}</td>
-                      <td className="border border-slate-900 py-[1px] text-center font-mono font-bold">{stsVal}</td>
-                      <td className="border border-slate-900 py-[1px] text-center font-mono text-slate-400">{sasVal}</td>
-                      <td className="border border-slate-900 py-[1px] px-1.5 text-[6.8px] leading-tight text-slate-700 truncate">
-                        {det?.lingkup_materi && det.lingkup_materi !== "-" ? det.lingkup_materi : `Kompetensi materi pembelajaran ${m.nama_mapel}`}
+                    <tr key={m.kode_mapel} className="border-b border-slate-900">
+                      <td className="border border-slate-900 py-0.5 px-2 pl-4 text-slate-800 truncate">{m.nama_mapel}</td>
+                      <td className="border border-slate-900 py-0.5 text-center font-mono font-bold">{lmVal}</td>
+                      <td className="border border-slate-900 py-0.5 text-center font-mono font-bold">{stsVal}</td>
+                      <td className="border border-slate-900 py-0.5 text-center font-mono text-slate-400">{sasVal}</td>
+                      <td className="border border-slate-900 py-0.5 px-2 text-[8pt] leading-tight text-slate-700">
+                        <span className="line-clamp-2">
+                          {det?.lingkup_materi && det.lingkup_materi !== "-" ? det.lingkup_materi : `Kompetensi materi pembelajaran ${m.nama_mapel}`}
+                        </span>
                       </td>
                     </tr>
                   );
@@ -240,14 +253,16 @@ export default function RaporMtsTemplate({
               const sasVal = det?.sas ? det.sas : "-";
               const rowNum = (paiMapel.length > 0 ? 2 : 1) + idx;
               return (
-                <tr key={m.kode_mapel} className="border-b border-slate-800">
-                  <td className="border border-slate-900 py-[1px] text-center font-mono font-bold">{rowNum}</td>
-                  <td className="border border-slate-900 py-[1px] px-1.5 text-slate-900 font-medium truncate">{m.nama_mapel}</td>
-                  <td className="border border-slate-900 py-[1px] text-center font-mono font-bold">{lmVal}</td>
-                  <td className="border border-slate-900 py-[1px] text-center font-mono font-bold">{stsVal}</td>
-                  <td className="border border-slate-900 py-[1px] text-center font-mono text-slate-400">{sasVal}</td>
-                  <td className="border border-slate-900 py-[1px] px-1.5 text-[6.8px] leading-tight text-slate-700 truncate">
-                    {det?.lingkup_materi && det.lingkup_materi !== "-" ? det.lingkup_materi : `Kompetensi materi pembelajaran ${m.nama_mapel}`}
+                <tr key={m.kode_mapel} className="border-b border-slate-900">
+                  <td className="border border-slate-900 py-0.5 text-center font-mono font-bold">{rowNum}</td>
+                  <td className="border border-slate-900 py-0.5 px-2 text-slate-900 font-medium truncate">{m.nama_mapel}</td>
+                  <td className="border border-slate-900 py-0.5 text-center font-mono font-bold">{lmVal}</td>
+                  <td className="border border-slate-900 py-0.5 text-center font-mono font-bold">{stsVal}</td>
+                  <td className="border border-slate-900 py-0.5 text-center font-mono text-slate-400">{sasVal}</td>
+                  <td className="border border-slate-900 py-0.5 px-2 text-[8pt] leading-tight text-slate-700">
+                    <span className="line-clamp-2">
+                      {det?.lingkup_materi && det.lingkup_materi !== "-" ? det.lingkup_materi : `Kompetensi materi pembelajaran ${m.nama_mapel}`}
+                    </span>
                   </td>
                 </tr>
               );
@@ -255,7 +270,7 @@ export default function RaporMtsTemplate({
 
             {/* - Kelompok B */}
             <tr className="bg-slate-100 font-bold text-slate-900">
-              <td colSpan={6} className="border border-slate-900 py-[1px] px-1.5 text-[7.8px]">
+              <td colSpan={6} className="border border-slate-900 py-0.5 px-2 text-[8pt]">
                 - Kelompok B
               </td>
             </tr>
@@ -266,75 +281,77 @@ export default function RaporMtsTemplate({
               const stsVal = det?.sts ? det.sts : (siswa.scores[m.kode_mapel] || "-");
               const sasVal = det?.sas ? det.sas : "-";
               return (
-                <tr key={m.kode_mapel} className="border-b border-slate-800">
-                  <td className="border border-slate-900 py-[1px] text-center font-mono font-bold">{idx + 1}</td>
-                  <td className="border border-slate-900 py-[1px] px-1.5 text-slate-900 font-medium truncate">{m.nama_mapel}</td>
-                  <td className="border border-slate-900 py-[1px] text-center font-mono font-bold">{lmVal}</td>
-                  <td className="border border-slate-900 py-[1px] text-center font-mono font-bold">{stsVal}</td>
-                  <td className="border border-slate-900 py-[1px] text-center font-mono text-slate-400">{sasVal}</td>
-                  <td className="border border-slate-900 py-[1px] px-1.5 text-[6.8px] leading-tight text-slate-700 truncate">
-                    {det?.lingkup_materi && det.lingkup_materi !== "-" ? det.lingkup_materi : `Kompetensi materi pembelajaran ${m.nama_mapel}`}
+                <tr key={m.kode_mapel} className="border-b border-slate-900">
+                  <td className="border border-slate-900 py-0.5 text-center font-mono font-bold">{idx + 1}</td>
+                  <td className="border border-slate-900 py-0.5 px-2 text-slate-900 font-medium truncate">{m.nama_mapel}</td>
+                  <td className="border border-slate-900 py-0.5 text-center font-mono font-bold">{lmVal}</td>
+                  <td className="border border-slate-900 py-0.5 text-center font-mono font-bold">{stsVal}</td>
+                  <td className="border border-slate-900 py-0.5 text-center font-mono text-slate-400">{sasVal}</td>
+                  <td className="border border-slate-900 py-0.5 px-2 text-[8pt] leading-tight text-slate-700">
+                    <span className="line-clamp-2">
+                      {det?.lingkup_materi && det.lingkup_materi !== "-" ? det.lingkup_materi : `Kompetensi materi pembelajaran ${m.nama_mapel}`}
+                    </span>
                   </td>
                 </tr>
               );
             })}
 
             {/* Baris RANGKING SISWA */}
-            <tr className="bg-slate-100 font-black border-t border-slate-900">
-              <td colSpan={2} className="border border-slate-900 py-[1.5px] px-2 text-left uppercase text-[8px]">
+            <tr className="bg-emerald-50/60 font-black border-t-2 border-slate-900">
+              <td colSpan={2} className="border border-slate-900 py-1 px-2 text-left uppercase text-[8.5pt]">
                 RANGKING SISWA
               </td>
-              <td colSpan={4} className="border border-slate-900 py-[1.5px] px-2 text-left font-mono text-[8px]">
-                <span className="font-bold">{siswa.ranking}</span> &nbsp;&nbsp;Dari :&nbsp; <span className="font-bold">{totalSiswa}</span> Siswa
+              <td colSpan={4} className="border border-slate-900 py-1 px-2 text-left font-mono text-[8.5pt]">
+                Peringkat: <span className="font-black text-emerald-950 text-[9pt]">{siswa.ranking}</span> &nbsp;dari&nbsp; <span className="font-bold">{totalSiswa}</span> Siswa
               </td>
             </tr>
           </tbody>
         </table>
 
         {/* Footnote Rapor Tengah Semester */}
-        <div className="text-[6.5px] text-slate-600 mt-0.5 space-y-0.2 italic leading-none">
-          <p className="font-bold not-italic">Keterangan;</p>
-          <p>* Nilai Capaian yang tertera adalah nilai murni hasil tes/ujian</p>
-          <p>* LM = Lingkup Materi (rerata nilai harian), STS = Sumatif Tengah Semester, SAS = Sumatif Akhir Semester</p>
+        <div className="text-[7.5pt] text-slate-600 mt-1 space-y-0.5 italic leading-none">
+          <p className="font-bold not-italic">Keterangan:</p>
+          <p>* Nilai Capaian yang tertera adalah nilai murni hasil tes/ujian.</p>
+          <p>* LM = Lingkup Materi (rerata nilai harian), STS = Sumatif Tengah Semester, SAS = Sumatif Akhir Semester.</p>
         </div>
       </div>
 
-      {/* ================= 5. B, C, D (KETIDAKHADIRAN, EKSKUL & CATATAN WALI KELAS) ================= */}
-      <div className="grid grid-cols-12 gap-2 my-1">
+      {/* ================= 5. B, C, D (KETIDAKHADIRAN, EKSKUL & CATATAN WALI KELAS SEJAJAR) ================= */}
+      <div className="grid grid-cols-12 gap-3 my-1 items-stretch">
         {/* Kolom Kiri (7 cols): Presensi & Ekstrakurikuler */}
-        <div className="col-span-7 space-y-1">
+        <div className="col-span-7 flex flex-col justify-between space-y-1.5">
           {/* B. Ketidakhadiran */}
           <div>
-            <h5 className="text-[8px] font-black text-slate-900 uppercase tracking-wide leading-none mb-0.5">
+            <h5 className="text-[8.5pt] font-black text-slate-900 uppercase tracking-wide leading-none mb-1">
               B. KETIDAKHADIRAN
             </h5>
-            <table className="w-full text-[7.5px] border border-slate-900 border-collapse table-fixed leading-none">
+            <table className="w-full text-[8pt] border border-slate-900 border-collapse table-fixed leading-snug">
               <thead>
                 <tr className="bg-slate-100 text-slate-900 font-bold text-center">
-                  <th className="border border-slate-900 py-[1px] w-6">No</th>
-                  <th className="border border-slate-900 py-[1px] px-1 text-left">Keterangan</th>
-                  <th className="border border-slate-900 py-[1px] w-10 text-center">JML</th>
-                  <th className="border border-slate-900 py-[1px] w-12 text-center">Satuan</th>
+                  <th className="border border-slate-900 py-0.5 w-7">No</th>
+                  <th className="border border-slate-900 py-0.5 px-1.5 text-left">Keterangan</th>
+                  <th className="border border-slate-900 py-0.5 w-12 text-center">JML</th>
+                  <th className="border border-slate-900 py-0.5 w-14 text-center">Satuan</th>
                 </tr>
               </thead>
               <tbody>
                 <tr>
-                  <td className="border border-slate-900 py-[1px] text-center font-mono">1</td>
-                  <td className="border border-slate-900 py-[1px] px-1">Sakit</td>
-                  <td className="border border-slate-900 py-[1px] text-center font-mono font-bold">{siswa.sakit > 0 ? siswa.sakit : "-"}</td>
-                  <td className="border border-slate-900 py-[1px] text-center">Hari</td>
+                  <td className="border border-slate-900 py-0.5 text-center font-mono">1</td>
+                  <td className="border border-slate-900 py-0.5 px-1.5">Sakit</td>
+                  <td className="border border-slate-900 py-0.5 text-center font-mono font-bold">{siswa.sakit > 0 ? siswa.sakit : "-"}</td>
+                  <td className="border border-slate-900 py-0.5 text-center">Hari</td>
                 </tr>
                 <tr>
-                  <td className="border border-slate-900 py-[1px] text-center font-mono">2</td>
-                  <td className="border border-slate-900 py-[1px] px-1">Izin</td>
-                  <td className="border border-slate-900 py-[1px] text-center font-mono font-bold">{siswa.izin > 0 ? siswa.izin : "-"}</td>
-                  <td className="border border-slate-900 py-[1px] text-center">Hari</td>
+                  <td className="border border-slate-900 py-0.5 text-center font-mono">2</td>
+                  <td className="border border-slate-900 py-0.5 px-1.5">Izin</td>
+                  <td className="border border-slate-900 py-0.5 text-center font-mono font-bold">{siswa.izin > 0 ? siswa.izin : "-"}</td>
+                  <td className="border border-slate-900 py-0.5 text-center">Hari</td>
                 </tr>
                 <tr>
-                  <td className="border border-slate-900 py-[1px] text-center font-mono">3</td>
-                  <td className="border border-slate-900 py-[1px] px-1">Tanpa Keterangan</td>
-                  <td className="border border-slate-900 py-[1px] text-center font-mono font-bold">{siswa.alpha > 0 ? siswa.alpha : "-"}</td>
-                  <td className="border border-slate-900 py-[1px] text-center">Hari</td>
+                  <td className="border border-slate-900 py-0.5 text-center font-mono">3</td>
+                  <td className="border border-slate-900 py-0.5 px-1.5">Tanpa Keterangan</td>
+                  <td className="border border-slate-900 py-0.5 text-center font-mono font-bold">{siswa.alpha > 0 ? siswa.alpha : "-"}</td>
+                  <td className="border border-slate-900 py-0.5 text-center">Hari</td>
                 </tr>
               </tbody>
             </table>
@@ -342,41 +359,41 @@ export default function RaporMtsTemplate({
 
           {/* C. Ekstrakurikuler */}
           <div>
-            <h5 className="text-[8px] font-black text-slate-900 uppercase tracking-wide leading-none mb-0.5">
+            <h5 className="text-[8.5pt] font-black text-slate-900 uppercase tracking-wide leading-none mb-1">
               C. CAPAIAN PEMBELAJARAN EKSTRA KURIKULER
             </h5>
-            <table className="w-full text-[7.5px] border border-slate-900 border-collapse table-fixed leading-none">
+            <table className="w-full text-[8pt] border border-slate-900 border-collapse table-fixed leading-snug">
               <thead>
                 <tr className="bg-slate-100 text-slate-900 font-bold text-center">
-                  <th className="border border-slate-900 py-[1px] w-6">No</th>
-                  <th className="border border-slate-900 py-[1px] px-1 text-left w-24">Ekstra yang diikuti</th>
-                  <th className="border border-slate-900 py-[1px] w-10 text-center">Nilai</th>
-                  <th className="border border-slate-900 py-[1px] px-1 text-left">Materi Ekstra</th>
+                  <th className="border border-slate-900 py-0.5 w-7">No</th>
+                  <th className="border border-slate-900 py-0.5 px-1.5 text-left w-28">Ekstra yang diikuti</th>
+                  <th className="border border-slate-900 py-0.5 w-12 text-center">Nilai</th>
+                  <th className="border border-slate-900 py-0.5 px-1.5 text-left">Materi Ekstra</th>
                 </tr>
               </thead>
               <tbody>
                 {siswa.ekskul && siswa.ekskul.length > 0 ? (
                   siswa.ekskul.map((e, idx) => (
                     <tr key={idx}>
-                      <td className="border border-slate-900 py-[1px] text-center font-mono">{idx + 1}</td>
-                      <td className="border border-slate-900 py-[1px] px-1 font-medium truncate">{e.nama}</td>
-                      <td className="border border-slate-900 py-[1px] text-center font-bold font-mono">{e.nilai}</td>
-                      <td className="border border-slate-900 py-[1px] px-1 text-[7px] truncate">{e.materi}</td>
+                      <td className="border border-slate-900 py-0.5 text-center font-mono">{idx + 1}</td>
+                      <td className="border border-slate-900 py-0.5 px-1.5 font-medium truncate">{e.nama}</td>
+                      <td className="border border-slate-900 py-0.5 text-center font-bold font-mono">{e.nilai}</td>
+                      <td className="border border-slate-900 py-0.5 px-1.5 text-[7.5pt] truncate">{e.materi}</td>
                     </tr>
                   ))
                 ) : (
                   <>
-                    <tr>
-                      <td className="border border-slate-900 py-[1px] text-center font-mono">1</td>
-                      <td className="border border-slate-900 py-[1px] px-1 text-slate-400 italic">-</td>
-                      <td className="border border-slate-900 py-[1px] text-center text-slate-400">-</td>
-                      <td className="border border-slate-900 py-[1px] px-1 text-slate-400">-</td>
+                    <tr className="h-5">
+                      <td className="border border-slate-900 py-0.5 text-center font-mono">1</td>
+                      <td className="border border-slate-900 py-0.5 px-1.5 text-slate-400 italic">-</td>
+                      <td className="border border-slate-900 py-0.5 text-center text-slate-400">-</td>
+                      <td className="border border-slate-900 py-0.5 px-1.5 text-slate-400">-</td>
                     </tr>
-                    <tr>
-                      <td className="border border-slate-900 py-[1px] text-center font-mono">2</td>
-                      <td className="border border-slate-900 py-[1px] px-1 text-slate-400 italic">-</td>
-                      <td className="border border-slate-900 py-[1px] text-center text-slate-400">-</td>
-                      <td className="border border-slate-900 py-[1px] px-1 text-slate-400">-</td>
+                    <tr className="h-5">
+                      <td className="border border-slate-900 py-0.5 text-center font-mono">2</td>
+                      <td className="border border-slate-900 py-0.5 px-1.5 text-slate-400 italic">-</td>
+                      <td className="border border-slate-900 py-0.5 text-center text-slate-400">-</td>
+                      <td className="border border-slate-900 py-0.5 px-1.5 text-slate-400">-</td>
                     </tr>
                   </>
                 )}
@@ -387,76 +404,99 @@ export default function RaporMtsTemplate({
 
         {/* Kolom Kanan (5 cols): Catatan Wali Kelas */}
         <div className="col-span-5 flex flex-col justify-between">
-          <div>
-            <h5 className="text-[8px] font-black text-slate-900 uppercase tracking-wide leading-none mb-0.5">
+          <div className="h-full flex flex-col">
+            <h5 className="text-[8.5pt] font-black text-slate-900 uppercase tracking-wide leading-none mb-1">
               D. CATATAN WALI KELAS
             </h5>
-            <div className="border border-slate-900 p-1.5 text-[7.5px] text-slate-800 bg-white leading-relaxed h-[68px] overflow-hidden">
-              {siswa.catatan || "Ananda menunjukkan kesungguhan dan ketertiban belajar yang baik. Pertahankan kedisiplinan dan terus kembangkan potensi akademik serta akhlaqul karimah."}
+            <div className="border border-slate-900 p-2.5 text-[8.5pt] text-slate-800 bg-white leading-relaxed flex-1 flex items-start rounded-xs">
+              {siswa.catatan || "Ananda menunjukkan kesungguhan belajar, akhlaqul karimah, dan ketekunan yang baik. Terus tingkatkan prestasi akademik dan spiritualitas."}
             </div>
           </div>
         </div>
       </div>
 
-      {/* ================= 6. TANDA TANGAN RESMI TIGA PIHAK ================= */}
-      <div className="border-t border-slate-800 pt-1 mt-0.5 signature-block">
-        <div className="grid grid-cols-3 text-center text-[8px] text-slate-900 leading-tight">
+      {/* ================= 6. TANDA TANGAN RESMI TIGA PIHAK (SEJAJAR HORIZONTAL) ================= */}
+      <div className="border-t border-slate-900 pt-1.5 mt-1 signature-block">
+        <div className="grid grid-cols-3 text-center text-[8.5pt] text-slate-900 leading-normal">
           {/* 1. Orang Tua */}
-          <div>
-            <p className="mb-7">
-              Mengetahui:<br />
-              <strong>Orangtua / Wali</strong>
-            </p>
-            <p className="font-bold underline uppercase text-slate-950">
-              {siswa.nama_ortu || "Orang Tua / Wali"}
-            </p>
+          <div className="flex flex-col justify-between h-32">
+            <div>
+              <p>Mengetahui,</p>
+              <p className="font-bold">Orang Tua / Wali</p>
+            </div>
+            <div className="h-14"></div>
+            <div>
+              <p className="font-bold underline uppercase text-slate-950">
+                {siswa.nama_ortu || "Orang Tua / Wali"}
+              </p>
+              <p className="text-[7.5pt] text-transparent select-none">-</p>
+            </div>
           </div>
 
-          {/* 2. Kepala MTs (Dengan Stempel Transparan MTs) */}
-          <div className="relative">
-            <p className="mb-0.5">
-              Mengetahui;<br />
-              <strong>Kepala MTs Ma&apos;arif NU 2</strong>
-            </p>
-            <div className="relative h-9 flex items-center justify-center my-0.2">
-              <div className="absolute inset-0 flex items-center justify-center pointer-events-none opacity-35 rotate-[-8deg] z-0">
-                <div className="w-11 h-11 rounded-full border-2 border-dashed border-[#006e14] flex flex-col items-center justify-center text-[4.5px] font-black text-[#006e14] leading-none p-0.5 text-center bg-emerald-50/40">
+          {/* 2. Kepala MTs (Dengan Stempel Resmi & TTD Kamad Upload) */}
+          <div className="flex flex-col justify-between h-32 relative">
+            <div>
+              <p>Mengetahui,</p>
+              <p className="font-bold">Kepala MTs Ma&apos;arif NU 2 Sutojayan</p>
+            </div>
+
+            <div className="relative h-14 flex items-center justify-center my-0.5">
+              {/* Stempel Layer Transparan */}
+              <div className="absolute inset-0 flex items-center justify-center pointer-events-none opacity-30 rotate-[-8deg] z-0">
+                <div className="w-14 h-14 rounded-full border-2 border-dashed border-[#006e14] flex flex-col items-center justify-center text-[5.5px] font-black text-[#006e14] leading-none p-0.5 text-center bg-emerald-50/40">
                   <span>MADRASAH</span>
-                  <span className="my-0.2 text-[5px] text-amber-700">★ RESMI ★</span>
-                  <span>MTs MA&apos;ARIF NU 2</span>
+                  <span className="my-0.5 text-[6px] text-amber-700">★ RESMI ★</span>
+                  <span>MTSM NU 2</span>
                 </div>
               </div>
-              <div className="relative z-10 font-serif text-slate-900 italic text-sm font-bold tracking-widest select-none rotate-[-3deg]">
-                Ulil Amin
-              </div>
+
+              {/* Tanda Tangan Digital Kepala Madrasah: Utamakan File Gambar Upload */}
+              {config.ttd_kamad_url ? (
+                <img
+                  src={config.ttd_kamad_url}
+                  alt="Tanda Tangan Kepala Madrasah"
+                  className="max-h-13 max-w-[140px] object-contain relative z-10"
+                />
+              ) : (
+                <div className="relative z-10 font-serif text-slate-900 italic text-lg font-bold tracking-widest select-none rotate-[-3deg]">
+                  Ulil Amin
+                </div>
+              )}
             </div>
-            <p className="font-bold underline uppercase relative z-10 text-[8.5px]">
-              Ahmad Ulil Amin, Lc., M.S.I.
-            </p>
-            <p className="text-[7.5px] text-slate-600 relative z-10">
-              NIP: -
-            </p>
+
+            <div>
+              <p className="font-bold underline uppercase text-slate-950 text-[9pt]">
+                {config.kepala_madrasah || "Ahmad Ulil Amin, Lc., M.S.I."}
+              </p>
+              <p className="text-[7.5pt] text-slate-600 font-mono">
+                NIP: {config.nip_kepala && config.nip_kepala !== "-" ? config.nip_kepala : "-"}
+              </p>
+            </div>
           </div>
 
           {/* 3. Wali Kelas */}
-          <div>
-            <p className="mb-0.5">
-              Blitar, {config.tanggal_rapor || "24 Oktober 2026"}<br />
-              <strong>Wali Kelas {kelas}</strong>
-            </p>
-            <div className="h-9 flex items-center justify-center my-0.2">
+          <div className="flex flex-col justify-between h-32">
+            <div>
+              <p>{config.kota_tanggal || "Blitar"}, {config.tanggal_rapor || "24 Oktober 2026"}</p>
+              <p className="font-bold">Wali Kelas {kelas}</p>
+            </div>
+
+            <div className="h-14 flex items-center justify-center my-0.5">
               {ttdBase64 ? (
-                <img src={ttdBase64} alt="TTD Wali" className="max-h-8 max-w-[90px] object-contain" />
+                <img src={ttdBase64} alt="TTD Wali" className="max-h-13 max-w-[120px] object-contain" />
               ) : (
-                <div className="h-8"></div>
+                <div className="h-12"></div>
               )}
             </div>
-            <p className="font-bold underline uppercase text-slate-950 text-[8.5px]">
-              {waliNama || "Wali Kelas"}
-            </p>
-            <p className="text-[7.5px] text-slate-600">
-              NIP: {waliNip || "-"}
-            </p>
+
+            <div>
+              <p className="font-bold underline uppercase text-slate-950 text-[9pt]">
+                {waliNama || "Wali Kelas"}
+              </p>
+              <p className="text-[7.5pt] text-slate-600 font-mono">
+                NIP: {waliNip && waliNip !== "-" ? waliNip : "-"}
+              </p>
+            </div>
           </div>
         </div>
       </div>
