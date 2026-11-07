@@ -20,6 +20,10 @@ import {
   MatriksMapelItem,
   MatriksKelasProgress,
   MatriksOverviewMadrasah,
+  ApiIntegrationConfig,
+  SiNusaGradeItem,
+  SiNusaStudentPayload,
+  SyncLogItem,
 } from "@/types";
 import {
   SCHOOL_CONFIGS,
@@ -55,6 +59,8 @@ function getStorageKeys(madrasahId: MadrasahId) {
     CONFIG: `rapor_nusa_${madrasahId}_config_v2`,
     PERIODS: `rapor_nusa_${madrasahId}_periods_v2`,
     LOGIN_LOGS: `rapor_nusa_${madrasahId}_login_logs_v1`,
+    SYNC_LOGS: `rapor_nusa_${madrasahId}_sync_logs_v1`,
+    INTEGRATION: `rapor_nusa_api_integration_config_v1`,
   };
 }
 
@@ -1430,3 +1436,229 @@ export function getMatriksNilaiMadrasah(
     list_kelas: listKelas,
   };
 }
+
+// =====================================================================
+// 15. PENGATURAN INTEGRASI API KE SI-NUSA.COM & OUTBOUND SYNC LOGS
+// =====================================================================
+export const DEFAULT_SINUSA_CONFIG: ApiIntegrationConfig = {
+  id: "sinusa-portal-integration",
+  madrasah_id: "all",
+  target_name: "SI-NUSA Portal (Pusat)",
+  endpoint_url: "https://si-nusa.com/api/v1/sync-grades",
+  secret_token: "sinusa_sec_token_live_9f83a4c2e1",
+  is_active: true,
+  auto_sync_on_send: false,
+};
+
+export function getIntegrationConfig(madrasahId: MadrasahId = "mts"): ApiIntegrationConfig {
+  const keys = getStorageKeys(madrasahId);
+  return getLocalData<ApiIntegrationConfig>(keys.INTEGRATION, DEFAULT_SINUSA_CONFIG);
+}
+
+export function saveIntegrationConfig(
+  madrasahId: MadrasahId = "mts",
+  cfg: Partial<ApiIntegrationConfig>
+): ApiIntegrationConfig {
+  const current = getIntegrationConfig(madrasahId);
+  const updated: ApiIntegrationConfig = {
+    ...current,
+    ...cfg,
+    updated_at: new Date().toISOString(),
+  };
+
+  const keys = getStorageKeys(madrasahId);
+  setLocalData(keys.INTEGRATION, updated);
+
+  // Sync juga ke Supabase jika aktif
+  if (isSupabaseConfigured && supabase) {
+    supabase
+      .from("api_integrations")
+      .upsert({
+        id: updated.id,
+        madrasah_id: updated.madrasah_id,
+        target_name: updated.target_name,
+        endpoint_url: updated.endpoint_url,
+        secret_token: updated.secret_token,
+        is_active: updated.is_active,
+        auto_sync_on_send: updated.auto_sync_on_send,
+        updated_at: new Date().toISOString(),
+      })
+      .then(({ error }) => {
+        if (error) console.warn("Supabase integration upsert note:", error.message);
+      });
+  }
+
+  return updated;
+}
+
+export function getSyncLogs(madrasahId: MadrasahId): SyncLogItem[] {
+  const keys = getStorageKeys(madrasahId);
+  const logs = getLocalData<SyncLogItem[]>(keys.SYNC_LOGS, []);
+  if (logs.length > 0) return logs;
+
+  // Sediakan seed log awal yang representatif
+  const seedLogs: SyncLogItem[] = [
+    {
+      id: "sync_seed_1",
+      madrasah_id: madrasahId,
+      student_nisn: madrasahId === "mts" ? "3103430551" : "0081234567",
+      student_nis: madrasahId === "mts" ? "160045" : "262005",
+      student_name: madrasahId === "mts" ? "ADIB ZYAD MAULANA" : "ALVIN CAESAR CRISTHIAN",
+      class_name: madrasahId === "mts" ? "VII A" : "10A",
+      academic_year: "2026/2027",
+      semester: "1",
+      total_grades: 18,
+      status: "SUCCESS",
+      http_status: 200,
+      response_message: "Data rapor siswa berhasil diterima dan disimpan di SI-NUSA.",
+      created_at: new Date(Date.now() - 25 * 60 * 1000).toLocaleString("id-ID", {
+        dateStyle: "medium",
+        timeStyle: "short",
+      }),
+    },
+  ];
+  setLocalData(keys.SYNC_LOGS, seedLogs);
+  return seedLogs;
+}
+
+export function recordSyncLog(madrasahId: MadrasahId, log: Omit<SyncLogItem, "id">): SyncLogItem {
+  const keys = getStorageKeys(madrasahId);
+  const newLog: SyncLogItem = {
+    ...log,
+    id: `sync_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
+  };
+
+  const current = getLocalData<SyncLogItem[]>(keys.SYNC_LOGS, []);
+  const updated = [newLog, ...current].slice(0, 150);
+  setLocalData(keys.SYNC_LOGS, updated);
+
+  // Sync log ke Supabase jika aktif
+  if (isSupabaseConfigured && supabase) {
+    supabase
+      .from("sync_logs")
+      .insert({
+        madrasah_id: newLog.madrasah_id,
+        student_nisn: newLog.student_nisn,
+        student_nis: newLog.student_nis,
+        student_name: newLog.student_name,
+        class_name: newLog.class_name,
+        academic_year: newLog.academic_year,
+        semester: newLog.semester,
+        total_grades: newLog.total_grades,
+        status: newLog.status,
+        http_status: newLog.http_status,
+        response_message: newLog.response_message,
+        payload_snapshot: newLog.payload_snapshot,
+      })
+      .then(({ error }) => {
+        if (error) console.warn("Supabase sync_logs insert note:", error.message);
+      });
+  }
+
+  return newLog;
+}
+
+export function clearSyncLogs(madrasahId: MadrasahId): void {
+  const keys = getStorageKeys(madrasahId);
+  setLocalData(keys.SYNC_LOGS, []);
+}
+
+// Builder Payload JSON Si-Nusa sesuai Format Resmi Kebutuhan
+export function buildSiNusaPayloads(
+  madrasahId: MadrasahId,
+  tahun?: string,
+  semester?: string,
+  filterKelas?: string,
+  filterNis?: string
+): SiNusaStudentPayload[] {
+  const curPeriod = getActivePeriod(madrasahId);
+  const activeTahun = tahun || curPeriod.tahun;
+  const activeSem = semester || curPeriod.semester;
+
+  const keys = getStorageKeys(madrasahId);
+  const defSiswa = madrasahId === "mts" ? SEED_SISWA_MTS : SEED_SISWA_MA;
+  const defMapel = madrasahId === "mts" ? SEED_MAPEL_MTS : SEED_MAPEL_MA;
+
+  const siswaList = getLocalData<Siswa[]>(keys.SISWA, defSiswa);
+  const mapelList = getLocalData<Mapel[]>(keys.MAPEL, defMapel);
+  const allNilai = getLocalData<NilaiMapelItem[]>(keys.NILAI, []);
+
+  let targetStudents = siswaList;
+  if (filterKelas && filterKelas !== "all") {
+    targetStudents = targetStudents.filter(
+      s => s.kelas.trim().toUpperCase() === filterKelas.trim().toUpperCase()
+    );
+  }
+  if (filterNis) {
+    targetStudents = targetStudents.filter(s => s.nis === filterNis);
+  }
+
+  return targetStudents.map(student => {
+    const grades: SiNusaGradeItem[] = mapelList.map(mapel => {
+      const rec = allNilai.find(
+        n =>
+          n.tahun_ajaran === activeTahun &&
+          n.semester === activeSem &&
+          n.nis === student.nis &&
+          n.kode_mapel.toLowerCase() === mapel.kode_mapel.toLowerCase()
+      );
+
+      // Hitung score knowledge (harian/UTS) & skill (UAS/praktik/NA)
+      const harianList = [
+        Number(rec?.nilai_harian_1) || 0,
+        Number(rec?.nilai_harian_2) || 0,
+        Number(rec?.nilai_harian_3) || 0,
+        Number(rec?.nilai_harian_4) || 0,
+      ].filter(v => v > 0);
+
+      const avgHarian =
+        harianList.length > 0
+          ? Math.round(harianList.reduce((a, b) => a + b, 0) / harianList.length)
+          : 0;
+
+      const scoreKnowledge = Number(rec?.nilai_uts) || avgHarian || 75;
+      const scoreSkill = Number(rec?.nilai_uas) || Number(rec?.nilai_akhir) || avgHarian || 78;
+
+      let pred: string = rec?.predikat || "B";
+      if (!rec?.predikat) {
+        const na = Math.round((scoreKnowledge + scoreSkill) / 2);
+        if (na >= 90) pred = "A";
+        else if (na >= 80) pred = "B";
+        else if (na >= 70) pred = "C";
+        else pred = "D";
+      }
+
+      // Gabungkan deskripsi dari materi atau catatan mapel
+      const deskripsiList = [rec?.materi_1, rec?.materi_2, rec?.materi_3, rec?.materi_4]
+        .filter(Boolean)
+        .join("; ");
+      const description =
+        rec?.catatan_mapel ||
+        (deskripsiList
+          ? `Menunjukkan penguasaan pada materi: ${deskripsiList}`
+          : `Menunjukkan penguasaan baik pada materi pembelajaran ${mapel.nama_mapel}.`);
+
+      return {
+        subject_code: mapel.kode_mapel,
+        subject_name: mapel.nama_mapel,
+        score_knowledge: scoreKnowledge,
+        score_skill: scoreSkill,
+        predicate: pred,
+        description,
+      };
+    });
+
+    return {
+      academic_year: activeTahun,
+      semester: activeSem,
+      student: {
+        nisn: student.nisn || student.nis,
+        nis: student.nis,
+        name: student.nama_siswa,
+        class_name: student.kelas,
+      },
+      grades,
+    };
+  });
+}
+

@@ -11,6 +11,10 @@ import {
   LoginLogItem,
   MatriksOverviewMadrasah,
   MatriksKelasProgress,
+  ApiIntegrationConfig,
+  SyncLogItem,
+  SiNusaStudentPayload,
+  SyncBatchResult,
 } from "@/types";
 import {
   getTeachers,
@@ -30,6 +34,12 @@ import {
   getLoginLogs,
   clearLoginLogs,
   getMatriksNilaiMadrasah,
+  getIntegrationConfig,
+  saveIntegrationConfig,
+  getSyncLogs,
+  clearSyncLogs,
+  buildSiNusaPayloads,
+  DEFAULT_SINUSA_CONFIG,
 } from "@/lib/storage";
 import {
   Users,
@@ -58,6 +68,15 @@ import {
   Grid,
   List,
   Sparkles,
+  Globe,
+  Radio,
+  Send,
+  Key,
+  ExternalLink,
+  Code,
+  Lock,
+  Unlock,
+  CloudLightning,
 } from "lucide-react";
 
 interface Props {
@@ -76,7 +95,7 @@ export default function AdminDashboard({
   onConfigUpdated,
 }: Props) {
   const [activeTab, setActiveTab] = useState<
-    "visualisasi" | "guru" | "wali" | "siswa" | "monitoring" | "logs" | "pengaturan"
+    "visualisasi" | "guru" | "wali" | "siswa" | "monitoring" | "logs" | "pengaturan" | "integrasi"
   >("visualisasi");
 
   const [teachers, setTeachers] = useState<User[]>([]);
@@ -141,6 +160,23 @@ export default function AdminDashboard({
   const [activePeriodId, setActivePeriodId] = useState("");
   const [newYearInput, setNewYearInput] = useState(2028);
 
+  // Integrasi SI-NUSA State
+  const [integrationConfig, setIntegrationConfig] = useState<ApiIntegrationConfig>(DEFAULT_SINUSA_CONFIG);
+  const [syncLogs, setSyncLogs] = useState<SyncLogItem[]>([]);
+  const [inputTargetName, setInputTargetName] = useState("SI-NUSA Portal (Pusat)");
+  const [inputEndpointUrl, setInputEndpointUrl] = useState("https://si-nusa.com/api/v1/sync-grades");
+  const [inputSecretToken, setInputSecretToken] = useState("sinusa_sec_token_live_9f83a4c2e1");
+  const [inputIsActive, setInputIsActive] = useState(true);
+  const [showToken, setShowToken] = useState(false);
+  const [syncScope, setSyncScope] = useState<"all" | "class">("all");
+  const [selectedSyncClass, setSelectedSyncClass] = useState("");
+  const [isSyncing, setIsSyncing] = useState(false);
+  const [isTestingConn, setIsTestingConn] = useState(false);
+  const [selectedPayloadDetail, setSelectedPayloadDetail] = useState<SiNusaStudentPayload | null>(null);
+  const [syncLogSearch, setSyncLogSearch] = useState("");
+  const [syncLogFilterStatus, setSyncLogFilterStatus] = useState<"all" | "SUCCESS" | "FAILED">("all");
+  const [previewSamplePayload, setPreviewSamplePayload] = useState<SiNusaStudentPayload | null>(null);
+
   const refreshData = () => {
     const t = getTeachers(madrasahId);
     setTeachers(t);
@@ -162,8 +198,20 @@ export default function AdminDashboard({
     const logs = getLoginLogs(madrasahId);
     setLoginLogs(logs);
 
+    // Refresh Konfigurasi Integrasi SI-NUSA & Sync Logs
+    const intCfg = getIntegrationConfig(madrasahId);
+    setIntegrationConfig(intCfg);
+    setInputTargetName(intCfg.target_name);
+    setInputEndpointUrl(intCfg.endpoint_url);
+    setInputSecretToken(intCfg.secret_token);
+    setInputIsActive(intCfg.is_active);
+
+    const sLogs = getSyncLogs(madrasahId);
+    setSyncLogs(sLogs);
+
     if (sortedKelas.length > 0 && !waliKelasTarget) setWaliKelasTarget(sortedKelas[0]);
     if (sortedKelas.length > 0 && !monitorKelas) setMonitorKelas(sortedKelas[0]);
+    if (sortedKelas.length > 0 && !selectedSyncClass) setSelectedSyncClass(sortedKelas[0]);
   };
 
   useEffect(() => {
@@ -323,6 +371,113 @@ export default function AdminDashboard({
     }
   };
 
+  // Handlers Integrasi SI-NUSA
+  const handleSaveIntegration = (e: React.FormEvent) => {
+    e.preventDefault();
+    const updated = saveIntegrationConfig(madrasahId, {
+      target_name: inputTargetName.trim(),
+      endpoint_url: inputEndpointUrl.trim(),
+      secret_token: inputSecretToken.trim(),
+      is_active: inputIsActive,
+    });
+    setIntegrationConfig(updated);
+    setMessage({ type: "success", text: "Konfigurasi target API SI-NUSA berhasil disimpan!" });
+  };
+
+  const handleTestConnection = async () => {
+    setIsTestingConn(true);
+    try {
+      const res = await fetch("/api/admin/sync-to-si-nusa", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          madrasah_id: madrasahId,
+          endpoint_url: inputEndpointUrl.trim(),
+          secret_token: inputSecretToken.trim(),
+          is_test: true,
+        }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setMessage({ type: "success", text: data.message || "Endpoint terhubung dengan sukses!" });
+      } else {
+        setMessage({ type: "error", text: data.message || "Gagal menghubungi endpoint SI-NUSA." });
+      }
+    } catch (err: any) {
+      setMessage({ type: "error", text: "Error tes koneksi: " + err.message });
+    } finally {
+      setIsTestingConn(false);
+    }
+  };
+
+  const handleTriggerSync = async () => {
+    if (!inputIsActive) {
+      setMessage({ type: "error", text: "Integrasi sedang Nonaktif! Aktifkan terlebih dahulu untuk mengirim sinkronisasi data." });
+      return;
+    }
+    const targetLabel = syncScope === "all" ? "SELURUH SISWA satu madrasah" : `seluruh siswa KELAS ${selectedSyncClass || sortedKelas[0]}`;
+    if (!confirm(`Apakah Anda yakin ingin menyinkronkan data nilai rapor ${targetLabel} langsung ke SI-NUSA?`)) {
+      return;
+    }
+
+    setIsSyncing(true);
+    try {
+      const targetClassParam = syncScope === "all" ? "all" : (selectedSyncClass || sortedKelas[0]);
+      const res = await fetch("/api/admin/sync-to-si-nusa", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          madrasah_id: madrasahId,
+          endpoint_url: inputEndpointUrl.trim(),
+          secret_token: inputSecretToken.trim(),
+          target_class: targetClassParam,
+        }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setMessage({
+          type: "success",
+          text: `Proses sinkronisasi selesai! Berhasil: ${data.synced_count}, Gagal: ${data.failed_count} dari total ${data.total_processed} siswa.`,
+        });
+      } else {
+        setMessage({
+          type: "error",
+          text: data.message || "Terjadi kesalahan saat memproses sinkronisasi data.",
+        });
+      }
+      // Reload logs
+      const updatedLogs = getSyncLogs(madrasahId);
+      setSyncLogs(updatedLogs);
+    } catch (err: any) {
+      setMessage({ type: "error", text: "Gagal memproses sinkronisasi: " + err.message });
+    } finally {
+      setIsSyncing(false);
+    }
+  };
+
+  const handleClearSyncLogs = () => {
+    if (confirm("Bersihkan seluruh riwayat log sinkronisasi SI-NUSA?")) {
+      clearSyncLogs(madrasahId);
+      setSyncLogs([]);
+      setMessage({ type: "success", text: "Riwayat log sinkronisasi SI-NUSA berhasil dikosongkan." });
+    }
+  };
+
+  const handleInspectSamplePayload = () => {
+    const curPer = getActivePeriod(madrasahId);
+    const payloads = buildSiNusaPayloads(
+      madrasahId,
+      curPer.tahun,
+      curPer.semester,
+      syncScope === "class" && selectedSyncClass ? selectedSyncClass : undefined
+    );
+    if (payloads.length > 0) {
+      setPreviewSamplePayload(payloads[0]);
+    } else {
+      setMessage({ type: "error", text: "Belum ada data siswa / nilai untuk di-generate sebagai payload contoh." });
+    }
+  };
+
   // Data Filtering: Guru
   const filteredTeachers = useMemo(() => {
     const q = searchTeacher.trim().toLowerCase();
@@ -418,6 +573,26 @@ export default function AdminDashboard({
   const mapelSudahKirim = useMemo(() => {
     return rekapKirim.filter(r => r.is_sent).length;
   }, [rekapKirim]);
+
+  // Data Filtering: Log Sinkronisasi SI-NUSA
+  const filteredSyncLogs = useMemo(() => {
+    let list = syncLogs;
+    if (syncLogFilterStatus !== "all") {
+      list = list.filter(l => l.status === syncLogFilterStatus);
+    }
+    const q = syncLogSearch.trim().toLowerCase();
+    if (q) {
+      list = list.filter(
+        l =>
+          l.student_name.toLowerCase().includes(q) ||
+          l.student_nis.toLowerCase().includes(q) ||
+          (l.student_nisn && l.student_nisn.toLowerCase().includes(q)) ||
+          l.class_name.toLowerCase().includes(q) ||
+          (l.response_message && l.response_message.toLowerCase().includes(q))
+      );
+    }
+    return list;
+  }, [syncLogs, syncLogFilterStatus, syncLogSearch]);
 
   const activePeriodObj = periods.find(p => p.id === activePeriodId);
 
@@ -561,6 +736,23 @@ export default function AdminDashboard({
         >
           <Settings className="w-3.5 h-3.5" />
           <span>6. Semester & Pengaturan</span>
+        </button>
+
+        <button
+          onClick={() => setActiveTab("integrasi")}
+          className={
+            activeTab === "integrasi"
+              ? "btn-retro-primary px-3.5 py-2 text-xs flex items-center gap-1.5"
+              : "btn-retro-white px-3.5 py-2 text-xs flex items-center gap-1.5"
+          }
+        >
+          <CloudLightning className="w-3.5 h-3.5 text-amber-400" />
+          <span>7. Integrasi SI-NUSA</span>
+          {syncLogs.length > 0 && (
+            <span className="badge-retro bg-retro-yellow text-retro-black text-[9px] px-1.5 py-0 font-black">
+              {syncLogs.length}
+            </span>
+          )}
         </button>
       </div>
 
@@ -1725,6 +1917,548 @@ export default function AdminDashboard({
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* ================= TAB 7: INTEGRASI REST API SI-NUSA.COM ================= */}
+      {activeTab === "integrasi" && (
+        <div className="space-y-6">
+          {/* Header Banner Integrasi */}
+          <div className="card-retro-lg bg-gradient-to-r from-emerald-50 via-teal-50 to-white p-5 sm:p-6 border-3 border-retro-border shadow-retro-lg flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+            <div className="flex items-start sm:items-center space-x-3.5">
+              <div className="w-12 h-12 rounded-xl bg-retro-black text-amber-300 p-2 border-2 border-retro-border shadow-retro-sm flex items-center justify-center flex-shrink-0">
+                <CloudLightning className="w-7 h-7" />
+              </div>
+              <div>
+                <div className="flex items-center gap-2">
+                  <span className="badge-retro bg-brand-500 text-white font-black">
+                    REST API PUSH
+                  </span>
+                  <span
+                    className={`badge-retro font-black ${
+                      inputIsActive
+                        ? "bg-emerald-400 text-emerald-950"
+                        : "bg-red-400 text-red-950"
+                    }`}
+                  >
+                    {inputIsActive ? "● AKTIF & TERHUBUNG" : "○ NONAKTIF"}
+                  </span>
+                </div>
+                <h3 className="text-base sm:text-lg font-black uppercase text-retro-black mt-1 flex items-center gap-1.5">
+                  <span>Sinkronisasi Data Rapor & Nilai ke SI-NUSA</span>
+                </h3>
+                <p className="text-xs text-slate-600 font-bold">
+                  Kirim langsung data identitas siswa, kelas, periode aktif, dan nilai per-mapel dari basis data Rapor ke portal eksternal <code className="bg-white px-1.5 py-0.5 rounded border border-retro-border text-[11px] font-mono text-emerald-700">https://si-nusa.com</code>.
+                </p>
+              </div>
+            </div>
+
+            {/* Quick Action Button */}
+            <div className="flex items-center gap-2 self-stretch md:self-auto justify-end">
+              <button
+                type="button"
+                onClick={handleInspectSamplePayload}
+                className="btn-retro-white text-xs font-black uppercase py-2.5 px-3.5 flex items-center gap-1.5 shadow-retro-sm"
+              >
+                <Code className="w-4 h-4 text-slate-600" />
+                <span>Lihat Format JSON</span>
+              </button>
+            </div>
+          </div>
+
+          {/* Quick Stats Grid Integrasi */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
+            <div className="card-retro p-4 bg-white space-y-1">
+              <span className="text-[10px] font-black uppercase text-slate-500 block">Total Pengiriman</span>
+              <div className="flex items-baseline justify-between">
+                <span className="text-2xl font-black text-retro-black">{syncLogs.length}</span>
+                <span className="text-xs font-bold text-slate-500">Record</span>
+              </div>
+              <p className="text-[10px] text-slate-500 font-bold">Riwayat dispatch payload</p>
+            </div>
+
+            <div className="card-retro p-4 bg-emerald-100 space-y-1 border-emerald-400">
+              <span className="text-[10px] font-black uppercase text-emerald-800 block">Sukses Diterima</span>
+              <div className="flex items-baseline justify-between">
+                <span className="text-2xl font-black text-emerald-900">
+                  {syncLogs.filter(l => l.status === "SUCCESS").length}
+                </span>
+                <span className="text-xs font-bold text-emerald-700">Siswa</span>
+              </div>
+              <p className="text-[10px] text-emerald-700 font-bold">Status 200 OK / 201 Created</p>
+            </div>
+
+            <div className="card-retro p-4 bg-red-100 space-y-1 border-red-400">
+              <span className="text-[10px] font-black uppercase text-red-800 block">Gagal / Timeout</span>
+              <div className="flex items-baseline justify-between">
+                <span className="text-2xl font-black text-red-900">
+                  {syncLogs.filter(l => l.status === "FAILED").length}
+                </span>
+                <span className="text-xs font-bold text-red-700">Percobaan</span>
+              </div>
+              <p className="text-[10px] text-red-700 font-bold">Respon non-200 / Timeout 10s</p>
+            </div>
+
+            <div className="card-retro p-4 bg-retro-yellow space-y-1">
+              <span className="text-[10px] font-black uppercase text-retro-black block">Tingkat Keberhasilan</span>
+              <div className="flex items-baseline justify-between">
+                <span className="text-2xl font-black text-retro-black">
+                  {syncLogs.length > 0
+                    ? Math.round((syncLogs.filter(l => l.status === "SUCCESS").length / syncLogs.length) * 100)
+                    : 100}
+                  %
+                </span>
+                <span className="text-xs font-bold text-retro-black">Reliabilitas</span>
+              </div>
+              <p className="text-[10px] text-slate-600 font-bold">Berdasarkan log tersimpan</p>
+            </div>
+          </div>
+
+          {/* 2 Kolom Utama: Form Konfigurasi Target & Tombol Push Sync */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 sm:gap-6">
+            {/* Box 1: Form Target Configuration */}
+            <div className="card-retro p-5 sm:p-6 bg-white space-y-4">
+              <div className="border-b-2 border-retro-border pb-3 flex items-center justify-between">
+                <div>
+                  <h4 className="text-sm font-black text-retro-black uppercase tracking-wider flex items-center gap-1.5">
+                    <Globe className="w-4 h-4 text-brand-600" />
+                    <span>Konfigurasi Endpoint & Token Target</span>
+                  </h4>
+                  <p className="text-[11px] text-slate-600 font-bold">
+                    Tentukan alamat API Receiver website penerima (https://si-nusa.com) & secret token.
+                  </p>
+                </div>
+              </div>
+
+              <form onSubmit={handleSaveIntegration} className="space-y-4 font-bold">
+                <div>
+                  <label className="text-xs font-black text-retro-black uppercase block mb-1">
+                    Nama Target Integrasi:
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={inputTargetName}
+                    onChange={e => setInputTargetName(e.target.value)}
+                    placeholder="Contoh: SI-NUSA Portal (Pusat)"
+                    className="w-full text-xs py-2.5 px-3.5 rounded-lg border-2 border-retro-border bg-retro-cream shadow-retro-sm"
+                  />
+                </div>
+
+                <div>
+                  <label className="text-xs font-black text-retro-black uppercase block mb-1">
+                    Endpoint URL Target SI-NUSA (REST POST):
+                  </label>
+                  <div className="relative">
+                    <input
+                      type="url"
+                      required
+                      value={inputEndpointUrl}
+                      onChange={e => setInputEndpointUrl(e.target.value)}
+                      placeholder="https://si-nusa.com/api/v1/sync-grades"
+                      className="w-full text-xs py-2.5 px-3.5 rounded-lg border-2 border-retro-border bg-retro-cream font-mono shadow-retro-sm"
+                    />
+                  </div>
+                  <span className="text-[10px] text-slate-500 font-bold block mt-1">
+                    Sistem akan mengirimkan request HTTP POST dengan body JSON per-siswa ke alamat ini.
+                  </span>
+                </div>
+
+                <div>
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="text-xs font-black text-retro-black uppercase block">
+                      Secret Bearer Token (Authorization):
+                    </label>
+                    <button
+                      type="button"
+                      onClick={() => setShowToken(!showToken)}
+                      className="text-[10px] text-brand-700 hover:text-brand-900 font-black flex items-center gap-1"
+                    >
+                      {showToken ? <Lock className="w-3 h-3" /> : <Unlock className="w-3 h-3" />}
+                      <span>{showToken ? "Sembunyikan" : "Tampilkan Token"}</span>
+                    </button>
+                  </div>
+                  <div className="relative">
+                    <input
+                      type={showToken ? "text" : "password"}
+                      required
+                      value={inputSecretToken}
+                      onChange={e => setInputSecretToken(e.target.value)}
+                      placeholder="Bearer token rahasia..."
+                      className="w-full text-xs py-2.5 px-3.5 rounded-lg border-2 border-retro-border bg-retro-cream font-mono shadow-retro-sm"
+                    />
+                  </div>
+                  <span className="text-[10px] text-slate-500 font-bold block mt-1">
+                    Dikirim pada header: <code className="bg-slate-100 px-1 py-0.5 rounded font-mono text-[10px]">Authorization: Bearer &lt;SECRET_TOKEN&gt;</code>.
+                  </span>
+                </div>
+
+                <div className="pt-1 flex items-center justify-between p-3 rounded-lg border-2 border-retro-border bg-retro-cream">
+                  <div>
+                    <span className="text-xs font-black text-retro-black block">Status Integrasi</span>
+                    <span className="text-[10px] text-slate-500 font-bold">
+                      Aktifkan untuk mengizinkan transmisi sinkronisasi data rapor.
+                    </span>
+                  </div>
+                  <label className="relative inline-flex items-center cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={inputIsActive}
+                      onChange={e => setInputIsActive(e.target.checked)}
+                      className="sr-only peer"
+                    />
+                    <div className="w-11 h-6 bg-slate-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-600"></div>
+                  </label>
+                </div>
+
+                <div className="pt-2 flex flex-col sm:flex-row items-center gap-2.5">
+                  <button
+                    type="submit"
+                    className="w-full sm:flex-1 py-2.5 btn-retro-primary text-xs font-black uppercase tracking-wider shadow-retro-sm flex items-center justify-center gap-1.5"
+                  >
+                    <Check className="w-4 h-4" />
+                    <span>Simpan Konfigurasi</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={handleTestConnection}
+                    disabled={isTestingConn}
+                    className="w-full sm:w-auto py-2.5 px-4 btn-retro bg-amber-400 text-retro-black hover:bg-amber-300 text-xs font-black uppercase tracking-wider shadow-retro-sm flex items-center justify-center gap-1.5 disabled:opacity-50"
+                  >
+                    {isTestingConn ? (
+                      <RefreshCw className="w-4 h-4 animate-spin" />
+                    ) : (
+                      <Radio className="w-4 h-4" />
+                    )}
+                    <span>{isTestingConn ? "Menguji..." : "Uji Koneksi"}</span>
+                  </button>
+                </div>
+              </form>
+            </div>
+
+            {/* Box 2: Manual Push Action & Dispatch Center */}
+            <div className="card-retro p-5 sm:p-6 bg-retro-cream space-y-4 flex flex-col justify-between">
+              <div className="space-y-4">
+                <div className="border-b-2 border-retro-border pb-3">
+                  <h4 className="text-sm font-black text-retro-black uppercase tracking-wider flex items-center gap-1.5">
+                    <Send className="w-4 h-4 text-emerald-700" />
+                    <span>Pusat Eksekusi Sinkronisasi Data (Push)</span>
+                  </h4>
+                  <p className="text-[11px] text-slate-600 font-bold">
+                    Pilih cakupan data yang ingin dikirimkan langsung ke basis data server SI-NUSA.
+                  </p>
+                </div>
+
+                {/* Scope Selection */}
+                <div className="space-y-2.5 font-bold">
+                  <label className="text-xs font-black text-retro-black uppercase block">
+                    Cakupan Pengiriman Data Rapor:
+                  </label>
+                  <div className="grid grid-cols-2 gap-2.5">
+                    <button
+                      type="button"
+                      onClick={() => setSyncScope("all")}
+                      className={`p-3 rounded-lg border-2 text-left transition-all ${
+                        syncScope === "all"
+                          ? "bg-brand-500 text-white border-retro-border shadow-retro-sm"
+                          : "bg-white text-retro-black border-retro-border hover:bg-slate-50"
+                      }`}
+                    >
+                      <span className="text-xs font-black uppercase block">Semua Siswa</span>
+                      <span className="text-[10px] opacity-90 block">
+                        Seluruh {allSiswa.length} Siswa ({allKelas.length} Rombel)
+                      </span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => setSyncScope("class")}
+                      className={`p-3 rounded-lg border-2 text-left transition-all ${
+                        syncScope === "class"
+                          ? "bg-brand-500 text-white border-retro-border shadow-retro-sm"
+                          : "bg-white text-retro-black border-retro-border hover:bg-slate-50"
+                      }`}
+                    >
+                      <span className="text-xs font-black uppercase block">Per Rombel / Kelas</span>
+                      <span className="text-[10px] opacity-90 block">
+                        Pilih 1 kelas tertentu
+                      </span>
+                    </button>
+                  </div>
+                </div>
+
+                {/* Class selector if scope === 'class' */}
+                {syncScope === "class" && (
+                  <div className="bg-white p-3.5 rounded-lg border-2 border-retro-border space-y-1.5 shadow-retro-sm">
+                    <label className="text-xs font-black text-retro-black uppercase block">
+                      Pilih Rombongan Belajar:
+                    </label>
+                    <select
+                      value={selectedSyncClass}
+                      onChange={e => setSelectedSyncClass(e.target.value)}
+                      className="w-full text-xs font-black py-2 px-3 rounded-md border-2 border-retro-border bg-retro-cream"
+                    >
+                      {sortedKelas.map(k => {
+                        const count = allSiswa.filter(s => s.kelas.toUpperCase() === k.toUpperCase()).length;
+                        return (
+                          <option key={k} value={k}>
+                            Kelas {k} ({count} Siswa)
+                          </option>
+                        );
+                      })}
+                    </select>
+                  </div>
+                )}
+
+                {/* Struktur Payload Info Box */}
+                <div className="bg-white p-3.5 rounded-lg border-2 border-retro-border text-xs space-y-1.5 shadow-retro-sm">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[10px] font-black uppercase text-slate-500">
+                      Spesifikasi JSON Payload:
+                    </span>
+                    <button
+                      type="button"
+                      onClick={handleInspectSamplePayload}
+                      className="text-[10px] text-brand-700 hover:underline font-black flex items-center gap-1"
+                    >
+                      <Eye className="w-3 h-3" />
+                      <span>Lihat Contoh Riil</span>
+                    </button>
+                  </div>
+                  <div className="text-[11px] text-slate-700 font-bold space-y-0.5">
+                    <div>• <strong>Identitas Siswa:</strong> NISN, NIS, Nama, Kelas</div>
+                    <div>• <strong>Periode:</strong> Tahun Ajaran {activePeriodObj?.tahun || "2026/2027"}, Semester {activePeriodObj?.semester || "1"}</div>
+                    <div>• <strong>Grades Array:</strong> Kode Mapel, Nama, Nilai Pengetahuan (LM), Nilai Keterampilan (STS/SAS), Predikat, Capaian Deskripsi.</div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Big Trigger Push Button */}
+              <div className="pt-4 border-t-2 border-retro-border">
+                <button
+                  type="button"
+                  onClick={handleTriggerSync}
+                  disabled={isSyncing || !inputIsActive}
+                  className="w-full py-3.5 btn-retro bg-emerald-600 text-white hover:bg-emerald-500 text-xs sm:text-sm font-black uppercase tracking-wider shadow-retro-md flex items-center justify-center gap-2 disabled:opacity-50"
+                >
+                  {isSyncing ? (
+                    <>
+                      <RefreshCw className="w-5 h-5 animate-spin" />
+                      <span>Mengirimkan & Menyinkronkan Data...</span>
+                    </>
+                  ) : (
+                    <>
+                      <CloudLightning className="w-5 h-5 text-amber-300" />
+                      <span>
+                        {syncScope === "all"
+                          ? `Sinkronkan Semua Data Siswa (${allSiswa.length} Siswa)`
+                          : `Sinkronkan Siswa Kelas ${selectedSyncClass || sortedKelas[0]}`}
+                      </span>
+                    </>
+                  )}
+                </button>
+                <p className="text-[10px] text-slate-500 text-center font-bold mt-2">
+                  Menggunakan timeout pengaman 10 detik per request dan pencatatan riwayat audit otomatis.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* Bagian 3: Tabel Riwayat & Status Sinkronisasi (Sync Logs) */}
+          <div className="card-retro p-5 sm:p-6 bg-white space-y-4">
+            <div className="border-b-2 border-retro-border pb-3 flex flex-wrap items-center justify-between gap-3">
+              <div>
+                <h4 className="text-sm font-black text-retro-black uppercase tracking-wider flex items-center gap-1.5">
+                  <Activity className="w-4 h-4 text-brand-600" />
+                  <span>Riwayat Pengiriman & Log Status Sinkronisasi ({syncLogs.length})</span>
+                </h4>
+                <p className="text-[11px] text-slate-600 font-bold">
+                  Pantau riwayat push data nilai ke https://si-nusa.com beserta status respon HTTP dan snapshot data.
+                </p>
+              </div>
+
+              {syncLogs.length > 0 && (
+                <button
+                  type="button"
+                  onClick={handleClearSyncLogs}
+                  className="btn-retro-white text-[11px] text-red-600 hover:text-red-800 font-black px-3 py-1.5 flex items-center gap-1 shadow-retro-sm"
+                >
+                  <Trash2 className="w-3.5 h-3.5" />
+                  <span>Bersihkan Riwayat Log</span>
+                </button>
+              )}
+            </div>
+
+            {/* Filter Log Bar */}
+            <div className="flex flex-wrap items-center justify-between gap-3 bg-retro-cream p-3 rounded-lg border-2 border-retro-border">
+              <div className="flex items-center gap-2 flex-1 min-w-[200px]">
+                <Search className="w-4 h-4 text-slate-500" />
+                <input
+                  type="text"
+                  placeholder="Cari NISN, nama siswa, kelas, respon..."
+                  value={syncLogSearch}
+                  onChange={e => setSyncLogSearch(e.target.value)}
+                  className="w-full bg-white text-xs py-1.5 px-3 rounded-md border-2 border-retro-border font-bold outline-none shadow-retro-sm"
+                />
+              </div>
+
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-black text-retro-black">Status:</span>
+                <select
+                  value={syncLogFilterStatus}
+                  onChange={e => setSyncLogFilterStatus(e.target.value as any)}
+                  className="bg-white text-xs font-black py-1.5 px-2.5 rounded-md border-2 border-retro-border shadow-retro-sm"
+                >
+                  <option value="all">Semua Status</option>
+                  <option value="SUCCESS">Hanya Sukses (SUCCESS)</option>
+                  <option value="FAILED">Hanya Gagal (FAILED)</option>
+                </select>
+              </div>
+            </div>
+
+            {/* Tabel Log Retro */}
+            <div className="overflow-x-auto border-2 border-retro-border rounded-xl shadow-retro-sm">
+              <table className="w-full text-left text-xs">
+                <thead className="bg-retro-black text-white font-black uppercase text-[10px]">
+                  <tr>
+                    <th className="py-2.5 px-3">Waktu Dispatch</th>
+                    <th className="py-2.5 px-3">NISN / NIS</th>
+                    <th className="py-2.5 px-3">Nama Siswa</th>
+                    <th className="py-2.5 px-3">Kelas</th>
+                    <th className="py-2.5 px-3 text-center">Jml Mapel</th>
+                    <th className="py-2.5 px-3 text-center">Status</th>
+                    <th className="py-2.5 px-3">Respon Server Target</th>
+                    <th className="py-2.5 px-3 text-center">Snapshot</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y-2 divide-retro-border font-bold bg-white">
+                  {filteredSyncLogs.length === 0 ? (
+                    <tr>
+                      <td colSpan={8} className="py-8 text-center text-slate-400 font-bold">
+                        {syncLogs.length === 0
+                          ? "Belum ada riwayat pengiriman data ke SI-NUSA. Klik tombol sinkronisasi di atas untuk memulai pengiriman pertama."
+                          : "Tidak ada log yang cocok dengan filter pencarian."}
+                      </td>
+                    </tr>
+                  ) : (
+                    filteredSyncLogs.map(log => (
+                      <tr key={log.id} className="hover:bg-slate-50 transition-colors">
+                        <td className="py-2.5 px-3 font-mono text-[11px] text-slate-600 whitespace-nowrap">
+                          {log.created_at}
+                        </td>
+                        <td className="py-2.5 px-3 font-mono text-[11px] text-retro-black whitespace-nowrap">
+                          <div>{log.student_nisn || "-"}</div>
+                          <div className="text-[10px] text-slate-500">NIS: {log.student_nis}</div>
+                        </td>
+                        <td className="py-2.5 px-3 text-retro-black uppercase whitespace-nowrap">
+                          {log.student_name}
+                        </td>
+                        <td className="py-2.5 px-3 whitespace-nowrap">
+                          <span className="badge-retro bg-slate-100 text-retro-black text-[10px]">
+                            {log.class_name}
+                          </span>
+                        </td>
+                        <td className="py-2.5 px-3 text-center font-mono">
+                          {log.total_grades} Mapel
+                        </td>
+                        <td className="py-2.5 px-3 text-center whitespace-nowrap">
+                          <span
+                            className={`badge-retro text-[10px] font-black ${
+                              log.status === "SUCCESS"
+                                ? "bg-emerald-500 text-white"
+                                : "bg-red-500 text-white"
+                            }`}
+                          >
+                            {log.status === "SUCCESS" ? "✓ SUCCESS" : "✕ FAILED"}
+                          </span>
+                        </td>
+                        <td className="py-2.5 px-3 text-[11px] text-slate-700 max-w-xs truncate">
+                          {log.response_message}
+                        </td>
+                        <td className="py-2.5 px-3 text-center whitespace-nowrap">
+                          <button
+                            type="button"
+                            onClick={() => setSelectedPayloadDetail(log.payload_snapshot || null)}
+                            className="btn-retro-white text-[10px] font-black py-1 px-2.5 shadow-retro-sm flex items-center gap-1 mx-auto"
+                          >
+                            <Code className="w-3 h-3 text-brand-700" />
+                            <span>JSON</span>
+                          </button>
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ================= MODAL INSPECTOR JSON PAYLOAD ================= */}
+      {(selectedPayloadDetail || previewSamplePayload) && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="card-retro bg-white max-w-3xl w-full max-h-[85vh] flex flex-col border-3 border-retro-border shadow-retro-xl animate-in fade-in duration-150">
+            {/* Modal Header */}
+            <div className="p-4 border-b-2 border-retro-border bg-retro-cream flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Code className="w-5 h-5 text-brand-700" />
+                <h3 className="font-black text-retro-black uppercase text-sm">
+                  {selectedPayloadDetail
+                    ? `Snapshot JSON Payload: ${selectedPayloadDetail.student.name} (${selectedPayloadDetail.student.class_name})`
+                    : "Pratinjau Format Payload REST API SI-NUSA"}
+                </h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  setSelectedPayloadDetail(null);
+                  setPreviewSamplePayload(null);
+                }}
+                className="w-8 h-8 rounded-lg border-2 border-retro-border bg-white text-retro-black font-black hover:bg-red-500 hover:text-white flex items-center justify-center shadow-retro-sm transition-colors"
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Modal Body */}
+            <div className="p-4 overflow-y-auto font-mono text-xs flex-1 bg-slate-900 text-emerald-400 rounded-b-lg">
+              <pre className="whitespace-pre-wrap break-words leading-relaxed">
+                {JSON.stringify(selectedPayloadDetail || previewSamplePayload, null, 2)}
+              </pre>
+            </div>
+
+            {/* Modal Footer */}
+            <div className="p-3 border-t-2 border-retro-border bg-retro-cream flex items-center justify-between">
+              <span className="text-[11px] font-bold text-slate-600">
+                Format standar integrasi sinkronisasi grades rapor madrasah ke SI-NUSA.
+              </span>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    const text = JSON.stringify(selectedPayloadDetail || previewSamplePayload, null, 2);
+                    navigator.clipboard.writeText(text);
+                    setMessage({ type: "success", text: "JSON Payload berhasil disalin ke clipboard!" });
+                  }}
+                  className="btn-retro-primary text-xs font-black py-1.5 px-3 shadow-retro-sm"
+                >
+                  Salin JSON
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSelectedPayloadDetail(null);
+                    setPreviewSamplePayload(null);
+                  }}
+                  className="btn-retro-white text-xs font-black py-1.5 px-3 shadow-retro-sm"
+                >
+                  Tutup
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       )}

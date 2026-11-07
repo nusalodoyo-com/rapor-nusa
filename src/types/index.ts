@@ -279,3 +279,66 @@ export interface SchoolConfig {
   telp?: string;
   website?: string;
 }
+
+// =====================================================================
+// PENGATURAN INTEGRASI API KE SI-NUSA.COM & OUTBOUND SYNC LOGS
+// =====================================================================
+export interface ApiIntegrationConfig {
+  id: string;
+  madrasah_id: MadrasahId | 'all';
+  target_name: string;
+  endpoint_url: string;
+  secret_token: string;
+  is_active: boolean;
+  auto_sync_on_send?: boolean;
+  created_at?: string;
+  updated_at?: string;
+}
+
+export interface SiNusaGradeItem {
+  subject_code: string;
+  subject_name: string;
+  score_knowledge: number; // nilai_uts / harian
+  score_skill: number;     // nilai_uas / praktik
+  predicate: string;       // 'A' | 'B' | 'C' | 'D'
+  description: string;     // catatan atau lingkup materi
+}
+
+export interface SiNusaStudentPayload {
+  academic_year: string;
+  semester: string;
+  student: {
+    nisn: string;
+    nis: string;
+    name: string;
+    class_name: string;
+  };
+  grades: SiNusaGradeItem[];
+}
+
+export interface SyncLogItem {
+  id: string;
+  integration_id?: string;
+  madrasah_id: MadrasahId;
+  student_nisn: string;
+  student_nis: string;
+  student_name: string;
+  class_name: string;
+  academic_year: string;
+  semester: string;
+  total_grades: number;
+  status: 'SUCCESS' | 'FAILED' | 'PENDING';
+  http_status?: number;
+  response_message?: string;
+  payload_snapshot?: SiNusaStudentPayload;
+  created_at: string;
+}
+
+export interface SyncBatchResult {
+  success: boolean;
+  message: string;
+  total_processed: number;
+  synced_count: number;
+  failed_count: number;
+  logs: SyncLogItem[];
+}
