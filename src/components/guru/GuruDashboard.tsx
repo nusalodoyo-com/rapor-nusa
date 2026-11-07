@@ -48,6 +48,9 @@ interface Props {
   madrasahId: MadrasahId;
   currentUser: User;
   config: SchoolConfig;
+  tahun?: string;
+  semester?: string;
+  activePeriodLabel?: string;
   onSwitchToWali?: () => void;
   onLogout: () => void;
 }
@@ -56,14 +59,17 @@ export default function GuruDashboard({
   madrasahId,
   currentUser,
   config,
+  tahun: propTahun,
+  semester: propSemester,
+  activePeriodLabel,
   onSwitchToWali,
   onLogout,
 }: Props) {
   const [assignments, setAssignments] = useState<TeacherAssignment[]>([]);
   const [selectedAssignId, setSelectedAssignId] = useState<string>("");
 
-  const [tahun, setTahun] = useState("2025/2026");
-  const [semester, setSemester] = useState("1");
+  const tahun = propTahun || "2026/2027";
+  const semester = propSemester || "1";
 
   // Bobot State
   const [isBobotOpen, setIsBobotOpen] = useState(false);
@@ -426,9 +432,11 @@ export default function GuruDashboard({
                 <label className="text-xs font-black text-retro-black uppercase block mb-1">
                   Semester & Tahun:
                 </label>
-                <div className="flex items-center text-xs py-2 px-3 rounded-lg border-2 border-retro-border bg-slate-50 font-bold text-retro-black shadow-retro-sm">
-                  <Calendar className="w-4 h-4 mr-1.5 text-brand-600" />
-                  <span>{tahun} (Gasal)</span>
+                <div className="flex items-center text-xs py-2 px-3 rounded-lg border-2 border-retro-border bg-slate-50 font-black text-retro-black shadow-retro-sm">
+                  <Calendar className="w-4 h-4 mr-1.5 text-brand-600 flex-shrink-0" />
+                  <span className="truncate">
+                    {activePeriodLabel || `${semester === "1" ? "Gasal" : "Genap"} ${tahun}`}
+                  </span>
                 </div>
               </div>
 

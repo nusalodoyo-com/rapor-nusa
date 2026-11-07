@@ -1,12 +1,15 @@
 "use client";
 
 import React from "react";
-import { User, SchoolConfig } from "@/types";
-import { LogOut, User as UserIcon, ShieldCheck, ArrowLeftRight, BarChart3, Printer, Search } from "lucide-react";
+import { User, SchoolConfig, AcademicPeriod } from "@/types";
+import { LogOut, User as UserIcon, ShieldCheck, ArrowLeftRight, BarChart3, Printer, Search, Calendar } from "lucide-react";
 
 interface Props {
   currentUser: User | null;
   currentConfig: SchoolConfig;
+  activePeriod?: AcademicPeriod;
+  academicPeriods?: AcademicPeriod[];
+  onSelectPeriod?: (periodId: string) => void;
   onLogout: () => void;
   onSwitchMadrasah: () => void;
   onOpenLegger?: () => void;
@@ -18,6 +21,9 @@ interface Props {
 export default function Navbar({
   currentUser,
   currentConfig,
+  activePeriod,
+  academicPeriods,
+  onSelectPeriod,
   onLogout,
   onSwitchMadrasah,
   onOpenLegger,
@@ -52,7 +58,26 @@ export default function Navbar({
 
         {/* Right side controls */}
         {currentUser && (
-          <div className="flex items-center space-x-1.5 sm:space-x-2.5 flex-shrink-0">
+          <div className="flex items-center space-x-1.5 sm:space-x-2 flex-shrink-0">
+            {/* Selector Tahun Ajaran & Semester Aktif */}
+            {academicPeriods && activePeriod && onSelectPeriod && (
+              <div className="flex items-center gap-1 bg-white border-2 border-retro-border rounded-lg px-2 py-1 shadow-retro-sm">
+                <Calendar className="w-3.5 h-3.5 text-brand-600 hidden xs:inline" />
+                <select
+                  value={activePeriod.id}
+                  onChange={e => onSelectPeriod(e.target.value)}
+                  className="text-[11px] sm:text-xs font-black text-retro-black bg-transparent outline-none cursor-pointer"
+                  title="Pilih Tahun Ajaran & Semester Aktif"
+                >
+                  {academicPeriods.map(p => (
+                    <option key={p.id} value={p.id}>
+                      {p.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
+
             {/* Tombol Pencarian Siswa & Guru */}
             {onOpenSearch && (
               <button
@@ -62,7 +87,7 @@ export default function Navbar({
                 title="Pencarian Siswa & Guru (Ctrl+K)"
               >
                 <Search className="w-3.5 h-3.5 text-retro-black stroke-[2.5]" />
-                <span className="hidden sm:inline font-black">Cari Siswa / Guru</span>
+                <span className="hidden sm:inline font-black">Cari</span>
               </button>
             )}
 

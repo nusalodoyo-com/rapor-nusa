@@ -7,6 +7,7 @@ import {
   User,
   LeggerResponse,
   SchoolConfig,
+  AcademicPeriod,
 } from "@/types";
 import {
   initializeLocalStorage,
@@ -14,6 +15,9 @@ import {
   getDropdownOptions,
   getLeggerDataByKelas,
   getSchoolConfig,
+  getAcademicPeriods,
+  getActivePeriod,
+  setActivePeriod,
 } from "@/lib/storage";
 import Navbar from "@/components/Navbar";
 import AdminDashboard from "@/components/admin/AdminDashboard";
@@ -58,8 +62,10 @@ export default function HomePage() {
   }>({ kelas: [], mapel: [], ekskul: [] });
 
   const [filterKelas, setFilterKelas] = useState("");
-  const [filterTahun, setFilterTahun] = useState("2025/2026");
+  const [filterTahun, setFilterTahun] = useState("2026/2027");
   const [filterSemester, setFilterSemester] = useState("1");
+  const [academicPeriods, setAcademicPeriods] = useState<AcademicPeriod[]>([]);
+  const [activePeriod, setActivePeriodState] = useState<AcademicPeriod | null>(null);
 
   // 5. Modals state
   const [isLeggerOpen, setIsLeggerOpen] = useState(false);
@@ -94,7 +100,28 @@ export default function HomePage() {
     const opts = getDropdownOptions(mid);
     setDropdowns(opts);
     if (opts.kelas.length > 0) setFilterKelas(opts.kelas[0]);
+
+    // Muat tahun ajaran & semester aktif
+    const periods = getAcademicPeriods(mid);
+    setAcademicPeriods(periods);
+    const currentActivePeriod = getActivePeriod(mid);
+    setActivePeriodState(currentActivePeriod);
+    setFilterTahun(currentActivePeriod.tahun);
+    setFilterSemester(currentActivePeriod.semester);
+
     setLoginError("");
+  };
+
+  const handleSelectPeriod = (periodId: string) => {
+    if (!selectedMadrasah) return;
+    const res = setActivePeriod(selectedMadrasah, periodId);
+    if (res.success && res.period) {
+      setActivePeriodState(res.period);
+      setFilterTahun(res.period.tahun);
+      setFilterSemester(res.period.semester);
+      const cfg = getSchoolConfig(selectedMadrasah);
+      setSchoolConfig(cfg);
+    }
   };
 
   const handleSwitchMadrasah = () => {
@@ -439,6 +466,9 @@ export default function HomePage() {
       <Navbar
         currentUser={currentUser}
         currentConfig={activeCfg}
+        activePeriod={activePeriod || undefined}
+        academicPeriods={academicPeriods}
+        onSelectPeriod={handleSelectPeriod}
         onLogout={handleLogout}
         onSwitchMadrasah={handleSwitchMadrasah}
         onOpenLegger={() => handleOpenLegger()}
@@ -501,6 +531,9 @@ export default function HomePage() {
             madrasahId={selectedMadrasah}
             currentUser={currentUser}
             config={activeCfg}
+            tahun={filterTahun}
+            semester={filterSemester}
+            activePeriodLabel={activePeriod?.label}
             onSwitchToWali={isDualRole ? () => setDualRoleMode("wali") : undefined}
             onLogout={handleLogout}
           />
@@ -515,6 +548,9 @@ export default function HomePage() {
             allKelas={dropdowns.kelas}
             allMapel={dropdowns.mapel}
             allEkskul={dropdowns.ekskul}
+            tahun={filterTahun}
+            semester={filterSemester}
+            activePeriodLabel={activePeriod?.label}
             onOpenLegger={k => handleOpenLegger(k)}
             onOpenCetakRapor={k => handleOpenCetakRapor(k)}
             onSwitchToGuru={isDualRole ? () => setDualRoleMode("guru") : undefined}

@@ -15,9 +15,11 @@ import {
   LeggerResponse,
   SchoolConfig,
   SiswaLegger,
+  AcademicPeriod,
 } from "@/types";
 import {
   SCHOOL_CONFIGS,
+  DEFAULT_ACADEMIC_PERIODS,
   SEED_USERS_MTS,
   SEED_USERS_MA,
   SEED_SISWA_MTS,
@@ -47,6 +49,7 @@ function getStorageKeys(madrasahId: MadrasahId) {
     RAPOR_WALI: `rapor_nusa_${madrasahId}_rapor_wali_v2`,
     P5RA: `rapor_nusa_${madrasahId}_p5ra_v2`,
     CONFIG: `rapor_nusa_${madrasahId}_config_v2`,
+    PERIODS: `rapor_nusa_${madrasahId}_periods_v2`,
   };
 }
 
@@ -1053,4 +1056,111 @@ export function saveUserTtd(madrasahId: MadrasahId, userId: string, ttdBase64: s
     users[idx].ttd_url = ttdBase64;
     setLocalData(keys.USERS, users);
   }
+}
+
+// =====================================================================
+// 13. TAHUN AJARAN & SEMESTER (GASAL 2026-2027, GENAP 2026-2027, DST)
+// =====================================================================
+export function getAcademicPeriods(madrasahId: MadrasahId): AcademicPeriod[] {
+  const keys = getStorageKeys(madrasahId);
+  const stored = getLocalData<AcademicPeriod[]>(keys.PERIODS, DEFAULT_ACADEMIC_PERIODS);
+  return stored && stored.length > 0 ? stored : DEFAULT_ACADEMIC_PERIODS;
+}
+
+export function getActivePeriod(madrasahId: MadrasahId): AcademicPeriod {
+  const cfg = getSchoolConfig(madrasahId);
+  const periods = getAcademicPeriods(madrasahId);
+
+  if (cfg.tahun_ajaran_aktif && cfg.semester_aktif) {
+    const found = periods.find(
+      p => p.tahun === cfg.tahun_ajaran_aktif && p.semester === cfg.semester_aktif
+    );
+    if (found) return found;
+  }
+
+  const activeOne = periods.find(p => p.is_active);
+  return (
+    activeOne ||
+    periods.find(p => p.id === "2026/2027-1") ||
+    periods[0] || {
+      id: "2026/2027-1",
+      tahun: "2026/2027",
+      semester: "1",
+      label: "Gasal 2026/2027",
+      is_active: true,
+    }
+  );
+}
+
+export function setActivePeriod(
+  madrasahId: MadrasahId,
+  periodId: string
+): { success: boolean; message: string; period: AcademicPeriod } {
+  const periods = getAcademicPeriods(madrasahId);
+  const target = periods.find(p => p.id === periodId);
+  if (!target) {
+    return {
+      success: false,
+      message: "Periode tahun ajaran tidak valid!",
+      period: getActivePeriod(madrasahId),
+    };
+  }
+
+  const updated = periods.map(p => ({
+    ...p,
+    is_active: p.id === periodId,
+  }));
+  const keys = getStorageKeys(madrasahId);
+  setLocalData(keys.PERIODS, updated);
+
+  const cfg = getSchoolConfig(madrasahId);
+  cfg.tahun_ajaran_aktif = target.tahun;
+  cfg.semester_aktif = target.semester;
+  updateSchoolConfig(madrasahId, cfg);
+
+  return {
+    success: true,
+    message: `Semester & tahun ajaran aktif diubah ke: ${target.label}!`,
+    period: target,
+  };
+}
+
+export function addAcademicYear(
+  madrasahId: MadrasahId,
+  startYear: number
+): { success: boolean; message: string; periods: AcademicPeriod[] } {
+  const tahunStr = `${startYear}/${startYear + 1}`;
+  const periods = getAcademicPeriods(madrasahId);
+
+  if (periods.some(p => p.tahun === tahunStr)) {
+    return {
+      success: false,
+      message: `Tahun ajaran ${tahunStr} sudah terdaftar!`,
+      periods,
+    };
+  }
+
+  const newGasal: AcademicPeriod = {
+    id: `${tahunStr}-1`,
+    tahun: tahunStr,
+    semester: "1",
+    label: `Gasal ${tahunStr}`,
+  };
+
+  const newGenap: AcademicPeriod = {
+    id: `${tahunStr}-2`,
+    tahun: tahunStr,
+    semester: "2",
+    label: `Genap ${tahunStr}`,
+  };
+
+  const updated = [...periods, newGasal, newGenap];
+  const keys = getStorageKeys(madrasahId);
+  setLocalData(keys.PERIODS, updated);
+
+  return {
+    success: true,
+    message: `Tahun ajaran ${tahunStr} (Gasal & Genap) berhasil ditambahkan!`,
+    periods: updated,
+  };
 }

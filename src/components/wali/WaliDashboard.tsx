@@ -47,6 +47,9 @@ interface Props {
   allKelas: string[];
   allMapel: { kode: string; nama: string; kelompok?: string; kkm?: number }[];
   allEkskul: string[];
+  tahun?: string;
+  semester?: string;
+  activePeriodLabel?: string;
   onOpenLegger: (kelas: string) => void;
   onOpenCetakRapor: (kelas: string) => void;
   onSwitchToGuru?: () => void;
@@ -59,6 +62,9 @@ export default function WaliDashboard({
   allKelas,
   allMapel,
   allEkskul,
+  tahun: propTahun,
+  semester: propSemester,
+  activePeriodLabel,
   onOpenLegger,
   onOpenCetakRapor,
   onSwitchToGuru,
@@ -74,8 +80,8 @@ export default function WaliDashboard({
   const [activeKelas, setActiveKelas] = useState(defaultKelas);
   const [activeTab, setActiveTab] = useState<"monitoring" | "presensi" | "catatan" | "p5ra" | "ekskul">("monitoring");
 
-  const [tahun, setTahun] = useState("2025/2026");
-  const [semester, setSemester] = useState("1");
+  const tahun = propTahun || "2026/2027";
+  const semester = propSemester || "1";
 
   // Tab 1: Monitoring Status Kirim
   const [rekapKirim, setRekapKirim] = useState<
@@ -188,12 +194,15 @@ export default function WaliDashboard({
             <img src="/logo.png" alt="Logo" className="w-full h-full object-contain" />
           </div>
           <div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 flex-wrap">
               <span className="badge-retro bg-brand-500 text-white">
                 WALI KELAS • {config.jenjang}
               </span>
               <span className="badge-retro bg-retro-yellow text-retro-black">
                 Kelas {activeKelas}
+              </span>
+              <span className="badge-retro bg-white text-retro-black">
+                📅 {activePeriodLabel || `${semester === "1" ? "Gasal" : "Genap"} ${tahun}`}
               </span>
             </div>
             <h2 className="text-lg sm:text-xl font-black uppercase text-retro-black mt-1">

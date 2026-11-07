@@ -188,6 +188,14 @@ export interface LeggerResponse {
   totalClassAverage?: number;
 }
 
+export interface AcademicPeriod {
+  id: string; // misal "2026/2027-1"
+  tahun: string; // "2026/2027"
+  semester: "1" | "2"; // 1 = Gasal, 2 = Genap
+  label: string; // "Gasal 2026/2027"
+  is_active?: boolean;
+}
+
 export interface SchoolConfig {
   id: MadrasahId;
   nama_yayasan: string;
@@ -206,6 +214,8 @@ export interface SchoolConfig {
   nip_kepala: string;
   kota_tanggal: string;
   tanggal_rapor: string;
+  tahun_ajaran_aktif?: string;
+  semester_aktif?: "1" | "2";
   logo_url?: string;
   stempel_url?: string;
 }

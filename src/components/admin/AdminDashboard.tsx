@@ -8,6 +8,7 @@ import {
   HomeroomAssignment,
   SchoolConfig,
   Siswa,
+  AcademicPeriod,
 } from "@/types";
 import {
   getTeachers,
@@ -23,6 +24,10 @@ import {
   updateSchoolConfig,
   getAllSiswa,
   sortRombelList,
+  getAcademicPeriods,
+  getActivePeriod,
+  setActivePeriod,
+  addAcademicYear,
 } from "@/lib/storage";
 import {
   Users,
@@ -104,8 +109,13 @@ export default function AdminDashboard({
   // Form config
   const [cfgNamaKamad, setCfgNamaKamad] = useState(config.kepala_madrasah);
   const [cfgNipKamad, setCfgNipKamad] = useState(config.nip_kepala);
-  const [cfgTglRapor, setCfgTglRapor] = useState(config.tanggal_rapor || "20 Desember 2025");
+  const [cfgTglRapor, setCfgTglRapor] = useState(config.tanggal_rapor || "19 Desember 2026");
   const [cfgKotaTgl, setCfgKotaTgl] = useState(config.kota_tanggal || "Blitar");
+
+  // Academic Periods State
+  const [periods, setPeriods] = useState<AcademicPeriod[]>([]);
+  const [activePeriodId, setActivePeriodId] = useState("");
+  const [newYearInput, setNewYearInput] = useState(2028);
 
   const refreshData = () => {
     const t = getTeachers(madrasahId);
@@ -116,6 +126,11 @@ export default function AdminDashboard({
     setHomerooms(h);
     const s = getAllSiswa(madrasahId);
     setAllSiswa(s);
+
+    const pers = getAcademicPeriods(madrasahId);
+    setPeriods(pers);
+    const curActive = getActivePeriod(madrasahId);
+    setActivePeriodId(curActive.id);
 
     if (t.length > 0 && !assignGuruId) setAssignGuruId(t[0].id);
     if (allMapel.length > 0 && !assignKodeMapel) setAssignKodeMapel(allMapel[0].kode);
@@ -245,16 +260,41 @@ export default function AdminDashboard({
 
   const handleSaveConfig = (e: React.FormEvent) => {
     e.preventDefault();
+    // Simpan periode aktif jika berubah
+    if (activePeriodId) {
+      setActivePeriod(madrasahId, activePeriodId);
+    }
+
+    const curPer = periods.find(p => p.id === activePeriodId);
     const updated: SchoolConfig = {
       ...config,
       kepala_madrasah: cfgNamaKamad,
       nip_kepala: cfgNipKamad,
       tanggal_rapor: cfgTglRapor,
       kota_tanggal: cfgKotaTgl,
+      tahun_ajaran_aktif: curPer ? curPer.tahun : config.tahun_ajaran_aktif,
+      semester_aktif: curPer ? curPer.semester : config.semester_aktif,
     };
     updateSchoolConfig(madrasahId, updated);
     onConfigUpdated(updated);
-    setMessage({ type: "success", text: "Pengaturan madrasah berhasil disimpan!" });
+    setMessage({ type: "success", text: "Pengaturan madrasah & tahun ajaran aktif berhasil disimpan!" });
+    refreshData();
+  };
+
+  const handleAddAcademicYear = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newYearInput || newYearInput < 2024 || newYearInput > 2050) {
+      setMessage({ type: "error", text: "Masukkan tahun awal yang valid (misal 2028)!" });
+      return;
+    }
+    const res = addAcademicYear(madrasahId, newYearInput);
+    if (res.success) {
+      setMessage({ type: "success", text: res.message });
+      setPeriods(res.periods);
+      setNewYearInput(newYearInput + 1);
+    } else {
+      setMessage({ type: "error", text: res.message });
+    }
   };
 
   const rekapKirim = monitorKelas ? getRekapKirimNilaiKelas(madrasahId, monitorKelas) : [];
@@ -1065,73 +1105,148 @@ export default function AdminDashboard({
         </div>
       )}
 
-      {/* ================= TAB 5: PENGATURAN MADRASAH & RAPOR ================= */}
+      {/* ================= TAB 6: PENGATURAN MADRASAH & TAHUN AJARAN ================= */}
       {activeTab === "pengaturan" && (
-        <div className="card-retro p-5 sm:p-6 space-y-4 bg-retro-cream max-w-2xl mx-auto">
-          <div className="border-b-2 border-retro-border pb-3">
-            <h4 className="text-sm font-black text-retro-black uppercase tracking-wider">
-              Pengaturan Profil Lembaga & Titimangsa Rapor
-            </h4>
-            <p className="text-[11px] text-slate-600 font-bold">
-              Data ini akan dicetak pada seluruh dokumen Rapor dan Legger resmi.
-            </p>
+        <div className="space-y-6 max-w-3xl mx-auto">
+          {/* Box 1: Penetapan Tahun Ajaran & Semester Aktif */}
+          <div className="card-retro p-5 sm:p-6 space-y-4 bg-retro-cream">
+            <div className="border-b-2 border-retro-border pb-3 flex items-center justify-between">
+              <div>
+                <h4 className="text-sm font-black text-retro-black uppercase tracking-wider flex items-center gap-1.5">
+                  <Clock className="w-4 h-4 text-brand-600" />
+                  Tahun Ajaran & Semester Aktif
+                </h4>
+                <p className="text-[11px] text-slate-600 font-bold">
+                  Tentukan periode aktif pengerjaan nilai guru dan rapor madrasah.
+                </p>
+              </div>
+              <span className="badge-retro bg-brand-500 text-white">
+                RDM KMA 1503
+              </span>
+            </div>
+
+            <div className="space-y-4 font-bold">
+              <div>
+                <label className="text-xs font-black text-retro-black uppercase block mb-1">
+                  Pilih Semester & Tahun Ajaran Aktif:
+                </label>
+                <select
+                  value={activePeriodId}
+                  onChange={e => setActivePeriodId(e.target.value)}
+                  className="w-full text-xs py-2.5 px-3.5 rounded-lg border-2 border-retro-border bg-white shadow-retro-sm font-black text-retro-black"
+                >
+                  {periods.map(p => (
+                    <option key={p.id} value={p.id}>
+                      {p.label} {p.id === activePeriodId ? "★ (Aktif)" : ""}
+                    </option>
+                  ))}
+                </select>
+                <p className="text-[11px] text-slate-500 mt-1 font-semibold">
+                  Tahun ajaran terpilih akan otomatis menjadi acuan seluruh Guru dan Wali Kelas dalam penginputan nilai dan pencetakan rapor.
+                </p>
+              </div>
+
+              {/* Tambah Tahun Ajaran Baru Dinamis ("dan seterusnya") */}
+              <div className="pt-3 border-t-2 border-dashed border-slate-300">
+                <label className="text-xs font-black text-retro-black uppercase block mb-1">
+                  + Tambah Tahun Ajaran Baru Berikutnya:
+                </label>
+                <div className="flex items-center gap-2">
+                  <div className="flex items-center bg-white border-2 border-retro-border rounded-lg px-3 py-2 shadow-retro-sm">
+                    <span className="text-xs font-mono font-black text-slate-500 mr-1.5">Tahun:</span>
+                    <input
+                      type="number"
+                      min={2026}
+                      max={2050}
+                      value={newYearInput}
+                      onChange={e => setNewYearInput(Number(e.target.value))}
+                      className="w-20 text-xs font-mono font-black text-retro-black outline-none"
+                    />
+                    <span className="text-xs font-mono font-black text-slate-500">/{newYearInput + 1}</span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={handleAddAcademicYear}
+                    className="btn-retro bg-retro-yellow text-retro-black hover:bg-amber-300 py-2 px-3 text-xs font-black uppercase flex items-center gap-1 shadow-retro-sm"
+                  >
+                    <Plus className="w-3.5 h-3.5" />
+                    <span>Daftarkan Tahun Ajaran</span>
+                  </button>
+                </div>
+                <p className="text-[10px] text-slate-500 mt-1 font-semibold">
+                  Otomatis menambahkan 2 semester (Gasal & Genap) untuk tahun {newYearInput}/{newYearInput + 1}.
+                </p>
+              </div>
+            </div>
           </div>
 
-          <form onSubmit={handleSaveConfig} className="space-y-4 font-bold">
-            <div>
-              <label className="text-xs font-black text-retro-black uppercase block mb-1">Nama Kepala Madrasah:</label>
-              <input
-                type="text"
-                required
-                value={cfgNamaKamad}
-                onChange={e => setCfgNamaKamad(e.target.value)}
-                className="w-full text-xs py-2.5 px-3.5 rounded-lg border-2 border-retro-border bg-white shadow-retro-sm"
-              />
+          {/* Box 2: Pengaturan Profil Lembaga & Titimangsa Rapor */}
+          <div className="card-retro p-5 sm:p-6 space-y-4 bg-white">
+            <div className="border-b-2 border-retro-border pb-3">
+              <h4 className="text-sm font-black text-retro-black uppercase tracking-wider">
+                Profil Pimpinan & Titimangsa Rapor
+              </h4>
+              <p className="text-[11px] text-slate-600 font-bold">
+                Data ini dicetak resmi pada halaman cover, biodata, legger, dan rapor siswa.
+              </p>
             </div>
 
-            <div>
-              <label className="text-xs font-black text-retro-black uppercase block mb-1">NIP Kepala Madrasah (Jika Ada):</label>
-              <input
-                type="text"
-                value={cfgNipKamad}
-                onChange={e => setCfgNipKamad(e.target.value)}
-                className="w-full text-xs py-2.5 px-3.5 rounded-lg border-2 border-retro-border bg-white font-mono shadow-retro-sm"
-              />
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <form onSubmit={handleSaveConfig} className="space-y-4 font-bold">
               <div>
-                <label className="text-xs font-black text-retro-black uppercase block mb-1">Kota / Tempat Rapor:</label>
+                <label className="text-xs font-black text-retro-black uppercase block mb-1">Nama Kepala Madrasah:</label>
                 <input
                   type="text"
                   required
-                  value={cfgKotaTgl}
-                  onChange={e => setCfgKotaTgl(e.target.value)}
-                  className="w-full text-xs py-2.5 px-3.5 rounded-lg border-2 border-retro-border bg-white shadow-retro-sm"
+                  value={cfgNamaKamad}
+                  onChange={e => setCfgNamaKamad(e.target.value)}
+                  className="w-full text-xs py-2.5 px-3.5 rounded-lg border-2 border-retro-border bg-retro-cream shadow-retro-sm"
                 />
               </div>
 
               <div>
-                <label className="text-xs font-black text-retro-black uppercase block mb-1">Tanggal Titimangsa Rapor:</label>
+                <label className="text-xs font-black text-retro-black uppercase block mb-1">NIP Kepala Madrasah (Jika Ada):</label>
                 <input
                   type="text"
-                  required
-                  value={cfgTglRapor}
-                  onChange={e => setCfgTglRapor(e.target.value)}
-                  className="w-full text-xs py-2.5 px-3.5 rounded-lg border-2 border-retro-border bg-white shadow-retro-sm"
+                  value={cfgNipKamad}
+                  onChange={e => setCfgNipKamad(e.target.value)}
+                  className="w-full text-xs py-2.5 px-3.5 rounded-lg border-2 border-retro-border bg-retro-cream font-mono shadow-retro-sm"
                 />
               </div>
-            </div>
 
-            <div className="pt-2">
-              <button
-                type="submit"
-                className="w-full py-3 btn-retro-primary text-xs font-black uppercase tracking-wider"
-              >
-                💾 Simpan Pengaturan Rapor
-              </button>
-            </div>
-          </form>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="text-xs font-black text-retro-black uppercase block mb-1">Kota / Tempat Rapor:</label>
+                  <input
+                    type="text"
+                    required
+                    value={cfgKotaTgl}
+                    onChange={e => setCfgKotaTgl(e.target.value)}
+                    className="w-full text-xs py-2.5 px-3.5 rounded-lg border-2 border-retro-border bg-retro-cream shadow-retro-sm"
+                  />
+                </div>
+
+                <div>
+                  <label className="text-xs font-black text-retro-black uppercase block mb-1">Tanggal Titimangsa Rapor:</label>
+                  <input
+                    type="text"
+                    required
+                    value={cfgTglRapor}
+                    onChange={e => setCfgTglRapor(e.target.value)}
+                    className="w-full text-xs py-2.5 px-3.5 rounded-lg border-2 border-retro-border bg-retro-cream shadow-retro-sm"
+                  />
+                </div>
+              </div>
+
+              <div className="pt-2">
+                <button
+                  type="submit"
+                  className="w-full py-3 btn-retro-primary text-xs font-black uppercase tracking-wider"
+                >
+                  💾 Simpan Seluruh Pengaturan Madrasah & Periode Aktif
+                </button>
+              </div>
+            </form>
+          </div>
         </div>
       )}
     </div>

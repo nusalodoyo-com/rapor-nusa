@@ -1,8 +1,27 @@
-import { Siswa, Mapel, Ekskul, User, SchoolConfig, MadrasahId } from "@/types";
+import { Siswa, Mapel, Ekskul, User, SchoolConfig, MadrasahId, AcademicPeriod } from "@/types";
 import { SEED_CLASSES_MTS, SEED_SISWA_MTS } from "./mtsStudents";
 import { REAL_TEACHERS_MTS, REAL_TEACHERS_MA } from "./teachersData";
 
 export { SEED_CLASSES_MTS, SEED_SISWA_MTS, REAL_TEACHERS_MTS, REAL_TEACHERS_MA };
+
+// =====================================================================
+// DAFTAR TAHUN AJARAN & SEMESTER (KMA 1503 TAHUN 2025)
+// Mendukung Gasal 2026-2027, Genap 2026-2027, Gasal 2027-2028 dst.
+// =====================================================================
+export const DEFAULT_ACADEMIC_PERIODS: AcademicPeriod[] = [
+  { id: "2025/2026-1", tahun: "2025/2026", semester: "1", label: "Gasal 2025/2026" },
+  { id: "2025/2026-2", tahun: "2025/2026", semester: "2", label: "Genap 2025/2026" },
+  { id: "2026/2027-1", tahun: "2026/2027", semester: "1", label: "Gasal 2026/2027", is_active: true },
+  { id: "2026/2027-2", tahun: "2026/2027", semester: "2", label: "Genap 2026/2027" },
+  { id: "2027/2028-1", tahun: "2027/2028", semester: "1", label: "Gasal 2027/2028" },
+  { id: "2027/2028-2", tahun: "2027/2028", semester: "2", label: "Genap 2027/2028" },
+  { id: "2028/2029-1", tahun: "2028/2029", semester: "1", label: "Gasal 2028/2029" },
+  { id: "2028/2029-2", tahun: "2028/2029", semester: "2", label: "Genap 2028/2029" },
+  { id: "2029/2030-1", tahun: "2029/2030", semester: "1", label: "Gasal 2029/2030" },
+  { id: "2029/2030-2", tahun: "2029/2030", semester: "2", label: "Genap 2029/2030" },
+  { id: "2030/2031-1", tahun: "2030/2031", semester: "1", label: "Gasal 2030/2031" },
+  { id: "2030/2031-2", tahun: "2030/2031", semester: "2", label: "Genap 2030/2031" },
+];
 
 // =====================================================================
 // KONFIGURASI PROFIL DUA MADRASAH (KMA 1503 TAHUN 2025)
@@ -26,7 +45,9 @@ export const SCHOOL_CONFIGS: Record<MadrasahId, SchoolConfig> = {
     kepala_madrasah: "Ahmad Ulil Amin, Lc., M.S.I.",
     nip_kepala: "-",
     kota_tanggal: "Blitar",
-    tanggal_rapor: "20 Desember 2025",
+    tanggal_rapor: "19 Desember 2026",
+    tahun_ajaran_aktif: "2026/2027",
+    semester_aktif: "1",
   },
   ma: {
     id: "ma",
@@ -45,7 +66,9 @@ export const SCHOOL_CONFIGS: Record<MadrasahId, SchoolConfig> = {
     kepala_madrasah: "M. Zen Pamuji, S.Pd.",
     nip_kepala: "-",
     kota_tanggal: "Blitar",
-    tanggal_rapor: "20 Desember 2025",
+    tanggal_rapor: "19 Desember 2026",
+    tahun_ajaran_aktif: "2026/2027",
+    semester_aktif: "1",
   },
 };
 
