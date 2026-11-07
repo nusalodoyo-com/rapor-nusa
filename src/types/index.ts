@@ -68,6 +68,7 @@ export interface Siswa {
   jenis_kelamin: 'L' | 'P';
   tempat_lahir?: string;
   tanggal_lahir?: string;
+  nama_ortu?: string;
   alamat?: string;
 }
 

@@ -4,7 +4,7 @@ import React, { useState } from "react";
 import { LeggerResponse, SchoolConfig, User } from "@/types";
 import { Printer, X, Upload, BookOpen, FileText, Heart } from "lucide-react";
 import KopMadrasah from "./KopMadrasah";
-import { getNilaiP5RA } from "@/lib/storage";
+import { getNilaiP5RA, saveUserTtd } from "@/lib/storage";
 
 interface Props {
   isOpen: boolean;
@@ -45,7 +45,11 @@ export default function CetakRaporModal({
     const reader = new FileReader();
     reader.onload = ev => {
       if (ev.target?.result) {
-        setTtdBase64(String(ev.target.result));
+        const base64 = String(ev.target.result);
+        setTtdBase64(base64);
+        if (currentUser) {
+          saveUserTtd(config.id, currentUser.id, base64);
+        }
       }
     };
     reader.readAsDataURL(file);
@@ -321,21 +325,35 @@ export default function CetakRaporModal({
                   <p className="mb-12">Mengetahui,<br /><strong>Orang Tua / Wali</strong></p>
                   <p className="font-bold underline uppercase">(....................................)</p>
                 </div>
-                <div>
-                  <p className="mb-12">Mengetahui,<br /><strong>Kepala Madrasah</strong></p>
-                  <p className="font-bold underline uppercase">{config.kepala_madrasah}</p>
-                  <p className="text-[9px] text-slate-600">NIP: {config.nip_kepala}</p>
+                <div className="relative">
+                  <p className="mb-1">Mengetahui,<br /><strong>Kepala Madrasah</strong></p>
+                  <div className="relative h-14 flex items-center justify-center my-0.5">
+                    <div className="absolute inset-0 flex items-center justify-center pointer-events-none opacity-40 rotate-[-12deg] z-0">
+                      <div className="w-16 h-16 rounded-full border-2 border-dashed border-emerald-800 flex flex-col items-center justify-center text-[6px] font-black text-emerald-900 leading-none p-1 text-center bg-emerald-100/30">
+                        <span>MADRASAH</span>
+                        <span className="my-0.5 text-[7px] text-amber-700">★ RESMI ★</span>
+                        <span>{config.id === "ma" ? "MA NURUS SALAM" : "MTs MA'ARIF NU 2"}</span>
+                      </div>
+                    </div>
+                    <div className="relative z-10 font-serif text-slate-800 italic text-lg font-bold tracking-widest select-none rotate-[-4deg]">
+                      {config.id === "ma" ? "M. Zen Pamuji" : "Ulil Amin"}
+                    </div>
+                  </div>
+                  <p className="font-bold underline uppercase relative z-10">
+                    {config.id === "ma" ? "M. Zen Pamuji, S.Pd." : (config.kepala_madrasah || "Ahmad Ulil Amin, Lc., M.S.I.")}
+                  </p>
+                  <p className="text-[9px] text-slate-600 relative z-10">NIP: {config.nip_kepala || "-"}</p>
                 </div>
                 <div>
                   <p className="mb-1">
-                    {config.kota_tanggal}, {config.tanggal_rapor || "20 Desember 2025"}<br />
+                    {config.kota_tanggal}, {config.tanggal_rapor || "19 Desember 2026"}<br />
                     <strong>Wali Kelas {kelas}</strong>
                   </p>
-                  <div className="h-10 flex items-center justify-center">
+                  <div className="h-14 flex items-center justify-center">
                     {ttdBase64 ? (
-                      <img src={ttdBase64} alt="Tanda Tangan" className="max-h-10 max-w-[100px] object-contain" />
+                      <img src={ttdBase64} alt="Tanda Tangan" className="max-h-12 max-w-[120px] object-contain" />
                     ) : (
-                      <div className="h-10"></div>
+                      <div className="h-12"></div>
                     )}
                   </div>
                   <p className="font-bold underline uppercase">
@@ -490,109 +508,168 @@ export default function CetakRaporModal({
                   </table>
                 </div>
 
-                {/* B. Ekstrakurikuler & C. Presensi (2 Kolom Sejajar) */}
-                <div className="grid grid-cols-2 gap-3 mb-2">
-                  {/* Ekstrakurikuler */}
-                  <div>
-                    <h5 className="text-[10px] font-bold text-slate-900 mb-1 uppercase tracking-wide">
-                      B. Kegiatan Ekstrakurikuler
-                    </h5>
-                    <table className="w-full text-[9px] border border-slate-800 border-collapse">
-                      <thead>
-                        <tr className="bg-slate-100 text-slate-800 border-b border-slate-800 text-center font-bold">
-                          <th className="border border-slate-800 py-0.5 px-1 w-6">No</th>
-                          <th className="border border-slate-800 py-0.5 px-2 text-left">Ekstrakurikuler</th>
-                          <th className="border border-slate-800 py-0.5 px-1 w-14">Predikat</th>
-                          <th className="border border-slate-800 py-0.5 px-2 text-left">Keterangan</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {currentSiswa.ekskul && currentSiswa.ekskul.length > 0 ? (
-                          currentSiswa.ekskul.map((e, idx) => (
-                            <tr key={idx} className="border-b border-slate-700">
-                              <td className="border border-slate-800 py-0.5 px-1 text-center font-mono">{idx + 1}</td>
-                              <td className="border border-slate-800 py-0.5 px-2 font-medium">{e.nama}</td>
-                              <td className="border border-slate-800 py-0.5 px-1 text-center font-semibold">{e.nilai}</td>
-                              <td className="border border-slate-800 py-0.5 px-2 text-[8px]">{e.materi}</td>
+                {/* B. Ekstrakurikuler & Presensi (Dinamis Sesuai Peserta) */}
+                {currentSiswa.ekskul && currentSiswa.ekskul.length > 0 ? (
+                  <>
+                    <div className="grid grid-cols-2 gap-3 mb-2">
+                      {/* B. Ekstrakurikuler */}
+                      <div>
+                        <h5 className="text-[10px] font-bold text-slate-900 mb-1 uppercase tracking-wide">
+                          B. Capaian Ekstrakurikuler
+                        </h5>
+                        <table className="w-full text-[9px] border border-slate-800 border-collapse">
+                          <thead>
+                            <tr className="bg-slate-100 text-slate-800 border-b border-slate-800 text-center font-bold">
+                              <th className="border border-slate-800 py-0.5 px-1 w-6">No</th>
+                              <th className="border border-slate-800 py-0.5 px-2 text-left">Ekstrakurikuler</th>
+                              <th className="border border-slate-800 py-0.5 px-1 w-14">Predikat</th>
+                              <th className="border border-slate-800 py-0.5 px-2 text-left">Keterangan</th>
                             </tr>
-                          ))
-                        ) : (
-                          <tr>
-                            <td colSpan={4} className="border border-slate-800 py-1 text-center text-slate-400 italic">
-                              Belum ada catatan ekstrakurikuler
-                            </td>
-                          </tr>
-                        )}
-                      </tbody>
-                    </table>
-                  </div>
+                          </thead>
+                          <tbody>
+                            {currentSiswa.ekskul.map((e, idx) => (
+                              <tr key={idx} className="border-b border-slate-700">
+                                <td className="border border-slate-800 py-0.5 px-1 text-center font-mono">{idx + 1}</td>
+                                <td className="border border-slate-800 py-0.5 px-2 font-medium">{e.nama}</td>
+                                <td className="border border-slate-800 py-0.5 px-1 text-center font-semibold">{e.nilai}</td>
+                                <td className="border border-slate-800 py-0.5 px-2 text-[8px]">{e.materi}</td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
 
-                  {/* Presensi */}
-                  <div>
-                    <h5 className="text-[10px] font-bold text-slate-900 mb-1 uppercase tracking-wide">
-                      C. Ketidakhadiran
-                    </h5>
-                    <table className="w-full text-[9px] border border-slate-800 border-collapse">
-                      <thead>
-                        <tr className="bg-slate-100 text-slate-800 border-b border-slate-800 font-bold">
-                          <th className="border border-slate-800 py-0.5 px-2 text-left">Keterangan</th>
-                          <th className="border border-slate-800 py-0.5 px-2 text-center w-12">Jumlah</th>
-                          <th className="border border-slate-800 py-0.5 px-2 text-center w-12">Satuan</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        <tr>
-                          <td className="border border-slate-800 py-0.5 px-2">Sakit (S)</td>
-                          <td className="border border-slate-800 py-0.5 px-2 text-center font-mono">{currentSiswa.sakit || 0}</td>
-                          <td className="border border-slate-800 py-0.5 px-2 text-center">Hari</td>
-                        </tr>
-                        <tr>
-                          <td className="border border-slate-800 py-0.5 px-2">Izin (I)</td>
-                          <td className="border border-slate-800 py-0.5 px-2 text-center font-mono">{currentSiswa.izin || 0}</td>
-                          <td className="border border-slate-800 py-0.5 px-2 text-center">Hari</td>
-                        </tr>
-                        <tr>
-                          <td className="border border-slate-800 py-0.5 px-2">Tanpa Keterangan (A)</td>
-                          <td className="border border-slate-800 py-0.5 px-2 text-center font-mono text-rose-600 font-bold">{currentSiswa.alpha || 0}</td>
-                          <td className="border border-slate-800 py-0.5 px-2 text-center">Hari</td>
-                        </tr>
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
+                      {/* C. Presensi */}
+                      <div>
+                        <h5 className="text-[10px] font-bold text-slate-900 mb-1 uppercase tracking-wide">
+                          C. Presensi Kehadiran
+                        </h5>
+                        <table className="w-full text-[9px] border border-slate-800 border-collapse">
+                          <thead>
+                            <tr className="bg-slate-100 text-slate-800 border-b border-slate-800 font-bold">
+                              <th className="border border-slate-800 py-0.5 px-2 text-left">Keterangan</th>
+                              <th className="border border-slate-800 py-0.5 px-2 text-center w-12">Jumlah</th>
+                              <th className="border border-slate-800 py-0.5 px-2 text-center w-12">Satuan</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            <tr>
+                              <td className="border border-slate-800 py-0.5 px-2">Sakit (S)</td>
+                              <td className="border border-slate-800 py-0.5 px-2 text-center font-mono">{currentSiswa.sakit || 0}</td>
+                              <td className="border border-slate-800 py-0.5 px-2 text-center">Hari</td>
+                            </tr>
+                            <tr>
+                              <td className="border border-slate-800 py-0.5 px-2">Izin (I)</td>
+                              <td className="border border-slate-800 py-0.5 px-2 text-center font-mono">{currentSiswa.izin || 0}</td>
+                              <td className="border border-slate-800 py-0.5 px-2 text-center">Hari</td>
+                            </tr>
+                            <tr>
+                              <td className="border border-slate-800 py-0.5 px-2">Tanpa Keterangan (A)</td>
+                              <td className="border border-slate-800 py-0.5 px-2 text-center font-mono text-rose-600 font-bold">{currentSiswa.alpha || 0}</td>
+                              <td className="border border-slate-800 py-0.5 px-2 text-center">Hari</td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
 
-                {/* D. Catatan Wali Kelas & Keputusan */}
-                <div className="mb-3">
-                  <h5 className="text-[10px] font-bold text-slate-900 mb-1 uppercase tracking-wide">
-                    D. Catatan Perkembangan Karakter & Evaluasi Belajar
-                  </h5>
-                  <div className="border border-slate-800 p-2 min-h-[32px] text-[9px] text-slate-800 bg-white">
-                    {currentSiswa.catatan || "Ananda menunjukkan ketekunan dan kesopanan yang baik. Pertahankan prestasi dan tingkatkan semangat belajar."}
-                  </div>
-                </div>
+                    {/* D. Catatan Wali Kelas & Keputusan */}
+                    <div className="mb-3">
+                      <h5 className="text-[10px] font-bold text-slate-900 mb-1 uppercase tracking-wide">
+                        D. Catatan Wali Kelas & Evaluasi Belajar
+                      </h5>
+                      <div className="border border-slate-800 p-2 min-h-[32px] text-[9px] text-slate-800 bg-white">
+                        {currentSiswa.catatan || "Ananda menunjukkan ketekunan dan kesopanan yang baik. Pertahankan prestasi dan tingkatkan semangat belajar."}
+                      </div>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    {/* Seluruh tabel B otomatis hilang jika siswa tidak ada nilai ekskul */}
+                    <div className="grid grid-cols-2 gap-3 mb-2">
+                      <div>
+                        <h5 className="text-[10px] font-bold text-slate-900 mb-1 uppercase tracking-wide">
+                          B. Presensi Kehadiran
+                        </h5>
+                        <table className="w-full text-[9px] border border-slate-800 border-collapse">
+                          <thead>
+                            <tr className="bg-slate-100 text-slate-800 border-b border-slate-800 font-bold">
+                              <th className="border border-slate-800 py-0.5 px-2 text-left">Keterangan</th>
+                              <th className="border border-slate-800 py-0.5 px-2 text-center w-12">Jumlah</th>
+                              <th className="border border-slate-800 py-0.5 px-2 text-center w-12">Satuan</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            <tr>
+                              <td className="border border-slate-800 py-0.5 px-2">Sakit (S)</td>
+                              <td className="border border-slate-800 py-0.5 px-2 text-center font-mono">{currentSiswa.sakit || 0}</td>
+                              <td className="border border-slate-800 py-0.5 px-2 text-center">Hari</td>
+                            </tr>
+                            <tr>
+                              <td className="border border-slate-800 py-0.5 px-2">Izin (I)</td>
+                              <td className="border border-slate-800 py-0.5 px-2 text-center font-mono">{currentSiswa.izin || 0}</td>
+                              <td className="border border-slate-800 py-0.5 px-2 text-center">Hari</td>
+                            </tr>
+                            <tr>
+                              <td className="border border-slate-800 py-0.5 px-2">Tanpa Keterangan (A)</td>
+                              <td className="border border-slate-800 py-0.5 px-2 text-center font-mono text-rose-600 font-bold">{currentSiswa.alpha || 0}</td>
+                              <td className="border border-slate-800 py-0.5 px-2 text-center">Hari</td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+
+                      <div>
+                        <h5 className="text-[10px] font-bold text-slate-900 mb-1 uppercase tracking-wide">
+                          C. Catatan Wali Kelas & Evaluasi Belajar
+                        </h5>
+                        <div className="border border-slate-800 p-2 min-h-[50px] text-[9px] text-slate-800 bg-white">
+                          {currentSiswa.catatan || "Ananda menunjukkan ketekunan dan kesopanan yang baik. Pertahankan prestasi dan tingkatkan semangat belajar."}
+                        </div>
+                      </div>
+                    </div>
+                  </>
+                )}
               </div>
 
-              {/* Tanda Tangan Tiga Pihak */}
-              <div className="grid grid-cols-3 text-center text-[10px] text-slate-900 signature-block">
+              {/* Tanda Tangan Tiga Pihak (Dengan Layering Stempel Transparan Kepsek & TTD Wali) */}
+              <div className="grid grid-cols-3 text-center text-[10px] text-slate-900 signature-block pt-2">
                 <div>
-                  <p className="mb-12">Mengetahui,<br /><strong>Orang Tua / Wali</strong></p>
+                  <p className="mb-14">Mengetahui,<br /><strong>Orang Tua / Wali</strong></p>
                   <p className="font-bold underline uppercase">(....................................)</p>
                 </div>
-                <div>
-                  <p className="mb-12">Mengetahui,<br /><strong>Kepala Madrasah</strong></p>
-                  <p className="font-bold underline uppercase">{config.kepala_madrasah}</p>
-                  <p className="text-[9px] text-slate-600">NIP: {config.nip_kepala}</p>
+
+                <div className="relative">
+                  <p className="mb-1">Mengetahui,<br /><strong>Kepala Madrasah</strong></p>
+                  {/* Layering Stempel Transparan di Belakang Tanda Tangan */}
+                  <div className="relative h-14 flex items-center justify-center my-0.5">
+                    <div className="absolute inset-0 flex items-center justify-center pointer-events-none opacity-40 rotate-[-12deg] z-0">
+                      <div className="w-16 h-16 rounded-full border-2 border-dashed border-emerald-800 flex flex-col items-center justify-center text-[6px] font-black text-emerald-900 leading-none p-1 text-center bg-emerald-100/30">
+                        <span>MADRASAH</span>
+                        <span className="my-0.5 text-[7px] text-amber-700">★ RESMI ★</span>
+                        <span>{config.id === "ma" ? "MA NURUS SALAM" : "MTs MA'ARIF NU 2"}</span>
+                      </div>
+                    </div>
+                    <div className="relative z-10 font-serif text-slate-800 italic text-lg font-bold tracking-widest select-none rotate-[-4deg]">
+                      {config.id === "ma" ? "M. Zen Pamuji" : "Ulil Amin"}
+                    </div>
+                  </div>
+                  <p className="font-bold underline uppercase relative z-10">
+                    {config.id === "ma" ? "M. Zen Pamuji, S.Pd." : (config.kepala_madrasah || "Ahmad Ulil Amin, Lc., M.S.I.")}
+                  </p>
+                  <p className="text-[9px] text-slate-600 relative z-10">NIP: {config.nip_kepala || "-"}</p>
                 </div>
+
                 <div>
                   <p className="mb-1">
-                    {config.kota_tanggal}, {config.tanggal_rapor || "20 Desember 2025"}<br />
+                    {config.kota_tanggal}, {config.tanggal_rapor || "19 Desember 2026"}<br />
                     <strong>Wali Kelas {kelas}</strong>
                   </p>
-                  <div className="h-10 flex items-center justify-center">
+                  <div className="h-14 flex items-center justify-center">
                     {ttdBase64 ? (
-                      <img src={ttdBase64} alt="Tanda Tangan" className="max-h-10 max-w-[100px] object-contain" />
+                      <img src={ttdBase64} alt="Tanda Tangan" className="max-h-12 max-w-[120px] object-contain" />
                     ) : (
-                      <div className="h-10"></div>
+                      <div className="h-12"></div>
                     )}
                   </div>
                   <p className="font-bold underline uppercase">

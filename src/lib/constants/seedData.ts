@@ -1,8 +1,9 @@
 import { Siswa, Mapel, Ekskul, User, SchoolConfig, MadrasahId, AcademicPeriod } from "@/types";
 import { SEED_CLASSES_MTS, SEED_SISWA_MTS } from "./mtsStudents";
+import { SEED_CLASSES_MA, SEED_SISWA_MA } from "./maStudents";
 import { REAL_TEACHERS_MTS, REAL_TEACHERS_MA } from "./teachersData";
 
-export { SEED_CLASSES_MTS, SEED_SISWA_MTS, REAL_TEACHERS_MTS, REAL_TEACHERS_MA };
+export { SEED_CLASSES_MTS, SEED_SISWA_MTS, SEED_CLASSES_MA, SEED_SISWA_MA, REAL_TEACHERS_MTS, REAL_TEACHERS_MA };
 
 // =====================================================================
 // DAFTAR TAHUN AJARAN & SEMESTER (KMA 1503 TAHUN 2025)
@@ -122,27 +123,10 @@ export const SEED_USERS_MA: User[] = [
 ];
 
 // =====================================================================
-// KELAS PER MADRASAH
+// KELAS & SISWA PER MADRASAH (1.280 SISWA MTS & 111 SISWA MA)
 // =====================================================================
 
-export const SEED_CLASSES_MA = ["X-A", "X-B", "XI-IPA", "XI-IPS", "XII-IPA", "XII-IPS"];
-
-// =====================================================================
-// DATA SISWA MA
-// =====================================================================
-
-export const SEED_SISWA_MA: Siswa[] = [
-  { id: "ma-s-101", madrasah_id: "ma", nis: "240101", nisn: "0071234561", nama_siswa: "Achmad Dhani Saputra", kelas: "X-A", jenis_kelamin: "L", alamat: "Kedungbunder" },
-  { id: "ma-s-102", madrasah_id: "ma", nis: "240102", nisn: "0071234562", nama_siswa: "Aisyah Putri Rahmadani", kelas: "X-A", jenis_kelamin: "P", alamat: "Sutojayan" },
-  { id: "ma-s-103", madrasah_id: "ma", nis: "240103", nisn: "0071234563", nama_siswa: "Bayu Fajar Wicaksono", kelas: "X-A", jenis_kelamin: "L", alamat: "Lodoyo" },
-  { id: "ma-s-104", madrasah_id: "ma", nis: "240104", nisn: "0071234564", nama_siswa: "Citra Lestari Dewi", kelas: "X-A", jenis_kelamin: "P", alamat: "Sutojayan" },
-  { id: "ma-s-105", madrasah_id: "ma", nis: "240105", nisn: "0071234565", nama_siswa: "Dafa Alfarizi", kelas: "X-A", jenis_kelamin: "L", alamat: "Kedungbunder" },
-  { id: "ma-s-106", madrasah_id: "ma", nis: "240106", nisn: "0071234566", nama_siswa: "Fatimah Az-Zahra", kelas: "X-A", jenis_kelamin: "P", alamat: "Kademangan" },
-  { id: "ma-s-107", madrasah_id: "ma", nis: "240107", nisn: "0071234567", nama_siswa: "Gilang Ramadhan", kelas: "X-A", jenis_kelamin: "L", alamat: "Lodoyo" },
-  { id: "ma-s-108", madrasah_id: "ma", nis: "240108", nisn: "0071234568", nama_siswa: "Hafiz Ridwan Hakim", kelas: "X-A", jenis_kelamin: "L", alamat: "Sutojayan" },
-  { id: "ma-s-109", madrasah_id: "ma", nis: "240109", nisn: "0071234569", nama_siswa: "Intan Permatasari", kelas: "X-A", jenis_kelamin: "P", alamat: "Kedungbunder" },
-  { id: "ma-s-110", madrasah_id: "ma", nis: "240110", nisn: "0071234570", nama_siswa: "Muhammad Rizki Maulana", kelas: "X-A", jenis_kelamin: "L", alamat: "Sutojayan" },
-];
+// Data siswa MTs & MA diexport dari ./mtsStudents dan ./maStudents
 
 // =====================================================================
 // MATA PELAJARAN KMA 1503 TAHUN 2025

@@ -22,6 +22,7 @@ import {
   getTeacherAssignments,
   sortRombelList,
 } from "@/lib/storage";
+import NilaiEkskulTable from "@/components/NilaiEkskulTable";
 import {
   ClipboardCheck,
   Award,
@@ -168,13 +169,16 @@ export default function WaliDashboard({
   };
 
   // Simpan Ekskul
-  const handleSaveEkskul = () => {
+  const handleSaveEkskul = (selectedItems?: NilaiEkskulItem[]) => {
     setIsSaving(true);
-    const res = simpanNilaiEkskulBatch(madrasahId, tahun, semester, selectedEkskul, dataEkskul);
+    const payload = selectedItems || dataEkskul.filter(d => d.checked);
+    const res = simpanNilaiEkskulBatch(madrasahId, tahun, semester, selectedEkskul, payload);
     setIsSaving(false);
     if (res.success) {
       triggerConfetti();
       setNotification({ type: "success", message: res.message });
+      const updated = getNilaiEkskulByKelas(madrasahId, tahun, semester, activeKelas, selectedEkskul);
+      setDataEkskul(updated);
     } else {
       setNotification({ type: "error", message: res.message });
     }
@@ -703,12 +707,21 @@ export default function WaliDashboard({
         </div>
       )}
 
-      {/* TAB 5: EKSTRAKURIKULER */}
+      {/* TAB 5: EKSTRAKURIKULER (SELEKSI SISWA & EXCEL) */}
       {activeTab === "ekskul" && (
         <div className="card-retro p-5 space-y-4 bg-white">
           <div className="flex flex-wrap items-center justify-between border-b-2 border-retro-border pb-3 gap-3">
-            <div className="flex items-center gap-3">
-              <label className="text-xs font-black text-retro-black uppercase">Pilih Ekstrakurikuler:</label>
+            <div>
+              <h3 className="text-xs sm:text-sm font-black text-retro-black uppercase tracking-wider">
+                Penilaian Kegiatan Ekstrakurikuler
+              </h3>
+              <p className="text-[11px] text-slate-500 font-bold">
+                Centang siswa peserta ekskul. Siswa yang tidak dicentang otomatis tidak muncul di Rapor Cetak.
+              </p>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <label className="text-xs font-black text-retro-black uppercase">Ekstrakurikuler:</label>
               <select
                 value={selectedEkskul}
                 onChange={e => setSelectedEkskul(e.target.value)}
@@ -721,70 +734,15 @@ export default function WaliDashboard({
                 ))}
               </select>
             </div>
-            <button
-              onClick={handleSaveEkskul}
-              disabled={isSaving}
-              className="btn-retro-primary px-4 py-2 text-xs flex items-center gap-1.5"
-            >
-              {isSaving ? "Menyimpan..." : "💾 Simpan Nilai Ekskul"}
-            </button>
           </div>
 
-          <div className="overflow-x-auto rounded-xl border-2 border-retro-border shadow-retro-sm">
-            <table className="w-full text-xs text-left">
-              <thead className="bg-retro-yellow text-retro-black font-black border-b-2 border-retro-border uppercase">
-                <tr>
-                  <th className="py-2.5 px-3 text-center w-24">NIS</th>
-                  <th className="py-2.5 px-3 w-48">Nama Siswa</th>
-                  <th className="py-2.5 px-3 text-center w-36">Predikat</th>
-                  <th className="py-2.5 px-3">Keterangan / Capaian Ekskul</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y-2 divide-slate-100 font-bold">
-                {dataEkskul.map(row => (
-                  <tr key={row.nis} className="hover:bg-brand-50/40">
-                    <td className="py-2 px-3 text-center font-mono text-slate-600">
-                      {row.nis}
-                    </td>
-                    <td className="py-2 px-3 text-retro-black">
-                      {row.nama_siswa}
-                    </td>
-                    <td className="p-1.5 text-center">
-                      <select
-                        value={row.predikat}
-                        onChange={e => {
-                          const val = e.target.value as any;
-                          setDataEkskul(prev =>
-                            prev.map(x => (x.nis === row.nis ? { ...x, predikat: val } : x))
-                          );
-                        }}
-                        className="w-full text-xs py-1 px-2 rounded-lg border-2 border-retro-border bg-white font-black text-center shadow-retro-sm"
-                      >
-                        <option value="Sangat Baik">Sangat Baik</option>
-                        <option value="Baik">Baik</option>
-                        <option value="Cukup">Cukup</option>
-                        <option value="Kurang">Kurang</option>
-                      </select>
-                    </td>
-                    <td className="p-1.5">
-                      <input
-                        type="text"
-                        value={row.keterangan || ""}
-                        onChange={e => {
-                          const val = e.target.value;
-                          setDataEkskul(prev =>
-                            prev.map(x => (x.nis === row.nis ? { ...x, keterangan: val } : x))
-                          );
-                        }}
-                        placeholder="Aktif dan menunjukkan kedisiplinan serta dedikasi..."
-                        className="w-full text-xs py-1 px-2 rounded-lg border-2 border-retro-border bg-white shadow-retro-sm"
-                      />
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          <NilaiEkskulTable
+            initialData={dataEkskul}
+            onSave={handleSaveEkskul}
+            isSaving={isSaving}
+            kelas={activeKelas}
+            namaEkskul={selectedEkskul}
+          />
         </div>
       )}
     </div>
