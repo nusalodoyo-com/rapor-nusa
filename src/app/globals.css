@@ -1,0 +1,75 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-slate-50 text-slate-900 antialiased font-sans;
+  }
+}
+
+/* Print styling specifically for A4 Rapor & Legger */
+@media print {
+  /* Hilangkan elemen non-print */
+  .no-print,
+  header,
+  nav,
+  footer,
+  aside,
+  .btn,
+  button,
+  .print-hide {
+    display: none !important;
+  }
+
+  body {
+    background: #ffffff !important;
+    color: #000000 !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    font-size: 11pt !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  /* Prevent page-break inside tables and signature blocks */
+  table, tr, td, th {
+    page-break-inside: avoid !important;
+  }
+
+  .signature-block {
+    page-break-inside: avoid !important;
+  }
+
+  /* Rapor Individu: A4 Portrait */
+  .rapor-print-container {
+    width: 100% !important;
+    max-width: 210mm !important;
+    margin: 0 auto !important;
+    padding: 10mm 15mm !important;
+  }
+
+  /* Legger: A4 Landscape */
+  .legger-print-container {
+    width: 100% !important;
+    max-width: 297mm !important;
+    margin: 0 auto !important;
+    padding: 10mm !important;
+  }
+}
+
+/* Custom scrollbar for data tables */
+.custom-scrollbar::-webkit-scrollbar {
+  height: 8px;
+  width: 8px;
+}
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: #f1f5f9;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 4px;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
