@@ -1,18 +1,17 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import confetti from "canvas-confetti";
 import {
   MadrasahId,
   User,
   SchoolConfig,
-  TeacherAssignment,
   BobotNilai,
   StatusKirimNilai,
   NilaiMapelItem,
+  NilaiEkskulItem,
 } from "@/types";
 import {
-  getTeacherAssignments,
   getBobotNilai,
   saveBobotNilai,
   getStatusKirimNilai,
@@ -20,13 +19,22 @@ import {
   batalKirimNilai,
   getNilaiByKelasMapel,
   simpanNilaiBatch,
-  compareRombel,
+  getNilaiEkskulByKelas,
+  simpanNilaiEkskulBatch,
+  sortRombelList,
 } from "@/lib/storage";
+import {
+  SEED_MAPEL_MTS,
+  SEED_MAPEL_MA,
+  SEED_EKSKUL_MTS,
+  SEED_EKSKUL_MA,
+} from "@/lib/constants/seedData";
 import {
   downloadExcelMapel,
   parseExcelUpload,
 } from "@/lib/excel/excelHandler";
 import NilaiMapelTable from "@/components/NilaiMapelTable";
+import NilaiEkskulTable from "@/components/NilaiEkskulTable";
 import {
   BookOpen,
   Send,
@@ -36,18 +44,21 @@ import {
   Upload,
   CheckCircle2,
   AlertCircle,
-  GraduationCap,
   Calendar,
   School,
   Sparkles,
-  ArrowRight,
   UserCheck,
+  Trophy,
+  Layers,
 } from "lucide-react";
 
 interface Props {
   madrasahId: MadrasahId;
   currentUser: User;
   config: SchoolConfig;
+  allKelas?: string[];
+  allMapel?: { kode: string; nama: string; kelompok?: string; kkm?: number }[];
+  allEkskul?: string[];
   tahun?: string;
   semester?: string;
   activePeriodLabel?: string;
@@ -59,17 +70,68 @@ export default function GuruDashboard({
   madrasahId,
   currentUser,
   config,
+  allKelas = [],
+  allMapel = [],
+  allEkskul = [],
   tahun: propTahun,
   semester: propSemester,
   activePeriodLabel,
   onSwitchToWali,
   onLogout,
 }: Props) {
-  const [assignments, setAssignments] = useState<TeacherAssignment[]>([]);
-  const [selectedAssignId, setSelectedAssignId] = useState<string>("");
-
   const tahun = propTahun || "2026/2027";
   const semester = propSemester || "1";
+
+  // Mode Penilaian: Mapel (Intrakurikuler) atau Ekskul (Ekstrakurikuler)
+  const [tipePenilaian, setTipePenilaian] = useState<"mapel" | "ekskul">("mapel");
+
+  // Rombel List yang diurutkan rapi VII -> VIII -> IX atau 10A -> 10D
+  const sortedKelas = useMemo(() => sortRombelList(allKelas), [allKelas]);
+
+  // Fallback mapel jika allMapel kosong
+  const mapelList = useMemo(() => {
+    if (allMapel.length > 0) return allMapel;
+    const def = madrasahId === "mts" ? SEED_MAPEL_MTS : SEED_MAPEL_MA;
+    return def.map(m => ({ kode: m.kode_mapel, nama: m.nama_mapel, kelompok: m.kelompok, kkm: m.kkm }));
+  }, [allMapel, madrasahId]);
+
+  // Fallback ekskul jika allEkskul kosong
+  const ekskulList = useMemo(() => {
+    if (allEkskul.length > 0) return allEkskul;
+    const def = madrasahId === "mts" ? SEED_EKSKUL_MTS : SEED_EKSKUL_MA;
+    return def.map(e => e.nama_ekskul);
+  }, [allEkskul, madrasahId]);
+
+  // Pilihan Kelas, Mapel, dan Ekskul yang bebas dipilih oleh Guru
+  const [selectedKelas, setSelectedKelas] = useState<string>("");
+  const [selectedKodeMapel, setSelectedKodeMapel] = useState<string>("");
+  const [selectedNamaEkskul, setSelectedNamaEkskul] = useState<string>("");
+
+  // Set default pilihan saat pertama kali render
+  useEffect(() => {
+    if (sortedKelas.length > 0 && !selectedKelas) {
+      // Prioritaskan kelas binaan jika ada
+      if (currentUser.kelas_diampu && currentUser.kelas_diampu !== "-" && sortedKelas.includes(currentUser.kelas_diampu)) {
+        setSelectedKelas(currentUser.kelas_diampu);
+      } else {
+        setSelectedKelas(sortedKelas[0]);
+      }
+    }
+  }, [sortedKelas, selectedKelas, currentUser.kelas_diampu]);
+
+  useEffect(() => {
+    if (mapelList.length > 0 && !selectedKodeMapel) {
+      setSelectedKodeMapel(mapelList[0].kode);
+    }
+  }, [mapelList, selectedKodeMapel]);
+
+  useEffect(() => {
+    if (ekskulList.length > 0 && !selectedNamaEkskul) {
+      setSelectedNamaEkskul(ekskulList[0]);
+    }
+  }, [ekskulList, selectedNamaEkskul]);
+
+  const activeMapelObj = mapelList.find(m => m.kode === selectedKodeMapel) || mapelList[0];
 
   // Bobot State
   const [isBobotOpen, setIsBobotOpen] = useState(false);
@@ -95,61 +157,33 @@ export default function GuruDashboard({
 
   // Table Data State
   const [dataNilai, setDataNilai] = useState<NilaiMapelItem[]>([]);
+  const [dataNilaiEkskul, setDataNilaiEkskul] = useState<NilaiEkskulItem[]>([]);
   const [isSaving, setIsSaving] = useState(false);
   const [notification, setNotification] = useState<{ type: "success" | "error"; message: string } | null>(null);
 
-  // Load Guru Assignments
+  // Load Data Nilai Mapel, Bobot, and Status Kirim
   useEffect(() => {
-    const all = getTeacherAssignments(madrasahId);
-    const mine = all
-      .filter(
-        a =>
-          a.guru_id === currentUser.id ||
-          a.guru_nama.trim().toLowerCase() === currentUser.nama_user.trim().toLowerCase()
-      )
-      .sort((a, b) => compareRombel(a.kelas, b.kelas));
-    setAssignments(mine);
-    if (mine.length > 0) {
-      setSelectedAssignId(mine[0].id);
-    }
-  }, [madrasahId, currentUser]);
-
-  const activeAssignment = assignments.find(a => a.id === selectedAssignId);
-
-  // Load Data Nilai, Bobot, and Status Kirim when Assignment changes
-  useEffect(() => {
-    if (!activeAssignment) {
-      setDataNilai([]);
-      return;
-    }
+    if (!selectedKelas || !selectedKodeMapel) return;
 
     // 1. Get Bobot
-    const b = getBobotNilai(
-      madrasahId,
-      currentUser.id,
-      activeAssignment.kode_mapel,
-      activeAssignment.kelas
-    );
+    const b = getBobotNilai(madrasahId, currentUser.id, selectedKodeMapel, selectedKelas);
     setBobot(b);
 
     // 2. Get Status Kirim
-    const sk = getStatusKirimNilai(
-      madrasahId,
-      activeAssignment.kode_mapel,
-      activeAssignment.kelas
-    );
+    const sk = getStatusKirimNilai(madrasahId, selectedKodeMapel, selectedKelas);
     setStatusKirim(sk);
 
     // 3. Get Student Grades
-    const list = getNilaiByKelasMapel(
-      madrasahId,
-      tahun,
-      semester,
-      activeAssignment.kelas,
-      activeAssignment.kode_mapel
-    );
+    const list = getNilaiByKelasMapel(madrasahId, tahun, semester, selectedKelas, selectedKodeMapel);
     setDataNilai(list);
-  }, [madrasahId, currentUser.id, activeAssignment, tahun, semester]);
+  }, [madrasahId, currentUser.id, selectedKelas, selectedKodeMapel, tahun, semester]);
+
+  // Load Data Nilai Ekskul
+  useEffect(() => {
+    if (!selectedKelas || !selectedNamaEkskul) return;
+    const listEks = getNilaiEkskulByKelas(madrasahId, tahun, semester, selectedKelas, selectedNamaEkskul);
+    setDataNilaiEkskul(listEks);
+  }, [madrasahId, selectedKelas, selectedNamaEkskul, tahun, semester]);
 
   const triggerConfetti = () => {
     try {
@@ -160,7 +194,7 @@ export default function GuruDashboard({
   // Simpan Bobot
   const handleSaveBobot = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!activeAssignment) return;
+    if (!selectedKelas || !selectedKodeMapel) return;
 
     const total =
       Number(bobot.bobot_formatif) +
@@ -176,8 +210,8 @@ export default function GuruDashboard({
       ...bobot,
       madrasah_id: madrasahId,
       guru_id: currentUser.id,
-      kode_mapel: activeAssignment.kode_mapel,
-      kelas: activeAssignment.kelas,
+      kode_mapel: selectedKodeMapel,
+      kelas: selectedKelas,
     };
 
     saveBobotNilai(madrasahId, updated);
@@ -190,7 +224,7 @@ export default function GuruDashboard({
         madrasahId,
         tahun,
         semester,
-        activeAssignment.kode_mapel,
+        selectedKodeMapel,
         dataNilai,
         updated
       );
@@ -198,27 +232,27 @@ export default function GuruDashboard({
         madrasahId,
         tahun,
         semester,
-        activeAssignment.kelas,
-        activeAssignment.kode_mapel
+        selectedKelas,
+        selectedKodeMapel
       );
       setDataNilai(reloaded);
     }
 
     setNotification({
       type: "success",
-      message: `Bobot penilaian diperbarui: Formatif ${bobot.bobot_formatif}%, STS ${bobot.bobot_sts}%, SAS ${bobot.bobot_sas}%!`,
+      message: `Bobot penilaian kelas ${selectedKelas} diperbarui: Formatif ${bobot.bobot_formatif}%, STS ${bobot.bobot_sts}%, SAS ${bobot.bobot_sas}%!`,
     });
   };
 
-  // Simpan Nilai
+  // Simpan Nilai Mapel
   const handleSaveNilai = (items: NilaiMapelItem[]) => {
-    if (!activeAssignment) return;
+    if (!selectedKelas || !selectedKodeMapel) return;
     setIsSaving(true);
     const res = simpanNilaiBatch(
       madrasahId,
       tahun,
       semester,
-      activeAssignment.kode_mapel,
+      selectedKodeMapel,
       items,
       bobot
     );
@@ -233,12 +267,34 @@ export default function GuruDashboard({
     }
   };
 
+  // Simpan Nilai Ekskul
+  const handleSaveNilaiEkskul = (items: NilaiEkskulItem[]) => {
+    if (!selectedKelas || !selectedNamaEkskul) return;
+    setIsSaving(true);
+    const res = simpanNilaiEkskulBatch(
+      madrasahId,
+      tahun,
+      semester,
+      selectedNamaEkskul,
+      items
+    );
+    setIsSaving(false);
+
+    if (res.success) {
+      setDataNilaiEkskul(items);
+      triggerConfetti();
+      setNotification({ type: "success", message: res.message });
+    } else {
+      setNotification({ type: "error", message: res.message });
+    }
+  };
+
   // Kirim Nilai ke Wali Kelas
   const handleKirimNilai = () => {
-    if (!activeAssignment) return;
+    if (!selectedKelas || !selectedKodeMapel || !activeMapelObj) return;
 
     const confirmSend = window.confirm(
-      `KIRIM nilai ${activeAssignment.nama_mapel} (${activeAssignment.kelas}) ke Wali Kelas?\n\nNilai akan terintegrasi langsung ke Legger & Rapor siswa dan data terkunci sementara.`
+      `KIRIM nilai ${activeMapelObj.nama} (${selectedKelas}) ke Wali Kelas?\n\nNilai akan terintegrasi langsung ke Legger & Rapor siswa dan data terkunci sementara.`
     );
     if (!confirmSend) return;
 
@@ -247,24 +303,24 @@ export default function GuruDashboard({
       madrasahId,
       tahun,
       semester,
-      activeAssignment.kode_mapel,
+      selectedKodeMapel,
       dataNilai,
       bobot
     );
 
     const res = kirimNilaiKeWali(
       madrasahId,
-      activeAssignment.kode_mapel,
-      activeAssignment.kelas,
+      selectedKodeMapel,
+      selectedKelas,
       currentUser.nama_user
     );
 
     if (res.success) {
       setStatusKirim({
-        id: `status-${activeAssignment.kode_mapel}-${activeAssignment.kelas}`,
+        id: `status-${selectedKodeMapel}-${selectedKelas}`,
         madrasah_id: madrasahId,
-        kode_mapel: activeAssignment.kode_mapel,
-        kelas: activeAssignment.kelas,
+        kode_mapel: selectedKodeMapel,
+        kelas: selectedKelas,
         is_sent: true,
         tanggal_kirim: new Date().toLocaleString("id-ID", {
           dateStyle: "medium",
@@ -279,46 +335,46 @@ export default function GuruDashboard({
 
   // Batalkan Kirim Nilai (Unlock)
   const handleBatalKirim = () => {
-    if (!activeAssignment) return;
+    if (!selectedKelas || !selectedKodeMapel || !activeMapelObj) return;
 
     const confirmCancel = window.confirm(
-      `Buka kunci pengeditan nilai ${activeAssignment.nama_mapel} (${activeAssignment.kelas})?`
+      `Buka kunci pengeditan nilai ${activeMapelObj.nama} (${selectedKelas})?`
     );
     if (!confirmCancel) return;
 
     const res = batalKirimNilai(
       madrasahId,
-      activeAssignment.kode_mapel,
-      activeAssignment.kelas
+      selectedKodeMapel,
+      selectedKelas
     );
 
     if (res.success) {
       setStatusKirim({
-        id: `status-${activeAssignment.kode_mapel}-${activeAssignment.kelas}`,
+        id: `status-${selectedKodeMapel}-${selectedKelas}`,
         madrasah_id: madrasahId,
-        kode_mapel: activeAssignment.kode_mapel,
-        kelas: activeAssignment.kelas,
+        kode_mapel: selectedKodeMapel,
+        kelas: selectedKelas,
         is_sent: false,
       });
       setNotification({ type: "success", message: res.message });
     }
   };
 
-  // Unduh Template Excel
+  // Unduh Template Excel Mapel
   const handleDownloadExcel = async () => {
-    if (!activeAssignment) return;
+    if (!selectedKelas || !selectedKodeMapel || !activeMapelObj) return;
     await downloadExcelMapel(
-      activeAssignment.kelas,
-      activeAssignment.kode_mapel,
-      activeAssignment.nama_mapel,
+      selectedKelas,
+      selectedKodeMapel,
+      activeMapelObj.nama,
       dataNilai
     );
   };
 
-  // Unggah Nilai Excel
+  // Unggah Nilai Excel Mapel
   const handleUploadExcel = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (!file || !activeAssignment) return;
+    if (!file || !selectedKelas || !selectedKodeMapel) return;
 
     try {
       const res = await parseExcelUpload(file, "mapel");
@@ -362,7 +418,7 @@ export default function GuruDashboard({
           <div>
             <div className="flex items-center gap-2">
               <span className="badge-retro bg-brand-500 text-white">
-                GURU MAPEL • {config.jenjang}
+                GURU PENILAIAN • {config.jenjang}
               </span>
               <span className="badge-retro bg-retro-yellow text-retro-black">
                 NIP: {currentUser.nip || "-"}
@@ -372,7 +428,7 @@ export default function GuruDashboard({
               {currentUser.nama_user}
             </h2>
             <p className="text-xs text-slate-600 font-bold">
-              {config.nama_madrasah} • Mengampu {assignments.length} Rombel
+              {config.nama_madrasah} • Bebas Pilih Kelas & Mata Pelajaran
             </p>
           </div>
         </div>
@@ -391,48 +447,81 @@ export default function GuruDashboard({
         </div>
       </div>
 
-      {/* No Assignments Warning */}
-      {assignments.length === 0 ? (
-        <div className="card-retro p-8 text-center space-y-3 bg-white">
-          <div className="w-14 h-14 rounded-xl bg-amber-100 border-2 border-retro-border shadow-retro-sm text-retro-black flex items-center justify-center mx-auto">
-            <AlertCircle className="w-8 h-8 text-amber-600" />
-          </div>
-          <h3 className="text-base font-black text-retro-black uppercase">
-            Belum Ada Tugas Mengajar
-          </h3>
-          <p className="text-xs text-slate-600 max-w-md mx-auto font-medium">
-            Operator madrasah belum menetapkan mapel & kelas yang Anda ampu di sistem RDM. Silakan hubungi operator madrasah untuk melakukan penugasan mengajar.
-          </p>
-        </div>
-      ) : (
+      {/* Nav Tabs Alur Pengisian Nilai (Mata Pelajaran vs Ekstrakurikuler) */}
+      <div className="flex flex-wrap items-center gap-2 bg-retro-cream p-2 rounded-xl border-2 border-retro-border shadow-retro-sm">
+        <button
+          onClick={() => setTipePenilaian("mapel")}
+          className={`px-4 py-2 text-xs font-black rounded-lg transition-all flex items-center gap-2 ${
+            tipePenilaian === "mapel"
+              ? "bg-brand-500 text-white shadow-retro-sm"
+              : "bg-white text-retro-black hover:bg-slate-100 border-2 border-retro-border"
+          }`}
+        >
+          <BookOpen className="w-4 h-4" />
+          <span>1. Nilai Mata Pelajaran (Intrakurikuler)</span>
+        </button>
+
+        <button
+          onClick={() => setTipePenilaian("ekskul")}
+          className={`px-4 py-2 text-xs font-black rounded-lg transition-all flex items-center gap-2 ${
+            tipePenilaian === "ekskul"
+              ? "bg-retro-yellow text-retro-black shadow-retro-sm"
+              : "bg-white text-retro-black hover:bg-slate-100 border-2 border-retro-border"
+          }`}
+        >
+          <Trophy className="w-4 h-4" />
+          <span>2. Nilai Ekstrakurikuler (Bakat & Minat)</span>
+        </button>
+      </div>
+
+      {/* ================= SECTION 1: NILAI MATA PELAJARAN ================= */}
+      {tipePenilaian === "mapel" && (
         <>
-          {/* Controls: Rombel Selector + Bobot + Kirim Status */}
+          {/* Controls: Rombel + Mapel Selector + Bobot + Semester */}
           <div className="card-retro p-4 sm:p-5 space-y-4 bg-white">
             <div className="grid grid-cols-1 md:grid-cols-4 gap-3 sm:gap-4">
-              {/* Selector Rombel & Mapel */}
-              <div className="md:col-span-2">
+              {/* Selector Rombongan Belajar (Kelas) */}
+              <div>
                 <label className="text-xs font-black text-retro-black uppercase block mb-1">
-                  Pilih Mata Pelajaran & Kelas:
+                  1. Rombel (Kelas):
                 </label>
                 <select
-                  value={selectedAssignId}
-                  onChange={e => setSelectedAssignId(e.target.value)}
+                  value={selectedKelas}
+                  onChange={e => setSelectedKelas(e.target.value)}
                   className="w-full text-xs py-2.5 px-3 rounded-lg border-2 border-retro-border bg-retro-cream font-black text-retro-black shadow-retro-sm focus:border-brand-500"
                 >
-                  {assignments.map(a => (
-                    <option key={a.id} value={a.id}>
-                      Kelas {a.kelas} — {a.nama_mapel} ({a.kode_mapel})
+                  {sortedKelas.map(k => (
+                    <option key={k} value={k}>
+                      Kelas {k}
                     </option>
                   ))}
                 </select>
               </div>
 
-              {/* Tahun Ajaran */}
+              {/* Selector Mata Pelajaran (KMA 1503) */}
+              <div>
+                <label className="text-xs font-black text-retro-black uppercase block mb-1">
+                  2. Mata Pelajaran (KMA 1503):
+                </label>
+                <select
+                  value={selectedKodeMapel}
+                  onChange={e => setSelectedKodeMapel(e.target.value)}
+                  className="w-full text-xs py-2.5 px-3 rounded-lg border-2 border-retro-border bg-white font-bold text-retro-black shadow-retro-sm focus:border-brand-500"
+                >
+                  {mapelList.map(m => (
+                    <option key={m.kode} value={m.kode}>
+                      {m.nama} ({m.kode}) {m.kelompok ? `- Kel. ${m.kelompok}` : ""}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Tahun Ajaran & Semester Aktif */}
               <div>
                 <label className="text-xs font-black text-retro-black uppercase block mb-1">
                   Semester & Tahun:
                 </label>
-                <div className="flex items-center text-xs py-2 px-3 rounded-lg border-2 border-retro-border bg-slate-50 font-black text-retro-black shadow-retro-sm">
+                <div className="flex items-center text-xs py-2.5 px-3 rounded-lg border-2 border-retro-border bg-slate-50 font-black text-retro-black shadow-retro-sm">
                   <Calendar className="w-4 h-4 mr-1.5 text-brand-600 flex-shrink-0" />
                   <span className="truncate">
                     {activePeriodLabel || `${semester === "1" ? "Gasal" : "Genap"} ${tahun}`}
@@ -443,17 +532,17 @@ export default function GuruDashboard({
               {/* Button Atur Bobot */}
               <div>
                 <label className="text-xs font-black text-retro-black uppercase block mb-1">
-                  Bobot Penilaian (RDM):
+                  Bobot Penilaian:
                 </label>
                 <button
                   onClick={() => setIsBobotOpen(!isBobotOpen)}
-                  className="w-full py-2 px-3 rounded-lg bg-retro-cream hover:bg-slate-100 border-2 border-retro-border text-xs font-black flex items-center justify-between shadow-retro-sm"
+                  className="w-full py-2.5 px-3 rounded-lg bg-retro-cream hover:bg-slate-100 border-2 border-retro-border text-xs font-black flex items-center justify-between shadow-retro-sm"
                 >
-                  <div className="flex items-center gap-1.5">
-                    <Sliders className="w-3.5 h-3.5 text-brand-700" />
-                    <span>F:{bobot.bobot_formatif}% STS:{bobot.bobot_sts}% SAS:{bobot.bobot_sas}%</span>
+                  <div className="flex items-center gap-1.5 truncate">
+                    <Sliders className="w-3.5 h-3.5 text-brand-700 flex-shrink-0" />
+                    <span className="truncate">F:{bobot.bobot_formatif}% STS:{bobot.bobot_sts}% SAS:{bobot.bobot_sas}%</span>
                   </div>
-                  <span className="badge-retro bg-retro-yellow text-retro-black text-[9px]">Ubah</span>
+                  <span className="badge-retro bg-retro-yellow text-retro-black text-[9px] flex-shrink-0">Atur</span>
                 </button>
               </div>
             </div>
@@ -464,10 +553,10 @@ export default function GuruDashboard({
                 <div className="flex flex-wrap items-center justify-between gap-2 border-b-2 border-retro-border pb-2">
                   <h4 className="text-xs font-black text-retro-black uppercase flex items-center gap-1.5">
                     <Sliders className="w-4 h-4 text-brand-600" />
-                    <span>Pengaturan Bobot Penilaian — {activeAssignment?.nama_mapel} ({activeAssignment?.kelas})</span>
+                    <span>Pengaturan Bobot Penilaian — {activeMapelObj?.nama} (Kelas {selectedKelas})</span>
                   </h4>
                   <span className="text-[11px] text-slate-500 font-bold">
-                    Sesuai RDM, total bobot harus tepat 100%.
+                    Sesuai RDM, akumulasi total bobot harus tepat 100%.
                   </span>
                 </div>
 
@@ -545,7 +634,7 @@ export default function GuruDashboard({
                 {statusKirim.is_sent ? (
                   <div className="flex flex-wrap items-center gap-2">
                     <span className="badge-retro bg-brand-500 text-white text-xs py-1 px-3">
-                      ✓ Nilai Terkirim ke Wali ({statusKirim.tanggal_kirim || "Terkonfirmasi"})
+                      ✓ Nilai Terkirim ke Wali ({statusKirim.tanggal_kirim || "Terkonfirmasi"}) • Pengampu: {statusKirim.guru_pengampu || currentUser.nama_user}
                     </span>
                     <button
                       onClick={handleBatalKirim}
@@ -575,7 +664,7 @@ export default function GuruDashboard({
                   className="btn-retro-white px-3 py-1.5 text-xs flex items-center gap-1"
                 >
                   <FileSpreadsheet className="w-4 h-4 text-brand-600" />
-                  <span>Unduh Excel</span>
+                  <span>Unduh Excel (.xlsx)</span>
                 </button>
 
                 {!statusKirim.is_sent && (
@@ -621,15 +710,115 @@ export default function GuruDashboard({
           )}
 
           {/* Tabel Nilai Mapel */}
-          {activeAssignment && (
-            <NilaiMapelTable
-              initialData={dataNilai}
-              onSave={handleSaveNilai}
-              isSaving={isSaving}
-              bobot={bobot}
-              readOnly={statusKirim.is_sent}
-            />
+          <NilaiMapelTable
+            initialData={dataNilai}
+            onSave={handleSaveNilai}
+            isSaving={isSaving}
+            bobot={bobot}
+            readOnly={statusKirim.is_sent}
+          />
+        </>
+      )}
+
+      {/* ================= SECTION 2: NILAI EKSTRAKURIKULER ================= */}
+      {tipePenilaian === "ekskul" && (
+        <>
+          {/* Controls: Rombel + Ekskul Selector */}
+          <div className="card-retro p-4 sm:p-5 space-y-4 bg-white">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3 sm:gap-4">
+              {/* Selector Rombongan Belajar (Kelas) */}
+              <div>
+                <label className="text-xs font-black text-retro-black uppercase block mb-1">
+                  1. Rombel (Kelas):
+                </label>
+                <select
+                  value={selectedKelas}
+                  onChange={e => setSelectedKelas(e.target.value)}
+                  className="w-full text-xs py-2.5 px-3 rounded-lg border-2 border-retro-border bg-retro-cream font-black text-retro-black shadow-retro-sm focus:border-brand-500"
+                >
+                  {sortedKelas.map(k => (
+                    <option key={k} value={k}>
+                      Kelas {k}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Selector Ekstrakurikuler */}
+              <div>
+                <label className="text-xs font-black text-retro-black uppercase block mb-1">
+                  2. Jenis Ekstrakurikuler:
+                </label>
+                <select
+                  value={selectedNamaEkskul}
+                  onChange={e => setSelectedNamaEkskul(e.target.value)}
+                  className="w-full text-xs py-2.5 px-3 rounded-lg border-2 border-retro-border bg-white font-bold text-retro-black shadow-retro-sm focus:border-brand-500"
+                >
+                  {ekskulList.map(e => (
+                    <option key={e} value={e}>
+                      🏆 {e}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Tahun Ajaran & Semester Aktif */}
+              <div>
+                <label className="text-xs font-black text-retro-black uppercase block mb-1">
+                  Semester & Tahun:
+                </label>
+                <div className="flex items-center text-xs py-2.5 px-3 rounded-lg border-2 border-retro-border bg-slate-50 font-black text-retro-black shadow-retro-sm">
+                  <Calendar className="w-4 h-4 mr-1.5 text-brand-600 flex-shrink-0" />
+                  <span className="truncate">
+                    {activePeriodLabel || `${semester === "1" ? "Gasal" : "Genap"} ${tahun}`}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* Note Info Seleksi Ekskul */}
+            <div className="p-3 bg-retro-yellow/30 border-2 border-retro-border rounded-xl text-xs font-bold text-retro-black flex items-center gap-2">
+              <Sparkles className="w-4 h-4 text-brand-700 flex-shrink-0" />
+              <span>
+                <strong>Panduan Alur Ekskul:</strong> Centang siswa peserta ekstrakurikuler {selectedNamaEkskul} di bawah. Siswa yang tidak dicentang otomatis tidak akan dicetak tabel ekskulnya di lembar Rapor Siswa.
+              </span>
+            </div>
+          </div>
+
+          {/* Toast Notification */}
+          {notification && (
+            <div
+              className={`p-3.5 rounded-xl border-2 border-retro-border text-xs font-black shadow-retro-sm flex items-center justify-between ${
+                notification.type === "success"
+                  ? "bg-brand-100 text-brand-900"
+                  : "bg-red-100 text-red-900"
+              }`}
+            >
+              <div className="flex items-center gap-2">
+                {notification.type === "success" ? (
+                  <CheckCircle2 className="w-4 h-4 text-brand-700" />
+                ) : (
+                  <AlertCircle className="w-4 h-4 text-red-700" />
+                )}
+                <span>{notification.message}</span>
+              </div>
+              <button
+                onClick={() => setNotification(null)}
+                className="text-retro-black hover:text-red-700 font-black ml-2"
+              >
+                ✕
+              </button>
+            </div>
           )}
+
+          {/* Tabel Nilai Ekskul dengan Checkbox Seleksi */}
+          <NilaiEkskulTable
+            initialData={dataNilaiEkskul}
+            onSave={handleSaveNilaiEkskul}
+            isSaving={isSaving}
+            kelas={selectedKelas}
+            namaEkskul={selectedNamaEkskul}
+          />
         </>
       )}
     </div>

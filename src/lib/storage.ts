@@ -484,7 +484,7 @@ export function getRekapKirimNilaiKelas(
     const stat = allStatus.find(s => s.kode_mapel === m.kode_mapel && s.kelas === kelas);
     return {
       mapel: m,
-      guru_nama: assign ? assign.guru_nama : "Belum Ditugaskan",
+      guru_nama: stat?.guru_pengampu || (assign ? assign.guru_nama : "Menunggu Pengisian"),
       is_sent: Boolean(stat?.is_sent),
       tanggal_kirim: stat?.tanggal_kirim,
     };

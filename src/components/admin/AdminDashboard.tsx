@@ -4,7 +4,6 @@ import React, { useState, useEffect, useMemo } from "react";
 import {
   MadrasahId,
   User,
-  TeacherAssignment,
   HomeroomAssignment,
   SchoolConfig,
   Siswa,
@@ -15,9 +14,6 @@ import {
   addTeacher,
   updateTeacher,
   deleteTeacher,
-  getTeacherAssignments,
-  addTeacherAssignment,
-  deleteTeacherAssignment,
   getHomeroomAssignments,
   setHomeroomAssignment,
   getRekapKirimNilaiKelas,
@@ -62,9 +58,8 @@ export default function AdminDashboard({
   allMapel,
   onConfigUpdated,
 }: Props) {
-  const [activeTab, setActiveTab] = useState<"guru" | "mengajar" | "wali" | "siswa" | "monitoring" | "pengaturan">("guru");
+  const [activeTab, setActiveTab] = useState<"guru" | "wali" | "siswa" | "monitoring" | "pengaturan">("guru");
   const [teachers, setTeachers] = useState<User[]>([]);
-  const [assignments, setAssignments] = useState<TeacherAssignment[]>([]);
   const [homerooms, setHomerooms] = useState<HomeroomAssignment[]>([]);
   const [allSiswa, setAllSiswa] = useState<Siswa[]>([]);
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
@@ -94,11 +89,6 @@ export default function AdminDashboard({
   const [editUsername, setEditUsername] = useState("");
   const [editPassword, setEditPassword] = useState("");
 
-  // Form states: Penugasan Mengajar
-  const [assignGuruId, setAssignGuruId] = useState("");
-  const [assignKodeMapel, setAssignKodeMapel] = useState("");
-  const [assignKelas, setAssignKelas] = useState("");
-
   // Form states: Penugasan Wali Kelas
   const [waliKelasTarget, setWaliKelasTarget] = useState("");
   const [waliGuruTarget, setWaliGuruTarget] = useState("");
@@ -120,8 +110,6 @@ export default function AdminDashboard({
   const refreshData = () => {
     const t = getTeachers(madrasahId);
     setTeachers(t);
-    const a = getTeacherAssignments(madrasahId);
-    setAssignments(a);
     const h = getHomeroomAssignments(madrasahId);
     setHomerooms(h);
     const s = getAllSiswa(madrasahId);
@@ -132,9 +120,6 @@ export default function AdminDashboard({
     const curActive = getActivePeriod(madrasahId);
     setActivePeriodId(curActive.id);
 
-    if (t.length > 0 && !assignGuruId) setAssignGuruId(t[0].id);
-    if (allMapel.length > 0 && !assignKodeMapel) setAssignKodeMapel(allMapel[0].kode);
-    if (sortedKelas.length > 0 && !assignKelas) setAssignKelas(sortedKelas[0]);
     if (sortedKelas.length > 0 && !waliKelasTarget) setWaliKelasTarget(sortedKelas[0]);
     if (sortedKelas.length > 0 && !monitorKelas) setMonitorKelas(sortedKelas[0]);
   };
@@ -209,37 +194,6 @@ export default function AdminDashboard({
       setMessage({ type: "success", text: `Guru ${nama} telah dihapus.` });
       refreshData();
     }
-  };
-
-  const handleAddAssignment = (e: React.FormEvent) => {
-    e.preventDefault();
-    const g = teachers.find(t => t.id === assignGuruId);
-    const m = allMapel.find(mp => mp.kode === assignKodeMapel);
-    if (!g || !m || !assignKelas) {
-      setMessage({ type: "error", text: "Lengkapi data guru, mapel, dan kelas!" });
-      return;
-    }
-
-    const res = addTeacherAssignment(madrasahId, {
-      guru_id: g.id,
-      guru_nama: g.nama_user,
-      kode_mapel: m.kode,
-      nama_mapel: m.nama,
-      kelas: assignKelas,
-    });
-
-    if (res.success) {
-      setMessage({ type: "success", text: res.message });
-      refreshData();
-    } else {
-      setMessage({ type: "error", text: res.message });
-    }
-  };
-
-  const handleDeleteAssignment = (id: string) => {
-    deleteTeacherAssignment(madrasahId, id);
-    setMessage({ type: "success", text: "Penugasan mengajar dihapus." });
-    refreshData();
   };
 
   const handleSetWali = (e: React.FormEvent) => {
@@ -395,19 +349,11 @@ export default function AdminDashboard({
         </button>
 
         <button
-          onClick={() => setActiveTab("mengajar")}
-          className={activeTab === "mengajar" ? "btn-retro-primary px-3.5 py-2 text-xs flex items-center gap-1.5" : "btn-retro-white px-3.5 py-2 text-xs flex items-center gap-1.5"}
-        >
-          <BookOpen className="w-3.5 h-3.5" />
-          <span>2. Tugas Mengajar ({assignments.length})</span>
-        </button>
-
-        <button
           onClick={() => setActiveTab("wali")}
           className={activeTab === "wali" ? "btn-retro-primary px-3.5 py-2 text-xs flex items-center gap-1.5" : "btn-retro-white px-3.5 py-2 text-xs flex items-center gap-1.5"}
         >
           <UserCheck className="w-3.5 h-3.5" />
-          <span>3. Wali Kelas ({homerooms.length}/{sortedKelas.length})</span>
+          <span>2. Wali Kelas ({homerooms.length}/{sortedKelas.length})</span>
         </button>
 
         <button
@@ -415,7 +361,7 @@ export default function AdminDashboard({
           className={activeTab === "siswa" ? "btn-retro-primary px-3.5 py-2 text-xs flex items-center gap-1.5" : "btn-retro-white px-3.5 py-2 text-xs flex items-center gap-1.5"}
         >
           <GraduationCap className="w-3.5 h-3.5" />
-          <span>4. Database Siswa ({allSiswa.length})</span>
+          <span>3. Database Siswa ({allSiswa.length})</span>
         </button>
 
         <button
@@ -423,7 +369,7 @@ export default function AdminDashboard({
           className={activeTab === "monitoring" ? "btn-retro-primary px-3.5 py-2 text-xs flex items-center gap-1.5" : "btn-retro-white px-3.5 py-2 text-xs flex items-center gap-1.5"}
         >
           <Activity className="w-3.5 h-3.5" />
-          <span>5. Monitoring Kirim</span>
+          <span>4. Monitoring Kirim</span>
         </button>
 
         <button
@@ -431,7 +377,7 @@ export default function AdminDashboard({
           className={activeTab === "pengaturan" ? "btn-retro-primary px-3.5 py-2 text-xs flex items-center gap-1.5" : "btn-retro-white px-3.5 py-2 text-xs flex items-center gap-1.5"}
         >
           <Settings className="w-3.5 h-3.5" />
-          <span>6. Pengaturan Rapor</span>
+          <span>5. Pengaturan Rapor</span>
         </button>
       </div>
 
@@ -689,130 +635,7 @@ export default function AdminDashboard({
         </div>
       )}
 
-      {/* ================= TAB 2: PEMBAGIAN TUGAS MENGAJAR ================= */}
-      {activeTab === "mengajar" && (
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-5 sm:gap-6">
-          {/* Form Plotting Guru -> Mapel -> Kelas */}
-          <div className="card-retro p-5 space-y-4 bg-retro-cream">
-            <h4 className="text-xs font-black text-retro-black uppercase tracking-wider flex items-center gap-1.5 border-b-2 border-retro-border pb-2">
-              <Plus className="w-4 h-4 text-brand-600" />
-              Plotting Tugas Mengajar
-            </h4>
-            <form onSubmit={handleAddAssignment} className="space-y-3">
-              <div>
-                <label className="text-[11px] font-black text-retro-black uppercase block mb-1">Pilih Guru Pengampu:</label>
-                <select
-                  value={assignGuruId}
-                  onChange={e => setAssignGuruId(e.target.value)}
-                  className="w-full text-xs py-2 px-3 rounded-lg border-2 border-retro-border bg-white font-bold shadow-retro-sm"
-                >
-                  {teachers.map(t => (
-                    <option key={t.id} value={t.id}>
-                      {t.nama_user} ({t.username})
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div>
-                <label className="text-[11px] font-black text-retro-black uppercase block mb-1">Mata Pelajaran (KMA 1503):</label>
-                <select
-                  value={assignKodeMapel}
-                  onChange={e => setAssignKodeMapel(e.target.value)}
-                  className="w-full text-xs py-2 px-3 rounded-lg border-2 border-retro-border bg-white font-bold shadow-retro-sm"
-                >
-                  {allMapel.map(m => (
-                    <option key={m.kode} value={m.kode}>
-                      {m.nama} ({m.kode}) - Kel. {m.kelompok}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div>
-                <label className="text-[11px] font-black text-retro-black uppercase block mb-1">Rombongan Belajar (Kelas):</label>
-                <select
-                  value={assignKelas}
-                  onChange={e => setAssignKelas(e.target.value)}
-                  className="w-full text-xs py-2 px-3 rounded-lg border-2 border-retro-border bg-white font-bold shadow-retro-sm"
-                >
-                  {sortedKelas.map(k => (
-                    <option key={k} value={k}>
-                      Kelas {k}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <button
-                type="submit"
-                className="w-full py-2.5 btn-retro-primary text-xs font-black uppercase tracking-wider mt-2"
-              >
-                + Simpan Tugas Mengajar
-              </button>
-            </form>
-          </div>
-
-          {/* Tabel Penugasan Mengajar */}
-          <div className="lg:col-span-2 card-retro p-5 space-y-3 bg-white">
-            <div className="flex justify-between items-center border-b-2 border-retro-border pb-3">
-              <h4 className="text-xs sm:text-sm font-black text-retro-black uppercase tracking-wider">
-                Daftar Tugas Mengajar Aktif ({assignments.length})
-              </h4>
-              <span className="badge-retro bg-brand-100 text-brand-900">
-                Terkoneksi Guru Mapel
-              </span>
-            </div>
-
-            {assignments.length === 0 ? (
-              <div className="p-8 text-center text-slate-400 border-2 border-dashed border-slate-300 rounded-xl">
-                <BookOpen className="w-10 h-10 mx-auto mb-2 text-slate-400" />
-                <p className="font-bold text-xs text-slate-700">Belum Ada Tugas Mengajar</p>
-                <p className="text-[11px] text-slate-500">Tugaskan guru ke kelas dan mapel pada form di sebelah kiri.</p>
-              </div>
-            ) : (
-              <div className="overflow-x-auto rounded-xl border-2 border-retro-border shadow-retro-sm">
-                <table className="w-full text-xs text-left">
-                  <thead className="bg-retro-yellow text-retro-black font-black border-b-2 border-retro-border uppercase">
-                    <tr>
-                      <th className="py-2.5 px-3 w-10 text-center">No</th>
-                      <th className="py-2.5 px-3">Nama Guru</th>
-                      <th className="py-2.5 px-3">Mata Pelajaran</th>
-                      <th className="py-2.5 px-3 w-24 text-center">Kelas</th>
-                      <th className="py-2.5 px-3 w-16 text-center">Aksi</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y-2 divide-slate-100 font-bold">
-                    {assignments.map((a, idx) => (
-                      <tr key={a.id} className="hover:bg-brand-50/40">
-                        <td className="py-2 px-3 text-center text-slate-500 font-mono">{idx + 1}</td>
-                        <td className="py-2 px-3 text-retro-black">{a.guru_nama}</td>
-                        <td className="py-2 px-3 text-brand-900">{a.nama_mapel} ({a.kode_mapel})</td>
-                        <td className="py-2 px-3 text-center">
-                          <span className="badge-retro bg-retro-cream text-retro-black">
-                            Kelas {a.kelas}
-                          </span>
-                        </td>
-                        <td className="py-2 px-3 text-center">
-                          <button
-                            onClick={() => handleDeleteAssignment(a.id)}
-                            className="p-1.5 rounded-lg border-2 border-red-600 bg-red-100 hover:bg-red-200 text-red-800 transition"
-                            title="Hapus Penugasan"
-                          >
-                            <Trash2 className="w-3.5 h-3.5" />
-                          </button>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
-          </div>
-        </div>
-      )}
-
-      {/* ================= TAB 3: PENETAPAN WALI KELAS ================= */}
+      {/* ================= TAB 2: PENETAPAN WALI KELAS ================= */}
       {activeTab === "wali" && (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-5 sm:gap-6">
           {/* Form Assign Wali */}
@@ -914,7 +737,7 @@ export default function AdminDashboard({
         </div>
       )}
 
-      {/* ================= TAB 4: DATABASE SISWA & PENCARIAN ================= */}
+      {/* ================= TAB 3: DATABASE SISWA & PENCARIAN ================= */}
       {activeTab === "siswa" && (
         <div className="card-retro p-5 space-y-4 bg-white">
           <div className="flex flex-wrap items-center justify-between border-b-2 border-retro-border pb-3 gap-3">
@@ -1105,7 +928,7 @@ export default function AdminDashboard({
         </div>
       )}
 
-      {/* ================= TAB 6: PENGATURAN MADRASAH & TAHUN AJARAN ================= */}
+      {/* ================= TAB 5: PENGATURAN MADRASAH & TAHUN AJARAN ================= */}
       {activeTab === "pengaturan" && (
         <div className="space-y-6 max-w-3xl mx-auto">
           {/* Box 1: Penetapan Tahun Ajaran & Semester Aktif */}

@@ -531,6 +531,9 @@ export default function HomePage() {
             madrasahId={selectedMadrasah}
             currentUser={currentUser}
             config={activeCfg}
+            allKelas={dropdowns.kelas}
+            allMapel={dropdowns.mapel}
+            allEkskul={dropdowns.ekskul}
             tahun={filterTahun}
             semester={filterSemester}
             activePeriodLabel={activePeriod?.label}
