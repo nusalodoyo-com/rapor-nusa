@@ -176,6 +176,24 @@ export function recordLoginLog(
   const logs = getLocalData<LoginLogItem[]>(keys.LOGIN_LOGS, []);
   const updated = [newLog, ...logs].slice(0, 150);
   setLocalData(keys.LOGIN_LOGS, updated);
+
+  // Sync login log ke Supabase jika aktif
+  if (isSupabaseConfigured && supabase) {
+    supabase
+      .from("login_logs")
+      .insert({
+        madrasah_id: newLog.madrasah_id,
+        user_id: newLog.user_id,
+        nama_user: newLog.nama_user,
+        username: newLog.username,
+        role: newLog.role,
+        status: newLog.status,
+        browser_device: newLog.browser_device,
+      })
+      .then(({ error }) => {
+        if (error) console.warn("Supabase login_logs insert note:", error.message);
+      });
+  }
 }
 
 export function getLoginLogs(madrasahId: MadrasahId): LoginLogItem[] {
@@ -456,6 +474,18 @@ export function resetTeacherPassword(
 
   all[idx].password = "Lodoyo2026";
   setLocalData(keys.USERS, all);
+
+  if (isSupabaseConfigured && supabase) {
+    supabase
+      .from("profiles")
+      .update({ password: "Lodoyo2026", updated_at: new Date().toISOString() })
+      .eq("username", all[idx].username)
+      .eq("madrasah_id", madrasahId)
+      .then(({ error }) => {
+        if (error) console.warn("Supabase resetTeacherPassword note:", error.message);
+      });
+  }
+
   return { success: true, message: `Password @${all[idx].username} (${all[idx].nama_user}) berhasil direset ke "Lodoyo2026"!` };
 }
 
@@ -490,6 +520,30 @@ export function updateUserProfile(
     ...profile,
   };
   setLocalData(keys.USERS, all);
+
+  if (isSupabaseConfigured && supabase) {
+    supabase
+      .from("profiles")
+      .update({
+        nama_lengkap: all[idx].nama_user,
+        nip: all[idx].nip,
+        gelar_depan: all[idx].gelar_depan,
+        gelar_belakang: all[idx].gelar_belakang,
+        tempat_lahir: all[idx].tempat_lahir,
+        tanggal_lahir: all[idx].tanggal_lahir || null,
+        jenis_kelamin: all[idx].jenis_kelamin,
+        alamat: all[idx].alamat,
+        no_wa: all[idx].no_wa,
+        email: all[idx].email,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("username", all[idx].username)
+      .eq("madrasah_id", madrasahId)
+      .then(({ error }) => {
+        if (error) console.warn("Supabase updateUserProfile note:", error.message);
+      });
+  }
+
   return { success: true, message: "Identitas profil berhasil diperbarui!", user: all[idx] };
 }
 
@@ -515,6 +569,21 @@ export function changeUserPassword(
 
   all[idx].password = newPass.trim();
   setLocalData(keys.USERS, all);
+
+  if (isSupabaseConfigured && supabase) {
+    supabase
+      .from("profiles")
+      .update({
+        password: newPass.trim(),
+        updated_at: new Date().toISOString(),
+      })
+      .eq("username", all[idx].username)
+      .eq("madrasah_id", madrasahId)
+      .then(({ error }) => {
+        if (error) console.warn("Supabase changeUserPassword note:", error.message);
+      });
+  }
+
   return { success: true, message: "Kata sandi berhasil diubah!" };
 }
 
@@ -1297,6 +1366,22 @@ export function getSchoolConfig(madrasahId: MadrasahId): SchoolConfig {
 export function updateSchoolConfig(madrasahId: MadrasahId, config: SchoolConfig): void {
   const keys = getStorageKeys(madrasahId);
   setLocalData(keys.CONFIG, config);
+
+  if (isSupabaseConfigured && supabase) {
+    supabase
+      .from("school_config")
+      .update({
+        nama_madrasah: config.nama_madrasah,
+        kepala_madrasah: config.kepala_madrasah,
+        nip_kepala: config.nip_kepala,
+        kota_tanggal: config.kota_tanggal,
+        ttd_kamad_url: config.ttd_kamad_url,
+      })
+      .eq("id", madrasahId)
+      .then(({ error }) => {
+        if (error) console.warn("Supabase school_config update note:", error.message);
+      });
+  }
 }
 
 export function saveKamadTtd(madrasahId: MadrasahId, ttdBase64: string): SchoolConfig {
