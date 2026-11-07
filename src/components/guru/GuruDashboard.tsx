@@ -22,6 +22,7 @@ import {
   getNilaiEkskulByKelas,
   simpanNilaiEkskulBatch,
   sortRombelList,
+  getAllSiswa,
 } from "@/lib/storage";
 import {
   SEED_MAPEL_MTS,
@@ -31,6 +32,11 @@ import {
 } from "@/lib/constants/seedData";
 import {
   downloadExcelMapel,
+  downloadExcelEkskul,
+  downloadTemplateRdmHarian,
+  downloadTemplateRdmSumatif,
+  downloadTemplateRdmPAS,
+  downloadTemplateRdmPTS,
   parseExcelUpload,
 } from "@/lib/excel/excelHandler";
 import NilaiMapelTable from "@/components/NilaiMapelTable";
@@ -160,6 +166,19 @@ export default function GuruDashboard({
   const [dataNilaiEkskul, setDataNilaiEkskul] = useState<NilaiEkskulItem[]>([]);
   const [isSaving, setIsSaving] = useState(false);
   const [notification, setNotification] = useState<{ type: "success" | "error"; message: string } | null>(null);
+
+  // Modal Download Template RDM State
+  const [isRdmModalOpen, setIsRdmModalOpen] = useState(false);
+
+  // Map NIS -> NISN untuk kelengkapan 100% template RDM
+  const allSiswaList = useMemo(() => getAllSiswa(madrasahId), [madrasahId]);
+  const allSiswaMap = useMemo(() => {
+    const map: Record<string, string> = {};
+    allSiswaList.forEach(s => {
+      if (s.nis) map[s.nis] = s.nisn || "";
+    });
+    return map;
+  }, [allSiswaList]);
 
   // Load Data Nilai Mapel, Bobot, and Status Kirim
   useEffect(() => {
@@ -360,7 +379,7 @@ export default function GuruDashboard({
     }
   };
 
-  // Unduh Template Excel Mapel
+  // Unduh Template Excel Mapel (Versi Sederhana)
   const handleDownloadExcel = async () => {
     if (!selectedKelas || !selectedKodeMapel || !activeMapelObj) return;
     await downloadExcelMapel(
@@ -369,6 +388,53 @@ export default function GuruDashboard({
       activeMapelObj.nama,
       dataNilai
     );
+  };
+
+  // Unduh Template RDM Resmi Kemenag (Terisi Otomatis 100%)
+  const handleDownloadRdm = async (type: "ph" | "sum" | "pas" | "pts") => {
+    if (!selectedKelas || !selectedKodeMapel || !activeMapelObj) return;
+
+    const options = {
+      kelas: selectedKelas,
+      kodeMapel: selectedKodeMapel,
+      namaMapel: activeMapelObj.nama,
+      semester,
+      tahun,
+      kkm: activeMapelObj.kkm || 70,
+      dataNilai,
+      allSiswaMap,
+    };
+
+    try {
+      if (type === "ph") {
+        await downloadTemplateRdmHarian(options);
+        setNotification({
+          type: "success",
+          message: `Template RDM Nilai Harian (PH 1-15) ${activeMapelObj.nama} berhasil diunduh dengan nilai terisi otomatis!`,
+        });
+      } else if (type === "sum") {
+        await downloadTemplateRdmSumatif(options);
+        setNotification({
+          type: "success",
+          message: `Template RDM Nilai Sumatif (SUM 1-9) ${activeMapelObj.nama} berhasil diunduh dengan nilai terisi otomatis!`,
+        });
+      } else if (type === "pas") {
+        await downloadTemplateRdmPAS(options);
+        setNotification({
+          type: "success",
+          message: `Template RDM Nilai Akhir Semester (PAS) ${activeMapelObj.nama} berhasil diunduh dengan nilai terisi otomatis!`,
+        });
+      } else if (type === "pts") {
+        await downloadTemplateRdmPTS(options);
+        setNotification({
+          type: "success",
+          message: `Template RDM Nilai Tengah Semester (PTS) ${activeMapelObj.nama} berhasil diunduh dengan nilai terisi otomatis!`,
+        });
+      }
+      setIsRdmModalOpen(false);
+    } catch (err: any) {
+      alert("Gagal mengunduh template RDM: " + err.message);
+    }
   };
 
   // Unggah Nilai Excel Mapel
@@ -660,20 +726,21 @@ export default function GuruDashboard({
                 )}
               </div>
 
-              {/* Right: Excel actions */}
-              <div className="flex items-center gap-2">
+              {/* Right: Excel & RDM actions */}
+              <div className="flex flex-wrap items-center gap-2">
                 <button
                   type="button"
-                  onClick={handleDownloadExcel}
-                  className="btn-retro-white px-3 py-1.5 text-xs flex items-center gap-1"
+                  onClick={() => setIsRdmModalOpen(true)}
+                  className="btn-retro bg-retro-yellow text-retro-black hover:bg-amber-300 px-3.5 py-1.5 text-xs font-black flex items-center gap-1.5 shadow-retro-sm"
+                  title="Unduh Template Standar RDM Kemenag RI (Terisi Otomatis)"
                 >
-                  <FileSpreadsheet className="w-4 h-4 text-brand-600" />
-                  <span>Unduh Excel (.xlsx)</span>
+                  <FileSpreadsheet className="w-4 h-4 text-retro-black" />
+                  <span>📥 Download Template RDM</span>
                 </button>
 
                 {!statusKirim.is_sent && (
-                  <label className="btn-retro bg-retro-yellow text-retro-black hover:bg-amber-300 px-3 py-1.5 text-xs flex items-center gap-1 cursor-pointer">
-                    <Upload className="w-4 h-4" />
+                  <label className="btn-retro-white px-3 py-1.5 text-xs flex items-center gap-1 cursor-pointer font-bold shadow-retro-sm" title="Unggah file Excel (Format RDM maupun standar)">
+                    <Upload className="w-4 h-4 text-brand-600" />
                     <span>Unggah Excel</span>
                     <input
                       type="file"
@@ -824,6 +891,179 @@ export default function GuruDashboard({
             namaEkskul={selectedNamaEkskul}
           />
         </>
+      )}
+
+      {/* MODAL DIALOG: DOWNLOAD TEMPLATE RDM RESMI KEMENAG */}
+      {isRdmModalOpen && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-xs flex items-center justify-center z-50 p-4">
+          <div className="card-retro bg-white max-w-2xl w-full p-5 sm:p-6 space-y-4 shadow-retro-lg max-h-[90vh] overflow-y-auto">
+            {/* Header Modal */}
+            <div className="flex items-start justify-between border-b-2 border-retro-border pb-3">
+              <div>
+                <div className="flex items-center gap-2">
+                  <span className="badge-retro bg-brand-500 text-white text-[10px]">
+                    STANDAR RDM KEMENAG RI
+                  </span>
+                  <span className="badge-retro bg-retro-yellow text-retro-black text-[10px] font-black">
+                    TERISI OTOMATIS
+                  </span>
+                </div>
+                <h3 className="text-base sm:text-lg font-black text-retro-black uppercase mt-1">
+                  Download Template RDM Madrasah
+                </h3>
+                <p className="text-xs text-slate-600 font-bold">
+                  Kelas {selectedKelas} • Mapel: {activeMapelObj?.nama} ({dataNilai.length} Siswa)
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsRdmModalOpen(false)}
+                className="p-1.5 rounded-lg border-2 border-retro-border bg-slate-100 hover:bg-red-100 text-retro-black font-black"
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Deskripsi Info Standar RDM */}
+            <div className="p-3 bg-retro-cream border-2 border-retro-border rounded-xl text-xs font-bold text-slate-700 space-y-1">
+              <p>
+                Format template di bawah <strong>100% persis mengacu pada standar RDM Kementerian Agama</strong> (kolom nomor urut, NIS, NISN, nama peserta didik, dan kolom nilai warna kuning).
+              </p>
+              <p className="text-[11px] text-brand-800">
+                ✓ Nilai yang telah diinput di web otomatis masuk ke dalam kolom Excel, siap langsung diunggah ke aplikasi RDM madrasah!
+              </p>
+            </div>
+
+            {/* 4 Pilihan Template RDM */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 pt-1">
+              {/* Opsi 1: Nilai Harian (PH 1-15) */}
+              <div className="card-retro p-4 bg-white border-2 border-retro-border hover:border-brand-500 transition space-y-2 flex flex-col justify-between">
+                <div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-[10px] font-black uppercase text-brand-700 bg-brand-50 px-2 py-0.5 rounded border border-brand-200">
+                      15 Sheet (PH 1 - PH 15)
+                    </span>
+                    <span className="text-xs">📘</span>
+                  </div>
+                  <h4 className="text-sm font-black text-retro-black mt-1.5">
+                    Template Nilai Harian (PH)
+                  </h4>
+                  <p className="text-[11px] text-slate-500 font-bold leading-relaxed">
+                    Setiap sheet berisi materi & nilai harian 1 s.d. 4 yang terisi otomatis. Kolom nilai kuning terang siap pakai.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => handleDownloadRdm("ph")}
+                  className="w-full py-2 btn-retro-primary text-xs font-black uppercase flex items-center justify-center gap-1.5 shadow-retro-sm mt-2"
+                >
+                  <FileSpreadsheet className="w-4 h-4" />
+                  <span>Unduh Template PH</span>
+                </button>
+              </div>
+
+              {/* Opsi 2: Nilai Sumatif LM (SUM 1-9) */}
+              <div className="card-retro p-4 bg-white border-2 border-retro-border hover:border-brand-500 transition space-y-2 flex flex-col justify-between">
+                <div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-[10px] font-black uppercase text-amber-800 bg-amber-50 px-2 py-0.5 rounded border border-amber-200">
+                      9 Sheet (SUM 1 - SUM 9)
+                    </span>
+                    <span className="text-xs">📙</span>
+                  </div>
+                  <h4 className="text-sm font-black text-retro-black mt-1.5">
+                    Template Nilai Sumatif (LM)
+                  </h4>
+                  <p className="text-[11px] text-slate-500 font-bold leading-relaxed">
+                    Sesuai format Sumatif Kurikulum Merdeka & KMA 1503 lengkap dengan baris KKTP ({activeMapelObj?.kkm || 70}) dan materi.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => handleDownloadRdm("sum")}
+                  className="w-full py-2 btn-retro bg-retro-yellow text-retro-black hover:bg-amber-300 border-2 border-retro-border text-xs font-black uppercase flex items-center justify-center gap-1.5 shadow-retro-sm mt-2"
+                >
+                  <FileSpreadsheet className="w-4 h-4" />
+                  <span>Unduh Template Sumatif</span>
+                </button>
+              </div>
+
+              {/* Opsi 3: PAS / SAS */}
+              <div className="card-retro p-4 bg-white border-2 border-retro-border hover:border-brand-500 transition space-y-2 flex flex-col justify-between">
+                <div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-[10px] font-black uppercase text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
+                      Sheet: PAS / SAS
+                    </span>
+                    <span className="text-xs">📗</span>
+                  </div>
+                  <h4 className="text-sm font-black text-retro-black mt-1.5">
+                    Penilaian Akhir Semester (PAS)
+                  </h4>
+                  <p className="text-[11px] text-slate-500 font-bold leading-relaxed">
+                    Template ujian akhir semester dengan kolom nilai terisi otomatis dari nilai UAS/SAS yang sudah Anda simpan.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => handleDownloadRdm("pas")}
+                  className="w-full py-2 btn-retro-white text-xs font-black uppercase flex items-center justify-center gap-1.5 shadow-retro-sm mt-2"
+                >
+                  <FileSpreadsheet className="w-4 h-4 text-emerald-700" />
+                  <span>Unduh Template PAS</span>
+                </button>
+              </div>
+
+              {/* Opsi 4: PTS / STS */}
+              <div className="card-retro p-4 bg-white border-2 border-retro-border hover:border-brand-500 transition space-y-2 flex flex-col justify-between">
+                <div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-[10px] font-black uppercase text-blue-800 bg-blue-50 px-2 py-0.5 rounded border border-blue-200">
+                      Sheet: PTS / STS
+                    </span>
+                    <span className="text-xs">📕</span>
+                  </div>
+                  <h4 className="text-sm font-black text-retro-black mt-1.5">
+                    Penilaian Tengah Semester (PTS)
+                  </h4>
+                  <p className="text-[11px] text-slate-500 font-bold leading-relaxed">
+                    Template ujian tengah semester dengan kolom nilai terisi otomatis dari nilai UTS/STS yang sudah Anda simpan.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => handleDownloadRdm("pts")}
+                  className="w-full py-2 btn-retro-white text-xs font-black uppercase flex items-center justify-center gap-1.5 shadow-retro-sm mt-2"
+                >
+                  <FileSpreadsheet className="w-4 h-4 text-blue-700" />
+                  <span>Unduh Template PTS</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Footer Opsi Tambahan */}
+            <div className="pt-3 border-t-2 border-slate-200 flex flex-wrap items-center justify-between gap-2">
+              <button
+                type="button"
+                onClick={() => {
+                  setIsRdmModalOpen(false);
+                  handleDownloadExcel();
+                }}
+                className="text-[11px] font-bold text-slate-500 hover:text-brand-700 underline text-left"
+              >
+                Unduh format spreadsheet sederhana (single sheet .xlsx)
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setIsRdmModalOpen(false)}
+                className="btn-retro-white py-1.5 px-4 text-xs font-black uppercase"
+              >
+                Tutup
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

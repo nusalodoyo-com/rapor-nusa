@@ -23,6 +23,719 @@ const HEADER_FONT: Partial<ExcelJS.Font> = {
   bold: true,
 };
 
+// Styling Spesifik Mengacu Standar Template RDM Kemenag
+const BORDER_THIN: Partial<ExcelJS.Borders> = {
+  top: { style: "thin", color: { argb: "FF595959" } },
+  left: { style: "thin", color: { argb: "FF595959" } },
+  bottom: { style: "thin", color: { argb: "FF595959" } },
+  right: { style: "thin", color: { argb: "FF595959" } },
+};
+
+const FILL_RDM_GREY_HEADER: ExcelJS.Fill = {
+  type: "pattern",
+  pattern: "solid",
+  fgColor: { argb: "FF7F7F7F" },
+};
+
+const FILL_RDM_GREY_CELL: ExcelJS.Fill = {
+  type: "pattern",
+  pattern: "solid",
+  fgColor: { argb: "FFD9D9D9" },
+};
+
+const FILL_RDM_YELLOW: ExcelJS.Fill = {
+  type: "pattern",
+  pattern: "solid",
+  fgColor: { argb: "FFFFFF00" },
+};
+
+export interface RdmTemplateOptions {
+  kelas: string;
+  kodeMapel: string;
+  namaMapel: string;
+  semester: string;
+  tahun: string;
+  kkm?: number;
+  dataNilai: NilaiMapelItem[];
+  allSiswaMap?: Record<string, string>; // nis -> nisn
+}
+
+function cleanFilename(str: string): string {
+  return str.replace(/[^a-zA-Z0-9_\-]/g, "_");
+}
+
+// =====================================================================
+// 1. TEMPLATE RDM RESMI: NILAI HARIAN / PH (15 SHEETS: PH 1 - PH 15)
+// =====================================================================
+export async function downloadTemplateRdmHarian(options: RdmTemplateOptions): Promise<void> {
+  const { kelas, kodeMapel, namaMapel, dataNilai, allSiswaMap = {} } = options;
+  const wb = new ExcelJS.Workbook();
+  wb.creator = "RDM Kemenag RI";
+
+  const first = dataNilai.length > 0 ? dataNilai[0] : null;
+  const materiMap: Record<number, string> = {
+    1: first?.materi_1 || "",
+    2: first?.materi_2 || "",
+    3: first?.materi_3 || "",
+    4: first?.materi_4 || "",
+  };
+
+  // Buat 15 sheet standar RDM Kemenag (PH 1 s.d. PH 15)
+  for (let ph = 1; ph <= 15; ph++) {
+    const sheetName = `PH ${ph}`;
+    const ws = wb.addWorksheet(sheetName);
+
+    // Setup kolom sesuai standar RDM (Kolom B disembunyikan/width 0)
+    ws.getColumn(1).width = 7; // A: No / Label
+    ws.getColumn(2).width = 0; // B: Hidden
+    ws.getColumn(2).hidden = true;
+    ws.getColumn(3).width = 14; // C: NIS
+    ws.getColumn(4).width = 18; // D: Nisn
+    ws.getColumn(5).width = 38; // E: Nama
+    ws.getColumn(6).width = 14; // F: Nilai
+
+    // Baris 1: Judul Template
+    ws.mergeCells("A1:F1");
+    const cA1 = ws.getCell("A1");
+    cA1.value = "Template Nilai Harian";
+    cA1.font = { name: "Calibri", size: 14, bold: true };
+    cA1.alignment = { horizontal: "center", vertical: "middle" };
+    ws.getRow(1).height = 26;
+
+    // Baris 2: Nama PH & Kelas/Mapel
+    const cA2 = ws.getCell("A2");
+    cA2.value = "Nama";
+    cA2.fill = FILL_RDM_GREY_HEADER;
+    cA2.font = { name: "Calibri", size: 11, bold: true, color: { argb: "FFFFFFFF" } };
+    cA2.alignment = { horizontal: "center", vertical: "middle" };
+    cA2.border = BORDER_THIN;
+
+    const cC2 = ws.getCell("C2");
+    cC2.value = `PH ${ph}`;
+    cC2.fill = FILL_RDM_YELLOW;
+    cC2.font = { name: "Calibri", size: 11, bold: true };
+    cC2.alignment = { horizontal: "center", vertical: "middle" };
+    cC2.border = BORDER_THIN;
+
+    ws.mergeCells("D2:E2");
+    const cD2 = ws.getCell("D2");
+    cD2.value = `Kelas/Mapel: ${kelas}/${namaMapel}`;
+    cD2.fill = FILL_RDM_YELLOW;
+    cD2.font = { name: "Calibri", size: 11, bold: true };
+    cD2.alignment = { horizontal: "left", vertical: "middle" };
+    cD2.border = BORDER_THIN;
+
+    const cF2 = ws.getCell("F2");
+    cF2.fill = FILL_RDM_YELLOW;
+    cF2.border = BORDER_THIN;
+    ws.getRow(2).height = 22;
+
+    // Baris 3: Pemisah tipis
+    ws.getRow(3).height = 4;
+
+    // Baris 4: Materi
+    const cA4 = ws.getCell("A4");
+    cA4.value = "Materi";
+    cA4.fill = FILL_RDM_GREY_HEADER;
+    cA4.font = { name: "Calibri", size: 11, bold: true, color: { argb: "FFFFFFFF" } };
+    cA4.alignment = { horizontal: "center", vertical: "middle" };
+    cA4.border = BORDER_THIN;
+
+    ws.mergeCells("C4:F4");
+    const cC4 = ws.getCell("C4");
+    cC4.value = materiMap[ph] || "";
+    cC4.fill = FILL_RDM_YELLOW;
+    cC4.font = { name: "Calibri", size: 11 };
+    cC4.alignment = { horizontal: "left", vertical: "middle" };
+    cC4.border = BORDER_THIN;
+    ws.getRow(4).height = 24;
+
+    // Baris 5: Pemisah kosong
+    ws.getRow(5).height = 8;
+
+    // Baris 6: Header Tabel
+    const headers = [
+      { col: "A", val: "No" },
+      { col: "C", val: "NIS" },
+      { col: "D", val: "Nisn" },
+      { col: "E", val: "Nama" },
+      { col: "F", val: "Nilai" },
+    ];
+    headers.forEach(h => {
+      const cell = ws.getCell(`${h.col}6`);
+      cell.value = h.val;
+      cell.fill = FILL_RDM_GREY_HEADER;
+      cell.font = { name: "Calibri", size: 11, bold: true, color: { argb: "FFFFFFFF" } };
+      cell.alignment = { horizontal: "center", vertical: "middle" };
+      cell.border = BORDER_THIN;
+    });
+    ws.getRow(6).height = 24;
+
+    // Baris 7+: Data Peserta Didik
+    dataNilai.forEach((siswa, idx) => {
+      const r = 7 + idx;
+      let valNilai: number | string = "";
+
+      if (ph === 1 && Number(siswa.nilai_harian_1) > 0) valNilai = Number(siswa.nilai_harian_1);
+      else if (ph === 2 && Number(siswa.nilai_harian_2) > 0) valNilai = Number(siswa.nilai_harian_2);
+      else if (ph === 3 && Number(siswa.nilai_harian_3) > 0) valNilai = Number(siswa.nilai_harian_3);
+      else if (ph === 4 && Number(siswa.nilai_harian_4) > 0) valNilai = Number(siswa.nilai_harian_4);
+
+      const nisnVal = allSiswaMap[siswa.nis] || siswa.nisn || "";
+
+      // Col A: No
+      const cA = ws.getCell(`A${r}`);
+      cA.value = idx + 1;
+      cA.fill = FILL_RDM_GREY_CELL;
+      cA.font = { name: "Calibri", size: 11 };
+      cA.alignment = { horizontal: "center", vertical: "middle" };
+      cA.border = BORDER_THIN;
+
+      // Col C: NIS
+      const cC = ws.getCell(`C${r}`);
+      cC.value = siswa.nis;
+      cC.fill = FILL_RDM_GREY_CELL;
+      cC.font = { name: "Calibri", size: 11 };
+      cC.alignment = { horizontal: "center", vertical: "middle" };
+      cC.border = BORDER_THIN;
+
+      // Col D: Nisn
+      const cD = ws.getCell(`D${r}`);
+      cD.value = String(nisnVal);
+      cD.fill = FILL_RDM_GREY_CELL;
+      cD.font = { name: "Calibri", size: 11 };
+      cD.alignment = { horizontal: "center", vertical: "middle" };
+      cD.border = BORDER_THIN;
+
+      // Col E: Nama
+      const cE = ws.getCell(`E${r}`);
+      cE.value = siswa.nama_siswa.toUpperCase();
+      cE.fill = FILL_RDM_GREY_CELL;
+      cE.font = { name: "Calibri", size: 11 };
+      cE.alignment = { horizontal: "left", vertical: "middle" };
+      cE.border = BORDER_THIN;
+
+      // Col F: Nilai (Kuning)
+      const cF = ws.getCell(`F${r}`);
+      cF.value = valNilai;
+      cF.fill = FILL_RDM_YELLOW;
+      cF.font = { name: "Calibri", size: 11, bold: true };
+      cF.alignment = { horizontal: "center", vertical: "middle" };
+      cF.border = BORDER_THIN;
+
+      ws.getRow(r).height = 20;
+    });
+  }
+
+  await triggerDownload(
+    wb,
+    `Template_Nilai_Harian_${cleanFilename(namaMapel)}_Kelas_${cleanFilename(kelas)}.xlsx`
+  );
+}
+
+// =====================================================================
+// 2. TEMPLATE RDM RESMI: NILAI SUMATIF (9 SHEETS: SUM 1 - SUM 9)
+// =====================================================================
+export async function downloadTemplateRdmSumatif(options: RdmTemplateOptions): Promise<void> {
+  const { kelas, kodeMapel, namaMapel, dataNilai, kkm = 70, allSiswaMap = {} } = options;
+  const wb = new ExcelJS.Workbook();
+  wb.creator = "RDM Kemenag RI";
+
+  const first = dataNilai.length > 0 ? dataNilai[0] : null;
+  const materiMap: Record<number, string> = {
+    1: first?.materi_1 || "",
+    2: first?.materi_2 || "",
+    3: first?.materi_3 || "",
+    4: first?.materi_4 || "",
+  };
+
+  for (let s = 1; s <= 9; s++) {
+    const sheetName = `SUM ${s}`;
+    const ws = wb.addWorksheet(sheetName);
+
+    ws.getColumn(1).width = 7;
+    ws.getColumn(2).width = 0;
+    ws.getColumn(2).hidden = true;
+    ws.getColumn(3).width = 14;
+    ws.getColumn(4).width = 18;
+    ws.getColumn(5).width = 38;
+    ws.getColumn(6).width = 14;
+
+    // Baris 1: Template Nilai Sumatif
+    ws.mergeCells("A1:F1");
+    const cA1 = ws.getCell("A1");
+    cA1.value = "Template Nilai Sumatif";
+    cA1.font = { name: "Calibri", size: 14, bold: true };
+    cA1.alignment = { horizontal: "center", vertical: "middle" };
+    ws.getRow(1).height = 26;
+
+    // Baris 2: Nama & Kelas/Mapel
+    const cA2 = ws.getCell("A2");
+    cA2.value = "Nama";
+    cA2.fill = FILL_RDM_GREY_HEADER;
+    cA2.font = { name: "Calibri", size: 11, bold: true, color: { argb: "FFFFFFFF" } };
+    cA2.alignment = { horizontal: "center", vertical: "middle" };
+    cA2.border = BORDER_THIN;
+
+    const cC2 = ws.getCell("C2");
+    cC2.value = `SUM ${s}`;
+    cC2.fill = FILL_RDM_YELLOW;
+    cC2.font = { name: "Calibri", size: 11, bold: true };
+    cC2.alignment = { horizontal: "center", vertical: "middle" };
+    cC2.border = BORDER_THIN;
+
+    const cD2 = ws.getCell("D2");
+    cD2.value = "Kelas/Mapel:";
+    cD2.fill = FILL_RDM_YELLOW;
+    cD2.font = { name: "Calibri", size: 11, bold: true };
+    cD2.alignment = { horizontal: "right", vertical: "middle" };
+    cD2.border = BORDER_THIN;
+
+    ws.mergeCells("E2:F2");
+    const cE2 = ws.getCell("E2");
+    cE2.value = `${kelas}/${namaMapel}`;
+    cE2.fill = FILL_RDM_YELLOW;
+    cE2.font = { name: "Calibri", size: 11, bold: true };
+    cE2.alignment = { horizontal: "left", vertical: "middle" };
+    cE2.border = BORDER_THIN;
+    ws.getRow(2).height = 22;
+
+    // Baris 3: Pemisah tipis
+    ws.getRow(3).height = 4;
+
+    // Baris 4: Materi
+    const cA4 = ws.getCell("A4");
+    cA4.value = "Materi";
+    cA4.fill = FILL_RDM_GREY_HEADER;
+    cA4.font = { name: "Calibri", size: 11, bold: true, color: { argb: "FFFFFFFF" } };
+    cA4.alignment = { horizontal: "center", vertical: "middle" };
+    cA4.border = BORDER_THIN;
+
+    ws.mergeCells("C4:F4");
+    const cC4 = ws.getCell("C4");
+    cC4.value = materiMap[s] || "";
+    cC4.fill = FILL_RDM_YELLOW;
+    cC4.font = { name: "Calibri", size: 11 };
+    cC4.alignment = { horizontal: "left", vertical: "middle" };
+    cC4.border = BORDER_THIN;
+    ws.getRow(4).height = 24;
+
+    // Baris 5: KKTP
+    const cA5 = ws.getCell("A5");
+    cA5.value = "KKTP";
+    cA5.fill = FILL_RDM_GREY_HEADER;
+    cA5.font = { name: "Calibri", size: 11, bold: true, color: { argb: "FFFFFFFF" } };
+    cA5.alignment = { horizontal: "center", vertical: "middle" };
+    cA5.border = BORDER_THIN;
+
+    const cC5 = ws.getCell("C5");
+    cC5.value = kkm;
+    cC5.fill = FILL_RDM_YELLOW;
+    cC5.font = { name: "Calibri", size: 11, bold: true };
+    cC5.alignment = { horizontal: "center", vertical: "middle" };
+    cC5.border = BORDER_THIN;
+
+    ws.mergeCells("D5:F5");
+    const cD5 = ws.getCell("D5");
+    cD5.fill = FILL_RDM_YELLOW;
+    cD5.border = BORDER_THIN;
+    ws.getRow(5).height = 22;
+
+    // Baris 6: Header Tabel
+    const headers = [
+      { col: "A", val: "No" },
+      { col: "C", val: "NIS" },
+      { col: "D", val: "Nisn" },
+      { col: "E", val: "Nama" },
+      { col: "F", val: "Nilai" },
+    ];
+    headers.forEach(h => {
+      const cell = ws.getCell(`${h.col}6`);
+      cell.value = h.val;
+      cell.fill = FILL_RDM_GREY_HEADER;
+      cell.font = { name: "Calibri", size: 11, bold: true, color: { argb: "FFFFFFFF" } };
+      cell.alignment = { horizontal: "center", vertical: "middle" };
+      cell.border = BORDER_THIN;
+    });
+    ws.getRow(6).height = 24;
+
+    // Baris 7+: Data Siswa
+    dataNilai.forEach((siswa, idx) => {
+      const r = 7 + idx;
+      let valNilai: number | string = "";
+
+      if (s === 1 && Number(siswa.nilai_harian_1) > 0) valNilai = Number(siswa.nilai_harian_1);
+      else if (s === 2 && Number(siswa.nilai_harian_2) > 0) valNilai = Number(siswa.nilai_harian_2);
+      else if (s === 3 && Number(siswa.nilai_harian_3) > 0) valNilai = Number(siswa.nilai_harian_3);
+      else if (s === 4 && Number(siswa.nilai_harian_4) > 0) valNilai = Number(siswa.nilai_harian_4);
+
+      const nisnVal = allSiswaMap[siswa.nis] || siswa.nisn || "";
+
+      const cA = ws.getCell(`A${r}`);
+      cA.value = idx + 1;
+      cA.fill = FILL_RDM_GREY_CELL;
+      cA.alignment = { horizontal: "center", vertical: "middle" };
+      cA.border = BORDER_THIN;
+
+      const cC = ws.getCell(`C${r}`);
+      cC.value = siswa.nis;
+      cC.fill = FILL_RDM_GREY_CELL;
+      cC.alignment = { horizontal: "center", vertical: "middle" };
+      cC.border = BORDER_THIN;
+
+      const cD = ws.getCell(`D${r}`);
+      cD.value = String(nisnVal);
+      cD.fill = FILL_RDM_GREY_CELL;
+      cD.alignment = { horizontal: "center", vertical: "middle" };
+      cD.border = BORDER_THIN;
+
+      const cE = ws.getCell(`E${r}`);
+      cE.value = siswa.nama_siswa.toUpperCase();
+      cE.fill = FILL_RDM_GREY_CELL;
+      cE.alignment = { horizontal: "left", vertical: "middle" };
+      cE.border = BORDER_THIN;
+
+      const cF = ws.getCell(`F${r}`);
+      cF.value = valNilai;
+      cF.fill = FILL_RDM_YELLOW;
+      cF.font = { name: "Calibri", size: 11, bold: true };
+      cF.alignment = { horizontal: "center", vertical: "middle" };
+      cF.border = BORDER_THIN;
+
+      ws.getRow(r).height = 20;
+    });
+  }
+
+  await triggerDownload(
+    wb,
+    `Template_Nilai_Sumatif_${cleanFilename(namaMapel)}_Kelas_${cleanFilename(kelas)}.xlsx`
+  );
+}
+
+// =====================================================================
+// 3. TEMPLATE RDM RESMI: PENILAIAN AKHIR SEMESTER (PAS / SAS)
+// =====================================================================
+export async function downloadTemplateRdmPAS(options: RdmTemplateOptions): Promise<void> {
+  const { kelas, kodeMapel, namaMapel, semester, tahun, kkm = 70, dataNilai, allSiswaMap = {} } = options;
+  const wb = new ExcelJS.Workbook();
+  wb.creator = "RDM Kemenag RI";
+
+  const ws = wb.addWorksheet("PAS");
+
+  ws.getColumn(1).width = 7;
+  ws.getColumn(2).width = 0;
+  ws.getColumn(2).hidden = true;
+  ws.getColumn(3).width = 14;
+  ws.getColumn(4).width = 18;
+  ws.getColumn(5).width = 38;
+  ws.getColumn(6).width = 14;
+
+  // Baris 1: Judul
+  ws.mergeCells("A1:F1");
+  const cA1 = ws.getCell("A1");
+  cA1.value = "Template Nilai Akhir Semester";
+  cA1.font = { name: "Calibri", size: 14, bold: true };
+  cA1.alignment = { horizontal: "center", vertical: "middle" };
+  ws.getRow(1).height = 26;
+
+  // Baris 2: Nama & Kelas/Mapel
+  const cA2 = ws.getCell("A2");
+  cA2.value = "Nama";
+  cA2.fill = FILL_RDM_GREY_HEADER;
+  cA2.font = { name: "Calibri", size: 11, bold: true, color: { argb: "FFFFFFFF" } };
+  cA2.alignment = { horizontal: "center", vertical: "middle" };
+  cA2.border = BORDER_THIN;
+
+  const cC2 = ws.getCell("C2");
+  cC2.value = "PAS";
+  cC2.fill = FILL_RDM_YELLOW;
+  cC2.font = { name: "Calibri", size: 11, bold: true };
+  cC2.alignment = { horizontal: "center", vertical: "middle" };
+  cC2.border = BORDER_THIN;
+
+  const cD2 = ws.getCell("D2");
+  cD2.value = "Kelas/Mapel:";
+  cD2.fill = FILL_RDM_YELLOW;
+  cD2.font = { name: "Calibri", size: 11, bold: true };
+  cD2.alignment = { horizontal: "right", vertical: "middle" };
+  cD2.border = BORDER_THIN;
+
+  ws.mergeCells("E2:F2");
+  const cE2 = ws.getCell("E2");
+  cE2.value = `${kelas}/${namaMapel}`;
+  cE2.fill = FILL_RDM_YELLOW;
+  cE2.font = { name: "Calibri", size: 11, bold: true };
+  cE2.alignment = { horizontal: "left", vertical: "middle" };
+  cE2.border = BORDER_THIN;
+  ws.getRow(2).height = 22;
+
+  // Baris 3: Pemisah tipis
+  ws.getRow(3).height = 4;
+
+  // Baris 4: Semester
+  const cA4 = ws.getCell("A4");
+  cA4.value = "Semester";
+  cA4.fill = FILL_RDM_GREY_HEADER;
+  cA4.font = { name: "Calibri", size: 11, bold: true, color: { argb: "FFFFFFFF" } };
+  cA4.alignment = { horizontal: "center", vertical: "middle" };
+  cA4.border = BORDER_THIN;
+
+  ws.mergeCells("C4:F4");
+  const cC4 = ws.getCell("C4");
+  cC4.value = `${semester === "1" ? "Gasal" : "Genap"} ${tahun}`;
+  cC4.fill = FILL_RDM_YELLOW;
+  cC4.font = { name: "Calibri", size: 11 };
+  cC4.alignment = { horizontal: "left", vertical: "middle" };
+  cC4.border = BORDER_THIN;
+  ws.getRow(4).height = 22;
+
+  // Baris 5: KKM / KKTP
+  const cA5 = ws.getCell("A5");
+  cA5.value = "KKM";
+  cA5.fill = FILL_RDM_GREY_HEADER;
+  cA5.font = { name: "Calibri", size: 11, bold: true, color: { argb: "FFFFFFFF" } };
+  cA5.alignment = { horizontal: "center", vertical: "middle" };
+  cA5.border = BORDER_THIN;
+
+  const cC5 = ws.getCell("C5");
+  cC5.value = kkm;
+  cC5.fill = FILL_RDM_YELLOW;
+  cC5.font = { name: "Calibri", size: 11, bold: true };
+  cC5.alignment = { horizontal: "center", vertical: "middle" };
+  cC5.border = BORDER_THIN;
+
+  ws.mergeCells("D5:F5");
+  const cD5 = ws.getCell("D5");
+  cD5.fill = FILL_RDM_YELLOW;
+  cD5.border = BORDER_THIN;
+  ws.getRow(5).height = 22;
+
+  // Baris 6: Header Tabel
+  const headers = [
+    { col: "A", val: "No" },
+    { col: "C", val: "NIS" },
+    { col: "D", val: "Nisn" },
+    { col: "E", val: "Nama" },
+    { col: "F", val: "Nilai" },
+  ];
+  headers.forEach(h => {
+    const cell = ws.getCell(`${h.col}6`);
+    cell.value = h.val;
+    cell.fill = FILL_RDM_GREY_HEADER;
+    cell.font = { name: "Calibri", size: 11, bold: true, color: { argb: "FFFFFFFF" } };
+    cell.alignment = { horizontal: "center", vertical: "middle" };
+    cell.border = BORDER_THIN;
+  });
+  ws.getRow(6).height = 24;
+
+  // Baris 7+: Data Siswa dengan Nilai PAS Otomatis
+  dataNilai.forEach((siswa, idx) => {
+    const r = 7 + idx;
+    const valNilai = Number(siswa.nilai_uas) > 0 ? Number(siswa.nilai_uas) : "";
+    const nisnVal = allSiswaMap[siswa.nis] || siswa.nisn || "";
+
+    const cA = ws.getCell(`A${r}`);
+    cA.value = idx + 1;
+    cA.fill = FILL_RDM_GREY_CELL;
+    cA.alignment = { horizontal: "center", vertical: "middle" };
+    cA.border = BORDER_THIN;
+
+    const cC = ws.getCell(`C${r}`);
+    cC.value = siswa.nis;
+    cC.fill = FILL_RDM_GREY_CELL;
+    cC.alignment = { horizontal: "center", vertical: "middle" };
+    cC.border = BORDER_THIN;
+
+    const cD = ws.getCell(`D${r}`);
+    cD.value = String(nisnVal);
+    cD.fill = FILL_RDM_GREY_CELL;
+    cD.alignment = { horizontal: "center", vertical: "middle" };
+    cD.border = BORDER_THIN;
+
+    const cE = ws.getCell(`E${r}`);
+    cE.value = siswa.nama_siswa.toUpperCase();
+    cE.fill = FILL_RDM_GREY_CELL;
+    cE.alignment = { horizontal: "left", vertical: "middle" };
+    cE.border = BORDER_THIN;
+
+    const cF = ws.getCell(`F${r}`);
+    cF.value = valNilai;
+    cF.fill = FILL_RDM_YELLOW;
+    cF.font = { name: "Calibri", size: 11, bold: true };
+    cF.alignment = { horizontal: "center", vertical: "middle" };
+    cF.border = BORDER_THIN;
+
+    ws.getRow(r).height = 20;
+  });
+
+  await triggerDownload(
+    wb,
+    `Template_Nilai_PAS_${cleanFilename(namaMapel)}_Kelas_${cleanFilename(kelas)}.xlsx`
+  );
+}
+
+// =====================================================================
+// 4. TEMPLATE RDM RESMI: PENILAIAN TENGAH SEMESTER (PTS / STS)
+// =====================================================================
+export async function downloadTemplateRdmPTS(options: RdmTemplateOptions): Promise<void> {
+  const { kelas, kodeMapel, namaMapel, semester, tahun, kkm = 70, dataNilai, allSiswaMap = {} } = options;
+  const wb = new ExcelJS.Workbook();
+  wb.creator = "RDM Kemenag RI";
+
+  const ws = wb.addWorksheet("PTS");
+
+  ws.getColumn(1).width = 7;
+  ws.getColumn(2).width = 0;
+  ws.getColumn(2).hidden = true;
+  ws.getColumn(3).width = 14;
+  ws.getColumn(4).width = 18;
+  ws.getColumn(5).width = 38;
+  ws.getColumn(6).width = 14;
+
+  // Baris 1: Judul
+  ws.mergeCells("A1:F1");
+  const cA1 = ws.getCell("A1");
+  cA1.value = "Template Nilai Tengah Semester";
+  cA1.font = { name: "Calibri", size: 14, bold: true };
+  cA1.alignment = { horizontal: "center", vertical: "middle" };
+  ws.getRow(1).height = 26;
+
+  // Baris 2: Nama & Kelas/Mapel
+  const cA2 = ws.getCell("A2");
+  cA2.value = "Nama";
+  cA2.fill = FILL_RDM_GREY_HEADER;
+  cA2.font = { name: "Calibri", size: 11, bold: true, color: { argb: "FFFFFFFF" } };
+  cA2.alignment = { horizontal: "center", vertical: "middle" };
+  cA2.border = BORDER_THIN;
+
+  const cC2 = ws.getCell("C2");
+  cC2.value = "PTS";
+  cC2.fill = FILL_RDM_YELLOW;
+  cC2.font = { name: "Calibri", size: 11, bold: true };
+  cC2.alignment = { horizontal: "center", vertical: "middle" };
+  cC2.border = BORDER_THIN;
+
+  const cD2 = ws.getCell("D2");
+  cD2.value = "Kelas/Mapel:";
+  cD2.fill = FILL_RDM_YELLOW;
+  cD2.font = { name: "Calibri", size: 11, bold: true };
+  cD2.alignment = { horizontal: "right", vertical: "middle" };
+  cD2.border = BORDER_THIN;
+
+  ws.mergeCells("E2:F2");
+  const cE2 = ws.getCell("E2");
+  cE2.value = `${kelas}/${namaMapel}`;
+  cE2.fill = FILL_RDM_YELLOW;
+  cE2.font = { name: "Calibri", size: 11, bold: true };
+  cE2.alignment = { horizontal: "left", vertical: "middle" };
+  cE2.border = BORDER_THIN;
+  ws.getRow(2).height = 22;
+
+  // Baris 3: Pemisah tipis
+  ws.getRow(3).height = 4;
+
+  // Baris 4: Semester
+  const cA4 = ws.getCell("A4");
+  cA4.value = "Semester";
+  cA4.fill = FILL_RDM_GREY_HEADER;
+  cA4.font = { name: "Calibri", size: 11, bold: true, color: { argb: "FFFFFFFF" } };
+  cA4.alignment = { horizontal: "center", vertical: "middle" };
+  cA4.border = BORDER_THIN;
+
+  ws.mergeCells("C4:F4");
+  const cC4 = ws.getCell("C4");
+  cC4.value = `${semester === "1" ? "Gasal" : "Genap"} ${tahun}`;
+  cC4.fill = FILL_RDM_YELLOW;
+  cC4.font = { name: "Calibri", size: 11 };
+  cC4.alignment = { horizontal: "left", vertical: "middle" };
+  cC4.border = BORDER_THIN;
+  ws.getRow(4).height = 22;
+
+  // Baris 5: KKM
+  const cA5 = ws.getCell("A5");
+  cA5.value = "KKM";
+  cA5.fill = FILL_RDM_GREY_HEADER;
+  cA5.font = { name: "Calibri", size: 11, bold: true, color: { argb: "FFFFFFFF" } };
+  cA5.alignment = { horizontal: "center", vertical: "middle" };
+  cA5.border = BORDER_THIN;
+
+  const cC5 = ws.getCell("C5");
+  cC5.value = kkm;
+  cC5.fill = FILL_RDM_YELLOW;
+  cC5.font = { name: "Calibri", size: 11, bold: true };
+  cC5.alignment = { horizontal: "center", vertical: "middle" };
+  cC5.border = BORDER_THIN;
+
+  ws.mergeCells("D5:F5");
+  const cD5 = ws.getCell("D5");
+  cD5.fill = FILL_RDM_YELLOW;
+  cD5.border = BORDER_THIN;
+  ws.getRow(5).height = 22;
+
+  // Baris 6: Header Tabel
+  const headers = [
+    { col: "A", val: "No" },
+    { col: "C", val: "NIS" },
+    { col: "D", val: "Nisn" },
+    { col: "E", val: "Nama" },
+    { col: "F", val: "Nilai" },
+  ];
+  headers.forEach(h => {
+    const cell = ws.getCell(`${h.col}6`);
+    cell.value = h.val;
+    cell.fill = FILL_RDM_GREY_HEADER;
+    cell.font = { name: "Calibri", size: 11, bold: true, color: { argb: "FFFFFFFF" } };
+    cell.alignment = { horizontal: "center", vertical: "middle" };
+    cell.border = BORDER_THIN;
+  });
+  ws.getRow(6).height = 24;
+
+  // Baris 7+: Data Siswa dengan Nilai STS/PTS Otomatis
+  dataNilai.forEach((siswa, idx) => {
+    const r = 7 + idx;
+    const valNilai = Number(siswa.nilai_uts) > 0 ? Number(siswa.nilai_uts) : "";
+    const nisnVal = allSiswaMap[siswa.nis] || siswa.nisn || "";
+
+    const cA = ws.getCell(`A${r}`);
+    cA.value = idx + 1;
+    cA.fill = FILL_RDM_GREY_CELL;
+    cA.alignment = { horizontal: "center", vertical: "middle" };
+    cA.border = BORDER_THIN;
+
+    const cC = ws.getCell(`C${r}`);
+    cC.value = siswa.nis;
+    cC.fill = FILL_RDM_GREY_CELL;
+    cC.alignment = { horizontal: "center", vertical: "middle" };
+    cC.border = BORDER_THIN;
+
+    const cD = ws.getCell(`D${r}`);
+    cD.value = String(nisnVal);
+    cD.fill = FILL_RDM_GREY_CELL;
+    cD.alignment = { horizontal: "center", vertical: "middle" };
+    cD.border = BORDER_THIN;
+
+    const cE = ws.getCell(`E${r}`);
+    cE.value = siswa.nama_siswa.toUpperCase();
+    cE.fill = FILL_RDM_GREY_CELL;
+    cE.alignment = { horizontal: "left", vertical: "middle" };
+    cE.border = BORDER_THIN;
+
+    const cF = ws.getCell(`F${r}`);
+    cF.value = valNilai;
+    cF.fill = FILL_RDM_YELLOW;
+    cF.font = { name: "Calibri", size: 11, bold: true };
+    cF.alignment = { horizontal: "center", vertical: "middle" };
+    cF.border = BORDER_THIN;
+
+    ws.getRow(r).height = 20;
+  });
+
+  await triggerDownload(
+    wb,
+    `Template_Nilai_PTS_${cleanFilename(namaMapel)}_Kelas_${cleanFilename(kelas)}.xlsx`
+  );
+}
+
 export async function downloadExcelMapel(
   kelas: string,
   kodeMapel: string,
@@ -91,7 +804,6 @@ export async function downloadExcelMapel(
       s.catatan_mapel || "",
     ]);
 
-    // Beri proteksi visual pada NIS dan Nama
     r.getCell(1).fill = LOCKED_FILL;
     r.getCell(1).font = LOCKED_FONT;
     r.getCell(1).alignment = { horizontal: "center" };
@@ -200,6 +912,9 @@ async function triggerDownload(wb: ExcelJS.Workbook, filename: string): Promise<
   URL.revokeObjectURL(link.href);
 }
 
+// =====================================================================
+// 5. PARSE EXCEL UPLOAD (CERDAS: MENDUKUNG TEMPLATE RDM MAUPUN STANDAR)
+// =====================================================================
 export async function parseExcelUpload(
   file: File,
   tipe: "mapel" | "ekskul" | "wali"
@@ -212,9 +927,112 @@ export async function parseExcelUpload(
   const buffer = await file.arrayBuffer();
   const wb = new ExcelJS.Workbook();
   await wb.xlsx.load(buffer);
-  const ws = wb.worksheets[0];
 
   if (tipe === "mapel") {
+    const sheetNames = wb.worksheets.map(w => w.name.toUpperCase().trim());
+
+    // Cek apakah ini template RDM Multi-Sheet (PH 1, SUM 1, PAS, PTS)
+    const isRdmPH = sheetNames.some(s => s === "PH 1" || s.startsWith("PH "));
+    const isRdmSUM = sheetNames.some(s => s === "SUM 1" || s.startsWith("SUM "));
+    const isRdmPAS = sheetNames.some(s => s === "PAS" || s === "SAS");
+    const isRdmPTS = sheetNames.some(s => s === "PTS" || s === "STS");
+
+    if (isRdmPH || isRdmSUM) {
+      // Membaca template RDM PH / SUM
+      const prefix = isRdmPH ? "PH" : "SUM";
+      const materis: [string, string, string, string] = ["", "", "", ""];
+      const studentMap = new Map<string, Partial<NilaiMapelItem>>();
+
+      for (let i = 1; i <= 4; i++) {
+        const ws = wb.getWorksheet(`${prefix} ${i}`) || wb.getWorksheet(`${prefix}${i}`);
+        if (!ws) continue;
+
+        // Ambil materi dari cell C4
+        const mVal = String(ws.getCell("C4").value || ws.getCell("D4").value || "").trim();
+        if (mVal) materis[i - 1] = mVal;
+
+        ws.eachRow((row, rowNum) => {
+          if (rowNum >= 7) {
+            const nis = String(row.getCell(3).value || "").trim(); // Col C
+            const nama = String(row.getCell(5).value || "").trim(); // Col E
+            const nilai = Number(row.getCell(6).value) || 0; // Col F
+
+            if (!nis) return;
+
+            if (!studentMap.has(nis)) {
+              studentMap.set(nis, {
+                nis,
+                nama_siswa: nama,
+                nilai_harian_1: 0,
+                nilai_harian_2: 0,
+                nilai_harian_3: 0,
+                nilai_harian_4: 0,
+                nilai_uts: 0,
+                nilai_uas: 0,
+              });
+            }
+
+            const item = studentMap.get(nis)!;
+            if (nama && !item.nama_siswa) item.nama_siswa = nama;
+
+            if (i === 1) item.nilai_harian_1 = nilai;
+            else if (i === 2) item.nilai_harian_2 = nilai;
+            else if (i === 3) item.nilai_harian_3 = nilai;
+            else if (i === 4) item.nilai_harian_4 = nilai;
+          }
+        });
+      }
+
+      return {
+        materis,
+        dataMapel: Array.from(studentMap.values()),
+      };
+    } else if (isRdmPAS) {
+      // Membaca template RDM PAS / SAS
+      const ws = wb.getWorksheet("PAS") || wb.getWorksheet("SAS") || wb.worksheets[0];
+      const dataMapel: Partial<NilaiMapelItem>[] = [];
+
+      ws.eachRow((row, rowNum) => {
+        if (rowNum >= 7) {
+          const nis = String(row.getCell(3).value || "").trim();
+          const nama = String(row.getCell(5).value || "").trim();
+          const nilai = Number(row.getCell(6).value) || 0;
+          if (!nis) return;
+
+          dataMapel.push({
+            nis,
+            nama_siswa: nama,
+            nilai_uas: nilai,
+          });
+        }
+      });
+
+      return { dataMapel };
+    } else if (isRdmPTS) {
+      // Membaca template RDM PTS / STS
+      const ws = wb.getWorksheet("PTS") || wb.getWorksheet("STS") || wb.worksheets[0];
+      const dataMapel: Partial<NilaiMapelItem>[] = [];
+
+      ws.eachRow((row, rowNum) => {
+        if (rowNum >= 7) {
+          const nis = String(row.getCell(3).value || "").trim();
+          const nama = String(row.getCell(5).value || "").trim();
+          const nilai = Number(row.getCell(6).value) || 0;
+          if (!nis) return;
+
+          dataMapel.push({
+            nis,
+            nama_siswa: nama,
+            nilai_uts: nilai,
+          });
+        }
+      });
+
+      return { dataMapel };
+    }
+
+    // Format Default / Standar Single Worksheet
+    const ws = wb.worksheets[0];
     const row2 = ws.getRow(2);
     const m1 = String(row2.getCell(3).value || "").trim();
     const m2 = String(row2.getCell(4).value || "").trim();
@@ -249,6 +1067,7 @@ export async function parseExcelUpload(
 
     return { materis: [m1, m2, m3, m4], dataMapel };
   } else if (tipe === "ekskul") {
+    const ws = wb.worksheets[0];
     const dataEkskul: Partial<NilaiEkskulItem>[] = [];
 
     ws.eachRow((row, rowNum) => {
@@ -271,6 +1090,7 @@ export async function parseExcelUpload(
 
     return { dataEkskul };
   } else {
+    const ws = wb.worksheets[0];
     const dataWali: Partial<RaporWaliItem>[] = [];
 
     ws.eachRow((row, rowNum) => {
@@ -294,3 +1114,4 @@ export async function parseExcelUpload(
     return { dataWali };
   }
 }
+

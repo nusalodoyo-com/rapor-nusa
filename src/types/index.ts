@@ -97,6 +97,7 @@ export interface NilaiMapelItem {
   tahun_ajaran: string;
   semester: string;
   nis: string;
+  nisn?: string;
   nama_siswa: string;
   kode_mapel: string;
   materi_1?: string;
