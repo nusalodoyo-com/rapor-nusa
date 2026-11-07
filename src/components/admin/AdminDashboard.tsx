@@ -41,7 +41,10 @@ import {
   buildSiNusaPayloads,
   DEFAULT_SINUSA_CONFIG,
   saveKamadTtd,
+  resetTeacherPassword,
+  resetAllTeachersPassword,
 } from "@/lib/storage";
+import CetakDataGuruModal from "./CetakDataGuruModal";
 import { downloadBulkLeggerExcel } from "@/lib/excel/excelHandler";
 import {
   Users,
@@ -85,6 +88,9 @@ import {
   HelpCircle,
   Copy,
   ArrowLeftRight,
+  KeyRound,
+  RotateCcw,
+  Printer,
 } from "lucide-react";
 
 interface Props {
@@ -142,7 +148,7 @@ export default function AdminDashboard({
   const [newNip, setNewNip] = useState("-");
   const [newJk, setNewJk] = useState<"L" | "P">("L");
   const [newUsername, setNewUsername] = useState("");
-  const [newPassword, setNewPassword] = useState("Matsamuda22");
+  const [newPassword, setNewPassword] = useState("Lodoyo2026");
 
   // Edit Teacher Modal State
   const [editingTeacher, setEditingTeacher] = useState<User | null>(null);
@@ -190,6 +196,7 @@ export default function AdminDashboard({
   // TTD Kepala Madrasah & Bulk Download State
   const [kamadTtdBase64, setKamadTtdBase64] = useState<string>(config.ttd_kamad_url || "");
   const [isDownloadingBulk, setIsDownloadingBulk] = useState(false);
+  const [isCetakGuruModalOpen, setIsCetakGuruModalOpen] = useState(false);
   const [activeApiDocTab, setActiveApiDocTab] = useState<"laravel" | "express" | "curl" | "json">("laravel");
   const [copiedSnippet, setCopiedSnippet] = useState(false);
 
@@ -257,7 +264,7 @@ export default function AdminDashboard({
       setNewNama("");
       setNewNip("-");
       setNewUsername("");
-      setNewPassword("Matsamuda22");
+      setNewPassword("Lodoyo2026");
       refreshData();
     } else {
       setMessage({ type: "error", text: res.message });
@@ -304,6 +311,30 @@ export default function AdminDashboard({
       deleteTeacher(madrasahId, id);
       setMessage({ type: "success", text: `Guru ${nama} telah dihapus.` });
       refreshData();
+    }
+  };
+
+  const handleResetSinglePassword = (t: User) => {
+    if (confirm(`Reset kata sandi guru "${t.nama_user}" (@${t.username}) ke default "Lodoyo2026"?`)) {
+      const res = resetTeacherPassword(madrasahId, t.id);
+      if (res.success) {
+        setMessage({ type: "success", text: res.message });
+        refreshData();
+      } else {
+        setMessage({ type: "error", text: res.message });
+      }
+    }
+  };
+
+  const handleResetAllPasswords = () => {
+    if (confirm(`Apakah Anda yakin ingin me-reset seluruh kata sandi (${teachers.length} guru) ke default "Lodoyo2026"? Tindakan ini akan mengembalikan semua password guru menjadi Lodoyo2026.`)) {
+      const res = resetAllTeachersPassword(madrasahId);
+      if (res.success) {
+        setMessage({ type: "success", text: res.message });
+        refreshData();
+      } else {
+        setMessage({ type: "error", text: res.message });
+      }
     }
   };
 
@@ -1386,19 +1417,41 @@ export default function AdminDashboard({
                   Daftar Pendidik ({teachers.length} Guru Terdaftar)
                 </h4>
                 <p className="text-[11px] text-slate-500 font-bold">
-                  Seluruh guru aktif di {config.nama_madrasah}
+                  Seluruh guru aktif di {config.nama_madrasah} • Username 7 Karakter & Password Default: Lodoyo2026
                 </p>
               </div>
 
-              <div className="relative w-full sm:w-60">
-                <input
-                  type="text"
-                  value={searchTeacher}
-                  onChange={e => setSearchTeacher(e.target.value)}
-                  placeholder="Cari nama atau username..."
-                  className="w-full text-xs py-1.5 pl-7 pr-2.5 rounded-lg border-2 border-retro-border bg-retro-cream font-bold"
-                />
-                <Search className="w-3.5 h-3.5 text-slate-500 absolute left-2 top-2.5" />
+              <div className="flex flex-wrap items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => setIsCetakGuruModalOpen(true)}
+                  className="btn-retro bg-brand-500 hover:bg-brand-600 text-white px-3 py-1.5 text-xs flex items-center gap-1.5 shadow-retro-sm font-black"
+                  title="Cetak & Unduh Seluruh Kredensial Guru Format PDF A4"
+                >
+                  <Printer className="w-3.5 h-3.5" />
+                  <span>Unduh Akun Guru (PDF A4)</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={handleResetAllPasswords}
+                  className="btn-retro bg-retro-orange hover:bg-orange-600 text-white px-2.5 py-1.5 text-xs flex items-center gap-1 shadow-retro-sm font-black"
+                  title="Reset seluruh password guru ke default Lodoyo2026"
+                >
+                  <RotateCcw className="w-3.5 h-3.5" />
+                  <span>Reset Semua Password</span>
+                </button>
+
+                <div className="relative w-full sm:w-52">
+                  <input
+                    type="text"
+                    value={searchTeacher}
+                    onChange={e => setSearchTeacher(e.target.value)}
+                    placeholder="Cari nama atau username..."
+                    className="w-full text-xs py-1.5 pl-7 pr-2.5 rounded-lg border-2 border-retro-border bg-retro-cream font-bold"
+                  />
+                  <Search className="w-3.5 h-3.5 text-slate-500 absolute left-2 top-2.5" />
+                </div>
               </div>
             </div>
 
@@ -1408,9 +1461,9 @@ export default function AdminDashboard({
                   <tr>
                     <th className="py-2.5 px-3 w-10 text-center">No</th>
                     <th className="py-2.5 px-3">Nama Lengkap & NIK</th>
-                    <th className="py-2.5 px-3 w-28">Username</th>
+                    <th className="py-2.5 px-3 w-28">Username (ID)</th>
                     <th className="py-2.5 px-3 w-28">Password</th>
-                    <th className="py-2.5 px-3 w-24 text-center">Aksi</th>
+                    <th className="py-2.5 px-3 w-28 text-center">Aksi</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y-2 divide-slate-100 font-bold">
@@ -1421,14 +1474,22 @@ export default function AdminDashboard({
                         <div>{t.nama_user}</div>
                         <div className="text-[10px] text-slate-500 font-mono">NIK: {t.nip || "-"} • ({t.jenis_kelamin || "-"})</div>
                       </td>
-                      <td className="py-2 px-3 font-mono text-brand-800">@{t.username}</td>
-                      <td className="py-2 px-3 font-mono text-slate-600">{t.password || "Matsamuda22"}</td>
+                      <td className="py-2 px-3 font-mono font-black text-brand-800">@{t.username}</td>
+                      <td className="py-2 px-3 font-mono text-slate-700 bg-slate-50">{t.password || "Lodoyo2026"}</td>
                       <td className="py-2 px-3 text-center">
                         <div className="flex items-center justify-center gap-1.5">
                           <button
                             type="button"
+                            onClick={() => handleResetSinglePassword(t)}
+                            className="p-1.5 rounded bg-emerald-100 hover:bg-emerald-200 text-emerald-900 border border-emerald-400 font-black"
+                            title="Reset Password ke default (Lodoyo2026)"
+                          >
+                            <KeyRound className="w-3.5 h-3.5" />
+                          </button>
+                          <button
+                            type="button"
                             onClick={() => openEditTeacher(t)}
-                            className="p-1 rounded bg-amber-100 hover:bg-amber-200 text-amber-900 border border-amber-300 font-black"
+                            className="p-1.5 rounded bg-amber-100 hover:bg-amber-200 text-amber-900 border border-amber-300 font-black"
                             title="Edit Data Guru"
                           >
                             <Edit3 className="w-3.5 h-3.5" />
@@ -1436,7 +1497,7 @@ export default function AdminDashboard({
                           <button
                             type="button"
                             onClick={() => handleDeleteTeacher(t.id, t.nama_user)}
-                            className="p-1 rounded bg-red-100 hover:bg-red-200 text-red-900 border border-red-300 font-black"
+                            className="p-1.5 rounded bg-red-100 hover:bg-red-200 text-red-900 border border-red-300 font-black"
                             title="Hapus Akun Guru"
                           >
                             <Trash2 className="w-3.5 h-3.5" />
@@ -1508,7 +1569,16 @@ export default function AdminDashboard({
               </div>
 
               <div>
-                <label className="text-[11px] font-black text-retro-black uppercase block mb-1">Kata Sandi:</label>
+                <div className="flex items-center justify-between mb-1">
+                  <label className="text-[11px] font-black text-retro-black uppercase">Kata Sandi:</label>
+                  <button
+                    type="button"
+                    onClick={() => setEditPassword("Lodoyo2026")}
+                    className="text-[10px] text-brand-700 hover:text-brand-900 underline font-black"
+                  >
+                    Set ke Lodoyo2026
+                  </button>
+                </div>
                 <input
                   type="text"
                   required
@@ -2965,6 +3035,15 @@ app.listen(3000, () => console.log('SI-NUSA receiver running on port 3000'));`}
           </div>
         </div>
       )}
+      {/* MODAL CETAK DATA AKUN GURU (PDF A4) */}
+      <CetakDataGuruModal
+        isOpen={isCetakGuruModalOpen}
+        onClose={() => setIsCetakGuruModalOpen(false)}
+        teachers={teachers}
+        config={config}
+        tahun={activePeriodObj?.tahun || "2026/2027"}
+        semester={activePeriodObj?.semester || "1"}
+      />
     </div>
   );
 }

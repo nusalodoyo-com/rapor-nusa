@@ -14,6 +14,15 @@ export interface User {
   kelas_diampu?: string; // Jika wali kelas
   ttd_url?: string;
   is_super_admin?: boolean;
+
+  // Profil Guru & Identitas Lengkap
+  gelar_depan?: string;
+  gelar_belakang?: string;
+  tempat_lahir?: string;
+  tanggal_lahir?: string;
+  alamat?: string;
+  no_wa?: string;
+  email?: string;
 }
 
 // Penugasan Guru Mengajar (Admin Setting)

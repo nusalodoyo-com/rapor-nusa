@@ -56,7 +56,9 @@ import {
   UserCheck,
   Trophy,
   Layers,
+  UserCog,
 } from "lucide-react";
+import ProfilGuruModal from "./ProfilGuruModal";
 
 interface Props {
   madrasahId: MadrasahId;
@@ -69,6 +71,7 @@ interface Props {
   semester?: string;
   activePeriodLabel?: string;
   onSwitchToWali?: () => void;
+  onUserUpdated?: (updatedUser: User) => void;
   onLogout: () => void;
 }
 
@@ -83,8 +86,10 @@ export default function GuruDashboard({
   semester: propSemester,
   activePeriodLabel,
   onSwitchToWali,
+  onUserUpdated,
   onLogout,
 }: Props) {
+  const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
   const tahun = propTahun || "2026/2027";
   const semester = propSemester || "1";
 
@@ -503,8 +508,18 @@ export default function GuruDashboard({
           </div>
         </div>
 
-        {/* Action: Switch to Wali if dual role */}
-        <div className="flex items-center gap-2">
+        {/* Action: Switch to Wali if dual role & Profile button */}
+        <div className="flex items-center gap-2 flex-wrap">
+          <button
+            type="button"
+            onClick={() => setIsProfileModalOpen(true)}
+            className="btn-retro bg-white hover:bg-slate-50 text-retro-black px-3 py-2 text-xs flex items-center gap-1.5 border-2 border-retro-border shadow-retro-sm font-black"
+            title="Ubah Biodata & Kata Sandi Guru"
+          >
+            <UserCog className="w-4 h-4 text-brand-600" />
+            <span>Ubah Profil & Password</span>
+          </button>
+
           {currentUser.kelas_diampu && currentUser.kelas_diampu !== "-" && onSwitchToWali && (
             <button
               onClick={onSwitchToWali}
@@ -1065,6 +1080,17 @@ export default function GuruDashboard({
           </div>
         </div>
       )}
+
+      {/* MODAL PENGATURAN PROFIL & UBAH PASSWORD GURU */}
+      <ProfilGuruModal
+        isOpen={isProfileModalOpen}
+        onClose={() => setIsProfileModalOpen(false)}
+        madrasahId={madrasahId}
+        currentUser={currentUser}
+        onUserUpdated={u => {
+          if (onUserUpdated) onUserUpdated(u);
+        }}
+      />
     </div>
   );
 }

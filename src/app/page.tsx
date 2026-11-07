@@ -547,6 +547,7 @@ export default function HomePage() {
             semester={filterSemester}
             activePeriodLabel={activePeriod?.label}
             onSwitchToWali={isDualRole ? () => setDualRoleMode("wali") : undefined}
+            onUserUpdated={u => setCurrentUser(u)}
             onLogout={handleLogout}
           />
         )}
