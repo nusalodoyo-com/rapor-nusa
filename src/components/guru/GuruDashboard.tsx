@@ -20,6 +20,7 @@ import {
   batalKirimNilai,
   getNilaiByKelasMapel,
   simpanNilaiBatch,
+  compareRombel,
 } from "@/lib/storage";
 import {
   downloadExcelMapel,
@@ -94,11 +95,13 @@ export default function GuruDashboard({
   // Load Guru Assignments
   useEffect(() => {
     const all = getTeacherAssignments(madrasahId);
-    const mine = all.filter(
-      a =>
-        a.guru_id === currentUser.id ||
-        a.guru_nama.trim().toLowerCase() === currentUser.nama_user.trim().toLowerCase()
-    );
+    const mine = all
+      .filter(
+        a =>
+          a.guru_id === currentUser.id ||
+          a.guru_nama.trim().toLowerCase() === currentUser.nama_user.trim().toLowerCase()
+      )
+      .sort((a, b) => compareRombel(a.kelas, b.kelas));
     setAssignments(mine);
     if (mine.length > 0) {
       setSelectedAssignId(mine[0].id);

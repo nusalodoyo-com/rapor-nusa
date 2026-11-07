@@ -21,6 +21,7 @@ import GuruDashboard from "@/components/guru/GuruDashboard";
 import WaliDashboard from "@/components/wali/WaliDashboard";
 import LeggerModal from "@/components/LeggerModal";
 import CetakRaporModal from "@/components/CetakRaporModal";
+import SearchModal from "@/components/SearchModal";
 import {
   GraduationCap,
   School,
@@ -63,6 +64,7 @@ export default function HomePage() {
   // 5. Modals state
   const [isLeggerOpen, setIsLeggerOpen] = useState(false);
   const [isCetakRaporOpen, setIsCetakRaporOpen] = useState(false);
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [leggerData, setLeggerData] = useState<LeggerResponse | null>(null);
   const [schoolConfig, setSchoolConfig] = useState<SchoolConfig | null>(null);
 
@@ -73,6 +75,15 @@ export default function HomePage() {
     if (savedMid === "mts" || savedMid === "ma") {
       handleSelectMadrasah(savedMid);
     }
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "k") {
+        e.preventDefault();
+        setIsSearchOpen(prev => !prev);
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
   }, []);
 
   const handleSelectMadrasah = (mid: MadrasahId) => {
@@ -432,6 +443,7 @@ export default function HomePage() {
         onSwitchMadrasah={handleSwitchMadrasah}
         onOpenLegger={() => handleOpenLegger()}
         onOpenCetakRapor={() => handleOpenCetakRapor()}
+        onOpenSearch={() => setIsSearchOpen(true)}
         isWali={currentUser.role === "wali_kelas" || currentUser.role === "guru_walikelas" || isDualRole}
       />
 
@@ -592,6 +604,13 @@ export default function HomePage() {
         kelas={filterKelas}
         config={activeCfg}
         currentUser={currentUser}
+      />
+
+      <SearchModal
+        isOpen={isSearchOpen}
+        onClose={() => setIsSearchOpen(false)}
+        madrasahId={selectedMadrasah}
+        schoolName={activeCfg.nama_madrasah}
       />
     </div>
   );

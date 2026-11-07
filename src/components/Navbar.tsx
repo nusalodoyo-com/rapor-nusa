@@ -2,7 +2,7 @@
 
 import React from "react";
 import { User, SchoolConfig } from "@/types";
-import { LogOut, User as UserIcon, ShieldCheck, ArrowLeftRight, BarChart3, Printer } from "lucide-react";
+import { LogOut, User as UserIcon, ShieldCheck, ArrowLeftRight, BarChart3, Printer, Search } from "lucide-react";
 
 interface Props {
   currentUser: User | null;
@@ -11,6 +11,7 @@ interface Props {
   onSwitchMadrasah: () => void;
   onOpenLegger?: () => void;
   onOpenCetakRapor?: () => void;
+  onOpenSearch?: () => void;
   isWali?: boolean;
 }
 
@@ -21,6 +22,7 @@ export default function Navbar({
   onSwitchMadrasah,
   onOpenLegger,
   onOpenCetakRapor,
+  onOpenSearch,
   isWali,
 }: Props) {
   const isMts = currentConfig.id === "mts";
@@ -50,7 +52,20 @@ export default function Navbar({
 
         {/* Right side controls */}
         {currentUser && (
-          <div className="flex items-center space-x-1.5 sm:space-x-3 flex-shrink-0">
+          <div className="flex items-center space-x-1.5 sm:space-x-2.5 flex-shrink-0">
+            {/* Tombol Pencarian Siswa & Guru */}
+            {onOpenSearch && (
+              <button
+                type="button"
+                onClick={onOpenSearch}
+                className="btn-retro bg-retro-yellow text-retro-black hover:bg-amber-300 px-2.5 sm:px-3 py-1.5 text-xs flex items-center gap-1.5 shadow-retro-sm"
+                title="Pencarian Siswa & Guru (Ctrl+K)"
+              >
+                <Search className="w-3.5 h-3.5 text-retro-black stroke-[2.5]" />
+                <span className="hidden sm:inline font-black">Cari Siswa / Guru</span>
+              </button>
+            )}
+
             {/* Tombol menu Wali Kelas (Mobile & Desktop) */}
             {isWali && (
               <div className="hidden md:flex items-center space-x-2">
@@ -65,7 +80,7 @@ export default function Navbar({
                 <button
                   type="button"
                   onClick={onOpenCetakRapor}
-                  className="btn-retro bg-retro-yellow text-retro-black hover:bg-amber-400 px-3 py-1.5 text-xs flex items-center gap-1.5"
+                  className="btn-retro bg-white text-retro-black hover:bg-slate-50 px-3 py-1.5 text-xs flex items-center gap-1.5"
                 >
                   <Printer className="w-3.5 h-3.5" />
                   <span>Cetak Rapor</span>

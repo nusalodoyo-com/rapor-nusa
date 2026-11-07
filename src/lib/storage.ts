@@ -489,8 +489,41 @@ export function getRekapKirimNilaiKelas(
 }
 
 // =====================================================================
-// 7. DROPDOWNS & SISWA
+// 7. DROPDOWNS & SISWA (ROMBEL SORTING & PENCARIAN)
 // =====================================================================
+export function compareRombel(a: string, b: string): number {
+  const parseRombel = (name: string) => {
+    const clean = (name || "").trim().toUpperCase();
+    const match = clean.match(/^(XII|XI|X|VIII|VII|IX|12|11|10|9|8|7)[.\s\-_]*(.*)$/i);
+    if (!match) return { grade: 99, suffix: clean };
+
+    const gradeMap: Record<string, number> = {
+      "VII": 7, "7": 7,
+      "VIII": 8, "8": 8,
+      "IX": 9, "9": 9,
+      "X": 10, "10": 10,
+      "XI": 11, "11": 11,
+      "XII": 12, "12": 12,
+    };
+
+    const grade = gradeMap[match[1]] ?? 99;
+    const suffix = match[2] || "";
+    return { grade, suffix };
+  };
+
+  const pa = parseRombel(a);
+  const pb = parseRombel(b);
+
+  if (pa.grade !== pb.grade) {
+    return pa.grade - pb.grade;
+  }
+  return pa.suffix.localeCompare(pb.suffix, undefined, { numeric: true, sensitivity: 'base' });
+}
+
+export function sortRombelList(classes: string[]): string[] {
+  return [...classes].sort(compareRombel);
+}
+
 export function getDropdownOptions(madrasahId: MadrasahId) {
   const keys = getStorageKeys(madrasahId);
   const defSiswa = madrasahId === "mts" ? SEED_SISWA_MTS : SEED_SISWA_MA;
@@ -502,12 +535,33 @@ export function getDropdownOptions(madrasahId: MadrasahId) {
   const mapel = getLocalData<Mapel[]>(keys.MAPEL, defMapel);
   const ekskul = getLocalData<Ekskul[]>(keys.EKSKUL, defEkskul);
 
-  const kelasList = Array.from(new Set(siswa.map(s => s.kelas.trim().toUpperCase()))).sort();
+  const rawList = Array.from(new Set(siswa.map(s => s.kelas.trim().toUpperCase())));
+  const kelasList = sortRombelList(rawList.length > 0 ? rawList : defClasses);
+
   return {
-    kelas: kelasList.length > 0 ? kelasList : defClasses,
+    kelas: kelasList,
     mapel: mapel.map(m => ({ kode: m.kode_mapel, nama: m.nama_mapel, kelompok: m.kelompok, kkm: m.kkm })),
     ekskul: ekskul.map(e => e.nama_ekskul),
   };
+}
+
+export function getAllSiswa(madrasahId: MadrasahId): Siswa[] {
+  const keys = getStorageKeys(madrasahId);
+  const defSiswa = madrasahId === "mts" ? SEED_SISWA_MTS : SEED_SISWA_MA;
+  return getLocalData<Siswa[]>(keys.SISWA, defSiswa);
+}
+
+export function searchSiswa(madrasahId: MadrasahId, query: string): Siswa[] {
+  const q = query.trim().toLowerCase();
+  if (!q) return [];
+  const list = getAllSiswa(madrasahId);
+  return list.filter(
+    s =>
+      s.nama_siswa.toLowerCase().includes(q) ||
+      s.nis.toLowerCase().includes(q) ||
+      (s.nisn && s.nisn.toLowerCase().includes(q)) ||
+      s.kelas.toLowerCase().includes(q)
+  );
 }
 
 export function getSiswaByKelas(madrasahId: MadrasahId, kelas: string): Siswa[] {

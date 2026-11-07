@@ -1,16 +1,18 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import {
   MadrasahId,
   User,
   TeacherAssignment,
   HomeroomAssignment,
   SchoolConfig,
+  Siswa,
 } from "@/types";
 import {
   getTeachers,
   addTeacher,
+  updateTeacher,
   deleteTeacher,
   getTeacherAssignments,
   addTeacherAssignment,
@@ -19,6 +21,8 @@ import {
   setHomeroomAssignment,
   getRekapKirimNilaiKelas,
   updateSchoolConfig,
+  getAllSiswa,
+  sortRombelList,
 } from "@/lib/storage";
 import {
   Users,
@@ -33,6 +37,9 @@ import {
   Clock,
   Shield,
   Search,
+  Edit3,
+  X,
+  GraduationCap,
 } from "lucide-react";
 
 interface Props {
@@ -50,14 +57,22 @@ export default function AdminDashboard({
   allMapel,
   onConfigUpdated,
 }: Props) {
-  const [activeTab, setActiveTab] = useState<"guru" | "mengajar" | "wali" | "monitoring" | "pengaturan">("guru");
+  const [activeTab, setActiveTab] = useState<"guru" | "mengajar" | "wali" | "siswa" | "monitoring" | "pengaturan">("guru");
   const [teachers, setTeachers] = useState<User[]>([]);
   const [assignments, setAssignments] = useState<TeacherAssignment[]>([]);
   const [homerooms, setHomerooms] = useState<HomeroomAssignment[]>([]);
+  const [allSiswa, setAllSiswa] = useState<Siswa[]>([]);
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
+
+  // Urutan rombel yang rapi VII -> VIII -> IX
+  const sortedKelas = useMemo(() => sortRombelList(allKelas), [allKelas]);
 
   // Search filter for teacher table
   const [searchTeacher, setSearchTeacher] = useState("");
+
+  // Search filter for siswa table
+  const [searchSiswaQuery, setSearchSiswaQuery] = useState("");
+  const [filterSiswaKelas, setFilterSiswaKelas] = useState("all");
 
   // Form states: Tambah Guru
   const [newNama, setNewNama] = useState("");
@@ -65,6 +80,14 @@ export default function AdminDashboard({
   const [newJk, setNewJk] = useState<"L" | "P">("L");
   const [newUsername, setNewUsername] = useState("");
   const [newPassword, setNewPassword] = useState("Matsamuda22");
+
+  // Edit Teacher Modal State
+  const [editingTeacher, setEditingTeacher] = useState<User | null>(null);
+  const [editNama, setEditNama] = useState("");
+  const [editNip, setEditNip] = useState("-");
+  const [editJk, setEditJk] = useState<"L" | "P">("L");
+  const [editUsername, setEditUsername] = useState("");
+  const [editPassword, setEditPassword] = useState("");
 
   // Form states: Penugasan Mengajar
   const [assignGuruId, setAssignGuruId] = useState("");
@@ -91,12 +114,14 @@ export default function AdminDashboard({
     setAssignments(a);
     const h = getHomeroomAssignments(madrasahId);
     setHomerooms(h);
+    const s = getAllSiswa(madrasahId);
+    setAllSiswa(s);
 
     if (t.length > 0 && !assignGuruId) setAssignGuruId(t[0].id);
     if (allMapel.length > 0 && !assignKodeMapel) setAssignKodeMapel(allMapel[0].kode);
-    if (allKelas.length > 0 && !assignKelas) setAssignKelas(allKelas[0]);
-    if (allKelas.length > 0 && !waliKelasTarget) setWaliKelasTarget(allKelas[0]);
-    if (allKelas.length > 0 && !monitorKelas) setMonitorKelas(allKelas[0]);
+    if (sortedKelas.length > 0 && !assignKelas) setAssignKelas(sortedKelas[0]);
+    if (sortedKelas.length > 0 && !waliKelasTarget) setWaliKelasTarget(sortedKelas[0]);
+    if (sortedKelas.length > 0 && !monitorKelas) setMonitorKelas(sortedKelas[0]);
   };
 
   useEffect(() => {
@@ -128,8 +153,43 @@ export default function AdminDashboard({
     }
   };
 
+  const openEditTeacher = (t: User) => {
+    setEditingTeacher(t);
+    setEditNama(t.nama_user);
+    setEditNip(t.nip || "-");
+    setEditJk(t.jenis_kelamin || "L");
+    setEditUsername(t.username);
+    setEditPassword(t.password || "Matsamuda22");
+  };
+
+  const handleSaveEditTeacher = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingTeacher) return;
+    if (!editNama.trim() || !editUsername.trim()) {
+      setMessage({ type: "error", text: "Nama dan username wajib diisi!" });
+      return;
+    }
+
+    const res = updateTeacher(madrasahId, {
+      ...editingTeacher,
+      nama_user: editNama.trim(),
+      nip: editNip.trim(),
+      jenis_kelamin: editJk,
+      username: editUsername.trim().toLowerCase(),
+      password: editPassword.trim(),
+    });
+
+    if (res.success) {
+      setMessage({ type: "success", text: res.message });
+      setEditingTeacher(null);
+      refreshData();
+    } else {
+      setMessage({ type: "error", text: res.message });
+    }
+  };
+
   const handleDeleteTeacher = (id: string, nama: string) => {
-    if (confirm(`Hapus guru ${nama} dari sistem?`)) {
+    if (confirm(`Hapus guru ${nama} dari sistem? Penugasan mengajar dan wali kelas terkait juga akan dibersihkan.`)) {
       deleteTeacher(madrasahId, id);
       setMessage({ type: "success", text: `Guru ${nama} telah dihapus.` });
       refreshData();
@@ -205,6 +265,24 @@ export default function AdminDashboard({
     t.username.toLowerCase().includes(searchTeacher.toLowerCase()) ||
     (t.nip && t.nip.includes(searchTeacher))
   );
+
+  const filteredSiswaList = useMemo(() => {
+    let list = allSiswa;
+    if (filterSiswaKelas !== "all") {
+      list = list.filter(s => s.kelas.trim().toUpperCase() === filterSiswaKelas.trim().toUpperCase());
+    }
+    const q = searchSiswaQuery.trim().toLowerCase();
+    if (q) {
+      list = list.filter(
+        s =>
+          s.nama_siswa.toLowerCase().includes(q) ||
+          s.nis.toLowerCase().includes(q) ||
+          (s.nisn && s.nisn.toLowerCase().includes(q)) ||
+          s.kelas.toLowerCase().includes(q)
+      );
+    }
+    return list;
+  }, [allSiswa, filterSiswaKelas, searchSiswaQuery]);
 
   return (
     <div className="space-y-5 sm:space-y-6">
@@ -289,7 +367,15 @@ export default function AdminDashboard({
           className={activeTab === "wali" ? "btn-retro-primary px-3.5 py-2 text-xs flex items-center gap-1.5" : "btn-retro-white px-3.5 py-2 text-xs flex items-center gap-1.5"}
         >
           <UserCheck className="w-3.5 h-3.5" />
-          <span>3. Wali Kelas ({homerooms.length}/{allKelas.length})</span>
+          <span>3. Wali Kelas ({homerooms.length}/{sortedKelas.length})</span>
+        </button>
+
+        <button
+          onClick={() => setActiveTab("siswa")}
+          className={activeTab === "siswa" ? "btn-retro-primary px-3.5 py-2 text-xs flex items-center gap-1.5" : "btn-retro-white px-3.5 py-2 text-xs flex items-center gap-1.5"}
+        >
+          <GraduationCap className="w-3.5 h-3.5" />
+          <span>4. Database Siswa ({allSiswa.length})</span>
         </button>
 
         <button
@@ -297,7 +383,7 @@ export default function AdminDashboard({
           className={activeTab === "monitoring" ? "btn-retro-primary px-3.5 py-2 text-xs flex items-center gap-1.5" : "btn-retro-white px-3.5 py-2 text-xs flex items-center gap-1.5"}
         >
           <Activity className="w-3.5 h-3.5" />
-          <span>4. Monitoring Kirim</span>
+          <span>5. Monitoring Kirim</span>
         </button>
 
         <button
@@ -305,7 +391,7 @@ export default function AdminDashboard({
           className={activeTab === "pengaturan" ? "btn-retro-primary px-3.5 py-2 text-xs flex items-center gap-1.5" : "btn-retro-white px-3.5 py-2 text-xs flex items-center gap-1.5"}
         >
           <Settings className="w-3.5 h-3.5" />
-          <span>5. Pengaturan Rapor</span>
+          <span>6. Pengaturan Rapor</span>
         </button>
       </div>
 
@@ -399,12 +485,12 @@ export default function AdminDashboard({
               </div>
 
               {/* Search bar */}
-              <div className="relative w-full sm:w-56">
+              <div className="relative w-full sm:w-64">
                 <input
                   type="text"
                   value={searchTeacher}
                   onChange={e => setSearchTeacher(e.target.value)}
-                  placeholder="Cari nama / username..."
+                  placeholder="Cari nama, NIP, username..."
                   className="w-full text-xs py-1.5 pl-7 pr-2.5 rounded-lg border-2 border-retro-border bg-retro-cream font-bold"
                 />
                 <Search className="w-3.5 h-3.5 text-slate-500 absolute left-2 top-2.5" />
@@ -420,7 +506,7 @@ export default function AdminDashboard({
                     <th className="py-2.5 px-3 w-28">NIP / NIK</th>
                     <th className="py-2.5 px-3 w-28">Username</th>
                     <th className="py-2.5 px-3 w-24 text-center">Password</th>
-                    <th className="py-2.5 px-3 w-16 text-center">Aksi</th>
+                    <th className="py-2.5 px-3 w-24 text-center">Aksi</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y-2 divide-slate-100 font-bold">
@@ -432,19 +518,133 @@ export default function AdminDashboard({
                       <td className="py-2 px-3 font-mono text-brand-800 bg-brand-50/50">{t.username}</td>
                       <td className="py-2 px-3 text-center font-mono text-xs">{t.password || "Matsamuda22"}</td>
                       <td className="py-2 px-3 text-center">
-                        <button
-                          onClick={() => handleDeleteTeacher(t.id, t.nama_user)}
-                          className="p-1.5 rounded-lg border-2 border-red-600 bg-red-100 hover:bg-red-200 text-red-800 transition"
-                          title="Hapus Guru"
-                        >
-                          <Trash2 className="w-3.5 h-3.5" />
-                        </button>
+                        <div className="flex items-center justify-center gap-1.5">
+                          <button
+                            onClick={() => openEditTeacher(t)}
+                            className="p-1.5 rounded-lg border-2 border-retro-border bg-white hover:bg-retro-yellow text-retro-black transition shadow-retro-sm"
+                            title="Edit Data Guru"
+                          >
+                            <Edit3 className="w-3.5 h-3.5" />
+                          </button>
+                          <button
+                            onClick={() => handleDeleteTeacher(t.id, t.nama_user)}
+                            className="p-1.5 rounded-lg border-2 border-red-600 bg-red-100 hover:bg-red-200 text-red-800 transition shadow-retro-sm"
+                            title="Hapus Guru"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   ))}
                 </tbody>
               </table>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* ================= MODAL EDIT DATA GURU ================= */}
+      {editingTeacher && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 bg-black/70 backdrop-blur-sm animate-fade-in no-print">
+          <div className="bg-white border-3 border-retro-border rounded-2xl shadow-retro-xl w-full max-w-lg overflow-hidden">
+            <div className="p-4 bg-retro-yellow border-b-2 border-retro-border flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Edit3 className="w-5 h-5 text-retro-black" />
+                <h3 className="font-black text-sm text-retro-black uppercase">
+                  Edit Akun & Data Guru
+                </h3>
+              </div>
+              <button
+                onClick={() => setEditingTeacher(null)}
+                className="p-1 rounded-lg border-2 border-retro-border bg-white hover:bg-red-50 text-retro-black"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <form onSubmit={handleSaveEditTeacher} className="p-5 space-y-3.5 bg-retro-cream">
+              <div>
+                <label className="text-[11px] font-black text-retro-black uppercase block mb-1">
+                  Nama Lengkap & Gelar:
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={editNama}
+                  onChange={e => setEditNama(e.target.value)}
+                  className="w-full text-xs py-2 px-3 rounded-lg border-2 border-retro-border bg-white font-bold shadow-retro-sm"
+                />
+              </div>
+
+              <div>
+                <label className="text-[11px] font-black text-retro-black uppercase block mb-1">
+                  NIK / NUPTK:
+                </label>
+                <input
+                  type="text"
+                  value={editNip}
+                  onChange={e => setEditNip(e.target.value)}
+                  className="w-full text-xs py-2 px-3 rounded-lg border-2 border-retro-border bg-white font-mono font-bold shadow-retro-sm"
+                />
+              </div>
+
+              <div>
+                <label className="text-[11px] font-black text-retro-black uppercase block mb-1">
+                  Jenis Kelamin:
+                </label>
+                <select
+                  value={editJk}
+                  onChange={e => setEditJk(e.target.value as any)}
+                  className="w-full text-xs py-2 px-3 rounded-lg border-2 border-retro-border bg-white font-bold shadow-retro-sm"
+                >
+                  <option value="L">Laki-Laki (L)</option>
+                  <option value="P">Perempuan (P)</option>
+                </select>
+              </div>
+
+              <div className="pt-2 border-t-2 border-dashed border-slate-300">
+                <label className="text-[11px] font-black text-retro-black uppercase block mb-1">
+                  Username Login:
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={editUsername}
+                  onChange={e => setEditUsername(e.target.value)}
+                  className="w-full text-xs py-2 px-3 rounded-lg border-2 border-retro-border bg-white font-mono font-bold shadow-retro-sm"
+                />
+              </div>
+
+              <div>
+                <label className="text-[11px] font-black text-retro-black uppercase block mb-1">
+                  Password Baru:
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={editPassword}
+                  onChange={e => setEditPassword(e.target.value)}
+                  className="w-full text-xs py-2 px-3 rounded-lg border-2 border-retro-border bg-white font-mono font-bold shadow-retro-sm"
+                />
+              </div>
+
+              <div className="pt-2 flex items-center justify-end gap-2">
+                <button
+                  type="button"
+                  onClick={() => setEditingTeacher(null)}
+                  className="px-4 py-2 rounded-lg border-2 border-retro-border bg-white text-xs font-black uppercase hover:bg-slate-100"
+                >
+                  Batal
+                </button>
+                <button
+                  type="submit"
+                  className="px-4 py-2 btn-retro-primary text-xs font-black uppercase shadow-retro-sm"
+                >
+                  Simpan Perubahan
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}
@@ -496,7 +696,7 @@ export default function AdminDashboard({
                   onChange={e => setAssignKelas(e.target.value)}
                   className="w-full text-xs py-2 px-3 rounded-lg border-2 border-retro-border bg-white font-bold shadow-retro-sm"
                 >
-                  {allKelas.map(k => (
+                  {sortedKelas.map(k => (
                     <option key={k} value={k}>
                       Kelas {k}
                     </option>
@@ -589,7 +789,7 @@ export default function AdminDashboard({
                   onChange={e => setWaliKelasTarget(e.target.value)}
                   className="w-full text-xs py-2 px-3 rounded-lg border-2 border-retro-border bg-white font-bold shadow-retro-sm"
                 >
-                  {allKelas.map(k => (
+                  {sortedKelas.map(k => (
                     <option key={k} value={k}>
                       Kelas {k}
                     </option>
@@ -626,10 +826,10 @@ export default function AdminDashboard({
           <div className="lg:col-span-2 card-retro p-5 space-y-3 bg-white">
             <div className="flex justify-between items-center border-b-2 border-retro-border pb-3">
               <h4 className="text-xs sm:text-sm font-black text-retro-black uppercase tracking-wider">
-                Daftar Wali Kelas ({homerooms.length} dari {allKelas.length} Terisi)
+                Daftar Wali Kelas ({homerooms.length} dari {sortedKelas.length} Terisi)
               </h4>
               <span className="badge-retro bg-retro-yellow text-retro-black">
-                {Math.round((homerooms.length / allKelas.length) * 100)}% Terplot
+                {sortedKelas.length > 0 ? Math.round((homerooms.length / sortedKelas.length) * 100) : 0}% Terplot
               </span>
             </div>
 
@@ -644,7 +844,7 @@ export default function AdminDashboard({
                   </tr>
                 </thead>
                 <tbody className="divide-y-2 divide-slate-100 font-bold">
-                  {allKelas.map((k, idx) => {
+                  {sortedKelas.map((k, idx) => {
                     const match = homerooms.find(h => h.kelas === k);
                     return (
                       <tr key={k} className="hover:bg-brand-50/40">
@@ -674,6 +874,104 @@ export default function AdminDashboard({
         </div>
       )}
 
+      {/* ================= TAB 4: DATABASE SISWA & PENCARIAN ================= */}
+      {activeTab === "siswa" && (
+        <div className="card-retro p-5 space-y-4 bg-white">
+          <div className="flex flex-wrap items-center justify-between border-b-2 border-retro-border pb-3 gap-3">
+            <div>
+              <h4 className="text-xs sm:text-sm font-black text-retro-black uppercase tracking-wider flex items-center gap-1.5">
+                <GraduationCap className="w-4 h-4 text-brand-600" />
+                Database Peserta Didik Madrasah ({allSiswa.length} Siswa)
+              </h4>
+              <p className="text-[11px] text-slate-500 font-bold">
+                Cari dan pantau data siswa aktif per rombongan belajar.
+              </p>
+            </div>
+
+            <div className="flex flex-wrap items-center gap-2">
+              {/* Filter Rombel */}
+              <div className="flex items-center gap-1.5">
+                <label className="text-[11px] font-black text-retro-black uppercase">Rombel:</label>
+                <select
+                  value={filterSiswaKelas}
+                  onChange={e => setFilterSiswaKelas(e.target.value)}
+                  className="text-xs py-1.5 px-2.5 rounded-lg border-2 border-retro-border bg-retro-cream font-bold shadow-retro-sm"
+                >
+                  <option value="all">Semua Rombel ({sortedKelas.length})</option>
+                  {sortedKelas.map(k => (
+                    <option key={k} value={k}>
+                      Kelas {k}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Input Pencarian Siswa */}
+              <div className="relative w-full sm:w-60">
+                <input
+                  type="text"
+                  value={searchSiswaQuery}
+                  onChange={e => setSearchSiswaQuery(e.target.value)}
+                  placeholder="Cari nama, NIS, NISN..."
+                  className="w-full text-xs py-1.5 pl-7 pr-2.5 rounded-lg border-2 border-retro-border bg-retro-cream font-bold"
+                />
+                <Search className="w-3.5 h-3.5 text-slate-500 absolute left-2 top-2.5" />
+              </div>
+            </div>
+          </div>
+
+          {/* Info Status Filter */}
+          <div className="flex items-center justify-between text-xs font-bold text-slate-600 px-1">
+            <span>
+              Menampilkan <strong>{filteredSiswaList.length}</strong> siswa
+              {filterSiswaKelas !== "all" ? ` di Kelas ${filterSiswaKelas}` : ""}
+              {searchSiswaQuery ? ` dengan kata kunci "${searchSiswaQuery}"` : ""}
+            </span>
+          </div>
+
+          {/* Tabel Siswa */}
+          <div className="overflow-x-auto rounded-xl border-2 border-retro-border shadow-retro-sm max-h-[550px] overflow-y-auto">
+            <table className="w-full text-xs text-left">
+              <thead className="bg-retro-yellow text-retro-black font-black border-b-2 border-retro-border uppercase sticky top-0 z-10">
+                <tr>
+                  <th className="py-2.5 px-3 w-12 text-center">No</th>
+                  <th className="py-2.5 px-3 w-28">NIS</th>
+                  <th className="py-2.5 px-3 w-28">NISN</th>
+                  <th className="py-2.5 px-3">Nama Lengkap Siswa</th>
+                  <th className="py-2.5 px-3 w-20 text-center">L/P</th>
+                  <th className="py-2.5 px-3 w-24 text-center">Rombel</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y-2 divide-slate-100 font-bold">
+                {filteredSiswaList.slice(0, 100).map((s, idx) => (
+                  <tr key={s.nis} className="hover:bg-brand-50/40">
+                    <td className="py-2 px-3 text-center text-slate-500 font-mono">{idx + 1}</td>
+                    <td className="py-2 px-3 font-mono text-slate-700">{s.nis}</td>
+                    <td className="py-2 px-3 font-mono text-slate-500">{s.nisn || "-"}</td>
+                    <td className="py-2 px-3 text-retro-black">{s.nama_siswa}</td>
+                    <td className="py-2 px-3 text-center">
+                      <span className={`px-1.5 py-0.5 rounded text-[10px] font-black ${s.jenis_kelamin === "L" ? "bg-blue-100 text-blue-800" : "bg-pink-100 text-pink-800"}`}>
+                        {s.jenis_kelamin || "-"}
+                      </span>
+                    </td>
+                    <td className="py-2 px-3 text-center">
+                      <span className="badge-retro bg-brand-500 text-white text-[10px]">
+                        {s.kelas}
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          {filteredSiswaList.length > 100 && (
+            <p className="text-[11px] text-slate-500 italic text-center font-bold">
+              Menampilkan 100 siswa pertama dari total {filteredSiswaList.length} siswa. Gunakan filter kelas atau kata kunci untuk mempersempit pencarian.
+            </p>
+          )}
+        </div>
+      )}
+
       {/* ================= TAB 4: MONITORING KIRIM NILAI ================= */}
       {activeTab === "monitoring" && (
         <div className="card-retro p-5 space-y-4 bg-white">
@@ -694,7 +992,7 @@ export default function AdminDashboard({
                 onChange={e => setMonitorKelas(e.target.value)}
                 className="text-xs py-1.5 px-3 rounded-lg border-2 border-retro-border bg-retro-cream font-black shadow-retro-sm"
               >
-                {allKelas.map(k => (
+                {sortedKelas.map(k => (
                   <option key={k} value={k}>
                     Kelas {k}
                   </option>

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import confetti from "canvas-confetti";
 import {
   MadrasahId,
@@ -20,6 +20,7 @@ import {
   simpanNilaiEkskulBatch,
   getStatusKirimNilai,
   getTeacherAssignments,
+  sortRombelList,
 } from "@/lib/storage";
 import {
   ClipboardCheck,
@@ -62,11 +63,13 @@ export default function WaliDashboard({
   onOpenCetakRapor,
   onSwitchToGuru,
 }: Props) {
+  const sortedKelas = useMemo(() => sortRombelList(allKelas), [allKelas]);
+
   // Tentukan kelas yang diampu wali
   const defaultKelas =
     currentUser.kelas_diampu && currentUser.kelas_diampu !== "-"
       ? currentUser.kelas_diampu.split(",")[0].trim()
-      : allKelas[0] || "VII.A";
+      : sortedKelas[0] || "VII.A";
 
   const [activeKelas, setActiveKelas] = useState(defaultKelas);
   const [activeTab, setActiveTab] = useState<"monitoring" | "presensi" | "catatan" | "p5ra" | "ekskul">("monitoring");
@@ -240,7 +243,7 @@ export default function WaliDashboard({
             onChange={e => setActiveKelas(e.target.value)}
             className="text-xs py-1.5 px-3 rounded-lg border-2 border-retro-border bg-retro-cream font-black text-retro-black shadow-retro-sm"
           >
-            {allKelas.map(k => (
+            {sortedKelas.map(k => (
               <option key={k} value={k}>
                 Kelas {k}
               </option>
