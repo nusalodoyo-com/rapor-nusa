@@ -1,12 +1,14 @@
 "use client";
 
 import React from "react";
-import { User } from "@/types";
-import { GraduationCap, LogOut, User as UserIcon, ShieldCheck } from "lucide-react";
+import { User, SchoolConfig } from "@/types";
+import { GraduationCap, LogOut, User as UserIcon, ShieldCheck, ArrowLeftRight } from "lucide-react";
 
 interface Props {
   currentUser: User | null;
+  currentConfig: SchoolConfig;
   onLogout: () => void;
+  onSwitchMadrasah: () => void;
   onOpenLegger?: () => void;
   onOpenCetakRapor?: () => void;
   isWali?: boolean;
@@ -14,27 +16,35 @@ interface Props {
 
 export default function Navbar({
   currentUser,
+  currentConfig,
   onLogout,
+  onSwitchMadrasah,
   onOpenLegger,
   onOpenCetakRapor,
   isWali,
 }: Props) {
+  const isMts = currentConfig.id === "mts";
+
   return (
     <header className="bg-white border-b border-slate-200 sticky top-0 z-30 shadow-sm no-print">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-        {/* Brand */}
+        {/* Brand & Madrasah Badge */}
         <div className="flex items-center space-x-3">
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-600 to-teal-700 flex items-center justify-center text-white shadow-md shadow-emerald-500/20">
+          <div className={`w-10 h-10 rounded-xl flex items-center justify-center text-white shadow-md ${
+            isMts ? "bg-gradient-to-br from-emerald-600 to-green-800" : "bg-gradient-to-br from-teal-600 to-emerald-700"
+          }`}>
             <GraduationCap className="w-6 h-6" />
           </div>
           <div>
             <div className="flex items-center space-x-2">
               <span className="font-extrabold text-lg text-slate-900 tracking-tight">RAPOR NUSA</span>
-              <span className="bg-emerald-100 text-emerald-800 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider">
-                MA Maarif
+              <span className={`text-[10px] font-extrabold px-2 py-0.5 rounded-full uppercase tracking-wider ${
+                isMts ? "bg-emerald-100 text-emerald-800" : "bg-teal-100 text-teal-800"
+              }`}>
+                {currentConfig.jenjang}
               </span>
             </div>
-            <p className="text-xs text-slate-500 font-medium">MA Ma&apos;arif Nurus Salam Blitar</p>
+            <p className="text-xs text-slate-600 font-semibold">{currentConfig.nama_madrasah}</p>
           </div>
         </div>
 
@@ -78,6 +88,16 @@ export default function Navbar({
                 </div>
               </div>
             </div>
+
+            {/* Switch Madrasah Button */}
+            <button
+              onClick={onSwitchMadrasah}
+              className="inline-flex items-center px-2.5 py-1.5 text-xs font-medium rounded-lg text-slate-700 bg-slate-100 hover:bg-slate-200 transition border border-slate-300"
+              title="Ganti Lembaga Madrasah"
+            >
+              <ArrowLeftRight className="w-3.5 h-3.5 mr-1 text-slate-600" />
+              <span className="hidden sm:inline">Ganti Madrasah</span>
+            </button>
 
             {/* Logout button */}
             <button

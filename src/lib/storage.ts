@@ -1,4 +1,5 @@
 import {
+  MadrasahId,
   User,
   Siswa,
   Mapel,
@@ -7,28 +8,36 @@ import {
   NilaiEkskulItem,
   RaporWaliItem,
   LeggerResponse,
-  SchoolConfig
+  SchoolConfig,
+  SiswaLegger,
 } from "@/types";
 import {
-  SEED_USERS,
-  SEED_SISWA,
-  SEED_MAPEL,
-  SEED_EKSKUL,
-  SEED_CLASSES,
-  DEFAULT_SCHOOL_CONFIG
+  SCHOOL_CONFIGS,
+  SEED_USERS_MTS,
+  SEED_USERS_MA,
+  SEED_SISWA_MTS,
+  SEED_SISWA_MA,
+  SEED_MAPEL_MTS,
+  SEED_MAPEL_MA,
+  SEED_EKSKUL_MTS,
+  SEED_EKSKUL_MA,
+  SEED_CLASSES_MTS,
+  SEED_CLASSES_MA,
 } from "./constants/seedData";
 import { supabase, isSupabaseConfigured } from "./supabase/client";
 
-const STORAGE_KEYS = {
-  USERS: "rapor_nusa_users",
-  SISWA: "rapor_nusa_siswa",
-  MAPEL: "rapor_nusa_mapel",
-  EKSKUL: "rapor_nusa_ekskul",
-  NILAI: "rapor_nusa_nilai",
-  NILAI_EKSKUL: "rapor_nusa_nilai_ekskul",
-  RAPOR_WALI: "rapor_nusa_rapor_wali",
-  CONFIG: "rapor_nusa_config",
-};
+function getStorageKeys(madrasahId: MadrasahId) {
+  return {
+    USERS: `rapor_nusa_${madrasahId}_users`,
+    SISWA: `rapor_nusa_${madrasahId}_siswa`,
+    MAPEL: `rapor_nusa_${madrasahId}_mapel`,
+    EKSKUL: `rapor_nusa_${madrasahId}_ekskul`,
+    NILAI: `rapor_nusa_${madrasahId}_nilai`,
+    NILAI_EKSKUL: `rapor_nusa_${madrasahId}_nilai_ekskul`,
+    RAPOR_WALI: `rapor_nusa_${madrasahId}_rapor_wali`,
+    CONFIG: `rapor_nusa_${madrasahId}_config`,
+  };
+}
 
 function getLocalData<T>(key: string, defaultVal: T): T {
   if (typeof window === "undefined") return defaultVal;
@@ -49,27 +58,32 @@ function setLocalData<T>(key: string, val: T): void {
   }
 }
 
-// Inisialisasi data awal jika belum ada
+// Inisialisasi awal untuk kedua madrasah
 export function initializeLocalStorage(): void {
   if (typeof window === "undefined") return;
-  if (!localStorage.getItem(STORAGE_KEYS.USERS)) {
-    setLocalData(STORAGE_KEYS.USERS, SEED_USERS);
-  }
-  if (!localStorage.getItem(STORAGE_KEYS.SISWA)) {
-    setLocalData(STORAGE_KEYS.SISWA, SEED_SISWA);
-  }
-  if (!localStorage.getItem(STORAGE_KEYS.MAPEL)) {
-    setLocalData(STORAGE_KEYS.MAPEL, SEED_MAPEL);
-  }
-  if (!localStorage.getItem(STORAGE_KEYS.EKSKUL)) {
-    setLocalData(STORAGE_KEYS.EKSKUL, SEED_EKSKUL);
-  }
-  if (!localStorage.getItem(STORAGE_KEYS.CONFIG)) {
-    setLocalData(STORAGE_KEYS.CONFIG, DEFAULT_SCHOOL_CONFIG);
-  }
+
+  (["mts", "ma"] as MadrasahId[]).forEach(mid => {
+    const keys = getStorageKeys(mid);
+    const seedUsers = mid === "mts" ? SEED_USERS_MTS : SEED_USERS_MA;
+    const seedSiswa = mid === "mts" ? SEED_SISWA_MTS : SEED_SISWA_MA;
+    const seedMapel = mid === "mts" ? SEED_MAPEL_MTS : SEED_MAPEL_MA;
+    const seedEkskul = mid === "mts" ? SEED_EKSKUL_MTS : SEED_EKSKUL_MA;
+    const seedConfig = SCHOOL_CONFIGS[mid];
+
+    if (!localStorage.getItem(keys.USERS)) setLocalData(keys.USERS, seedUsers);
+    if (!localStorage.getItem(keys.SISWA)) setLocalData(keys.SISWA, seedSiswa);
+    if (!localStorage.getItem(keys.MAPEL)) setLocalData(keys.MAPEL, seedMapel);
+    if (!localStorage.getItem(keys.EKSKUL)) setLocalData(keys.EKSKUL, seedEkskul);
+    if (!localStorage.getItem(keys.CONFIG)) setLocalData(keys.CONFIG, seedConfig);
+  });
 }
 
-export async function loginUser(username: string, pass: string): Promise<{
+// 1. OTENTIKASI PENGGUNA TERISOLASI PER MADRASAH
+export async function loginUser(
+  madrasahId: MadrasahId,
+  username: string,
+  pass: string
+): Promise<{
   success: boolean;
   message?: string;
   user?: User;
@@ -79,12 +93,14 @@ export async function loginUser(username: string, pass: string): Promise<{
   isAdmin?: boolean;
 }> {
   const uInput = username.trim().toLowerCase();
-  
+
+  // Supabase Cloud check
   if (isSupabaseConfigured && supabase) {
     try {
       const { data, error } = await supabase
         .from("profiles")
         .select("*")
+        .eq("madrasah_id", madrasahId)
         .eq("username", uInput)
         .maybeSingle();
 
@@ -93,6 +109,7 @@ export async function loginUser(username: string, pass: string): Promise<{
         const role = String(data.role || "").toLowerCase();
         const userObj: User = {
           id: data.id,
+          madrasah_id: madrasahId,
           username: data.username,
           nama_user: data.nama_lengkap || data.username,
           nip: data.nip,
@@ -114,8 +131,10 @@ export async function loginUser(username: string, pass: string): Promise<{
     }
   }
 
-  // Fallback Local
-  const users = getLocalData<User[]>(STORAGE_KEYS.USERS, SEED_USERS);
+  // Local Storage Check
+  const keys = getStorageKeys(madrasahId);
+  const defaultUsers = madrasahId === "mts" ? SEED_USERS_MTS : SEED_USERS_MA;
+  const users = getLocalData<User[]>(keys.USERS, defaultUsers);
   const found = users.find(u => u.username.toLowerCase() === uInput);
 
   if (found) {
@@ -130,38 +149,53 @@ export async function loginUser(username: string, pass: string): Promise<{
     };
   }
 
-  return { success: false, message: "Username tidak terdaftar! (Coba: admin, guru1, wali10a, ekstra1)" };
+  const schoolName = madrasahId === "mts" ? "MTs Ma'arif NU 2" : "MA Ma'arif Nurus Salam";
+  return {
+    success: false,
+    message: `Username tidak terdaftar di ${schoolName}! Pastikan memilih madrasah yang sesuai.`,
+  };
 }
 
-export function getDropdownOptions() {
-  const siswa = getLocalData<Siswa[]>(STORAGE_KEYS.SISWA, SEED_SISWA);
-  const mapel = getLocalData<Mapel[]>(STORAGE_KEYS.MAPEL, SEED_MAPEL);
-  const ekskul = getLocalData<Ekskul[]>(STORAGE_KEYS.EKSKUL, SEED_EKSKUL);
+// 2. DROPDOWNS PER MADRASAH
+export function getDropdownOptions(madrasahId: MadrasahId) {
+  const keys = getStorageKeys(madrasahId);
+  const defSiswa = madrasahId === "mts" ? SEED_SISWA_MTS : SEED_SISWA_MA;
+  const defMapel = madrasahId === "mts" ? SEED_MAPEL_MTS : SEED_MAPEL_MA;
+  const defEkskul = madrasahId === "mts" ? SEED_EKSKUL_MTS : SEED_EKSKUL_MA;
+  const defClasses = madrasahId === "mts" ? SEED_CLASSES_MTS : SEED_CLASSES_MA;
+
+  const siswa = getLocalData<Siswa[]>(keys.SISWA, defSiswa);
+  const mapel = getLocalData<Mapel[]>(keys.MAPEL, defMapel);
+  const ekskul = getLocalData<Ekskul[]>(keys.EKSKUL, defEkskul);
 
   const kelasList = Array.from(new Set(siswa.map(s => s.kelas.trim().toUpperCase()))).sort();
   return {
-    kelas: kelasList.length > 0 ? kelasList : SEED_CLASSES,
-    mapel: mapel.map(m => ({ kode: m.kode_mapel, nama: m.nama_mapel })),
+    kelas: kelasList.length > 0 ? kelasList : defClasses,
+    mapel: mapel.map(m => ({ kode: m.kode_mapel, nama: m.nama_mapel, kelompok: m.kelompok, kkm: m.kkm })),
     ekskul: ekskul.map(e => e.nama_ekskul),
   };
 }
 
-export function getSiswaByKelas(kelas: string): Siswa[] {
+export function getSiswaByKelas(madrasahId: MadrasahId, kelas: string): Siswa[] {
   const target = kelas.trim().toUpperCase();
-  const siswa = getLocalData<Siswa[]>(STORAGE_KEYS.SISWA, SEED_SISWA);
+  const keys = getStorageKeys(madrasahId);
+  const defSiswa = madrasahId === "mts" ? SEED_SISWA_MTS : SEED_SISWA_MA;
+  const siswa = getLocalData<Siswa[]>(keys.SISWA, defSiswa);
   return siswa.filter(s => s.kelas.trim().toUpperCase() === target);
 }
 
+// 3. NILAI MAPEL (FORMATIF & SUMATIF)
 export function getNilaiByKelasMapel(
+  madrasahId: MadrasahId,
   tahun: string,
   semester: string,
   kelas: string,
   kodeMapel: string
 ): NilaiMapelItem[] {
-  const siswaList = getSiswaByKelas(kelas);
-  const allNilai = getLocalData<NilaiMapelItem[]>(STORAGE_KEYS.NILAI, []);
+  const siswaList = getSiswaByKelas(madrasahId, kelas);
+  const keys = getStorageKeys(madrasahId);
+  const allNilai = getLocalData<NilaiMapelItem[]>(keys.NILAI, []);
 
-  // Ambil template materi yang mungkin sudah diinput sebelumnya untuk kelas & mapel ini
   const existingClassMapel = allNilai.find(
     n => n.tahun_ajaran === tahun && n.semester === semester && n.kode_mapel.toLowerCase() === kodeMapel.toLowerCase()
   );
@@ -176,6 +210,7 @@ export function getNilaiByKelasMapel(
     );
 
     return {
+      madrasah_id: madrasahId,
       tahun_ajaran: tahun,
       semester: semester,
       nis: siswa.nis,
@@ -199,28 +234,31 @@ export function getNilaiByKelasMapel(
 }
 
 export function simpanNilaiBatch(
+  madrasahId: MadrasahId,
   tahun: string,
   semester: string,
   kodeMapel: string,
   dataNilai: NilaiMapelItem[]
 ): { success: boolean; message: string } {
   try {
-    let allNilai = getLocalData<NilaiMapelItem[]>(STORAGE_KEYS.NILAI, []);
+    const keys = getStorageKeys(madrasahId);
+    let allNilai = getLocalData<NilaiMapelItem[]>(keys.NILAI, []);
 
     dataNilai.forEach(item => {
       const h1 = Number(item.nilai_harian_1) || 0;
       const h2 = Number(item.nilai_harian_2) || 0;
       const h3 = Number(item.nilai_harian_3) || 0;
       const h4 = Number(item.nilai_harian_4) || 0;
-      
+
       const avg = (h1 + h2 + h3 + h4) / 4;
       const uts = Number(item.nilai_uts) || 0;
       const uas = Number(item.nilai_uas) || 0;
       const na = Math.round((avg * 0.4) + (uts * 0.3) + (uas * 0.3));
-      const predikat: 'A' | 'B' | 'C' | 'D' = na >= 90 ? 'A' : na >= 80 ? 'B' : na >= 70 ? 'C' : 'D';
+      const predikat: "A" | "B" | "C" | "D" = na >= 90 ? "A" : na >= 80 ? "B" : na >= 70 ? "C" : "D";
 
       const enriched: NilaiMapelItem = {
         ...item,
+        madrasah_id: madrasahId,
         tahun_ajaran: tahun,
         semester: semester,
         kode_mapel: kodeMapel,
@@ -236,28 +274,28 @@ export function simpanNilaiBatch(
           n.kode_mapel.toLowerCase() === kodeMapel.toLowerCase()
       );
 
-      if (idx >= 0) {
-        allNilai[idx] = enriched;
-      } else {
-        allNilai.push(enriched);
-      }
+      if (idx >= 0) allNilai[idx] = enriched;
+      else allNilai.push(enriched);
     });
 
-    setLocalData(STORAGE_KEYS.NILAI, allNilai);
+    setLocalData(keys.NILAI, allNilai);
     return { success: true, message: `Berhasil menyimpan nilai ${dataNilai.length} siswa!` };
   } catch (err: any) {
     return { success: false, message: "Gagal menyimpan: " + err.toString() };
   }
 }
 
+// 4. NILAI EKSTRAKURIKULER
 export function getNilaiEkskulByKelas(
+  madrasahId: MadrasahId,
   tahun: string,
   semester: string,
   kelas: string,
   namaEkskul: string
 ): NilaiEkskulItem[] {
-  const siswaList = getSiswaByKelas(kelas);
-  const allEkskul = getLocalData<NilaiEkskulItem[]>(STORAGE_KEYS.NILAI_EKSKUL, []);
+  const siswaList = getSiswaByKelas(madrasahId, kelas);
+  const keys = getStorageKeys(madrasahId);
+  const allEkskul = getLocalData<NilaiEkskulItem[]>(keys.NILAI_EKSKUL, []);
 
   return siswaList.map(siswa => {
     const rec = allEkskul.find(
@@ -269,6 +307,7 @@ export function getNilaiEkskulByKelas(
     );
 
     return {
+      madrasah_id: madrasahId,
       tahun_ajaran: tahun,
       semester: semester,
       nis: siswa.nis,
@@ -282,13 +321,15 @@ export function getNilaiEkskulByKelas(
 }
 
 export function simpanNilaiEkskulBatch(
+  madrasahId: MadrasahId,
   tahun: string,
   semester: string,
   namaEkskul: string,
   dataNilai: NilaiEkskulItem[]
 ): { success: boolean; message: string } {
   try {
-    let allEkskul = getLocalData<NilaiEkskulItem[]>(STORAGE_KEYS.NILAI_EKSKUL, []);
+    const keys = getStorageKeys(madrasahId);
+    let allEkskul = getLocalData<NilaiEkskulItem[]>(keys.NILAI_EKSKUL, []);
 
     dataNilai.forEach(item => {
       const idx = allEkskul.findIndex(
@@ -300,6 +341,7 @@ export function simpanNilaiEkskulBatch(
       );
 
       const payload: NilaiEkskulItem = {
+        madrasah_id: madrasahId,
         tahun_ajaran: tahun,
         semester: semester,
         nis: item.nis,
@@ -309,33 +351,34 @@ export function simpanNilaiEkskulBatch(
         keterangan: item.keterangan || "",
       };
 
-      if (idx >= 0) {
-        allEkskul[idx] = payload;
-      } else {
-        allEkskul.push(payload);
-      }
+      if (idx >= 0) allEkskul[idx] = payload;
+      else allEkskul.push(payload);
     });
 
-    setLocalData(STORAGE_KEYS.NILAI_EKSKUL, allEkskul);
-    return { success: true, message: `Berhasil menyimpan nilai ekskul untuk ${dataNilai.length} siswa!` };
+    setLocalData(keys.NILAI_EKSKUL, allEkskul);
+    return { success: true, message: `Nilai ekskul ${dataNilai.length} siswa berhasil disimpan!` };
   } catch (err: any) {
     return { success: false, message: "Gagal: " + err.toString() };
   }
 }
 
+// 5. RAPOR WALI KELAS (PRESENSI & KEPUTUSAN)
 export function getRaporWaliByKelas(
+  madrasahId: MadrasahId,
   tahun: string,
   semester: string,
   kelas: string
 ): RaporWaliItem[] {
-  const siswaList = getSiswaByKelas(kelas);
-  const allWali = getLocalData<RaporWaliItem[]>(STORAGE_KEYS.RAPOR_WALI, []);
+  const siswaList = getSiswaByKelas(madrasahId, kelas);
+  const keys = getStorageKeys(madrasahId);
+  const allWali = getLocalData<RaporWaliItem[]>(keys.RAPOR_WALI, []);
 
   return siswaList.map(siswa => {
     const rec = allWali.find(
       w => w.tahun_ajaran === tahun && w.semester === semester && w.nis === siswa.nis
     );
     return {
+      madrasah_id: madrasahId,
       tahun_ajaran: tahun,
       semester: semester,
       nis: siswa.nis,
@@ -350,12 +393,14 @@ export function getRaporWaliByKelas(
 }
 
 export function simpanRaporWaliBatch(
+  madrasahId: MadrasahId,
   tahun: string,
   semester: string,
   dataWali: RaporWaliItem[]
 ): { success: boolean; message: string } {
   try {
-    let allWali = getLocalData<RaporWaliItem[]>(STORAGE_KEYS.RAPOR_WALI, []);
+    const keys = getStorageKeys(madrasahId);
+    let allWali = getLocalData<RaporWaliItem[]>(keys.RAPOR_WALI, []);
 
     dataWali.forEach(item => {
       const idx = allWali.findIndex(
@@ -363,6 +408,7 @@ export function simpanRaporWaliBatch(
       );
 
       const payload: RaporWaliItem = {
+        madrasah_id: madrasahId,
         tahun_ajaran: tahun,
         semester: semester,
         nis: item.nis,
@@ -374,38 +420,42 @@ export function simpanRaporWaliBatch(
         keputusan: item.keputusan || "-",
       };
 
-      if (idx >= 0) {
-        allWali[idx] = payload;
-      } else {
-        allWali.push(payload);
-      }
+      if (idx >= 0) allWali[idx] = payload;
+      else allWali.push(payload);
     });
 
-    setLocalData(STORAGE_KEYS.RAPOR_WALI, allWali);
+    setLocalData(keys.RAPOR_WALI, allWali);
     return { success: true, message: `Data Rapor Wali Kelas disimpan untuk ${dataWali.length} siswa!` };
   } catch (err: any) {
     return { success: false, message: "Gagal: " + err.toString() };
   }
 }
 
+// 6. LEGGER DATA DENGAN KALKULASI RATA-RATA & PERINGKAT KELAS (RIGID & VALID)
 export function getLeggerDataByKelas(
+  madrasahId: MadrasahId,
   tahun: string,
   semester: string,
   kelas: string
 ): LeggerResponse {
-  const siswaList = getSiswaByKelas(kelas);
+  const siswaList = getSiswaByKelas(madrasahId, kelas);
   if (!siswaList.length) {
     return { success: false, message: "Data siswa di kelas ini tidak ditemukan.", mapel: [], siswa: [] };
   }
 
-  const mapelList = getLocalData<Mapel[]>(STORAGE_KEYS.MAPEL, SEED_MAPEL);
-  const allNilai = getLocalData<NilaiMapelItem[]>(STORAGE_KEYS.NILAI, []);
-  const allWali = getLocalData<RaporWaliItem[]>(STORAGE_KEYS.RAPOR_WALI, []);
-  const allEkskul = getLocalData<NilaiEkskulItem[]>(STORAGE_KEYS.NILAI_EKSKUL, []);
+  const keys = getStorageKeys(madrasahId);
+  const defMapel = madrasahId === "mts" ? SEED_MAPEL_MTS : SEED_MAPEL_MA;
+  const mapelList = getLocalData<Mapel[]>(keys.MAPEL, defMapel);
+  const allNilai = getLocalData<NilaiMapelItem[]>(keys.NILAI, []);
+  const allWali = getLocalData<RaporWaliItem[]>(keys.RAPOR_WALI, []);
+  const allEkskul = getLocalData<NilaiEkskulItem[]>(keys.NILAI_EKSKUL, []);
 
-  const dataSiswa = siswaList.map(siswa => {
+  // 1. Ekstraksi nilai per siswa
+  const rawSiswa: Omit<SiswaLegger, "ranking">[] = siswaList.map(siswa => {
     const mapelDetails: Record<string, any> = {};
     const scores: Record<string, number> = {};
+    let totalScore = 0;
+    let mapelCount = 0;
 
     mapelList.forEach(m => {
       const rec = allNilai.find(
@@ -434,15 +484,26 @@ export function getLeggerDataByKelas(
       if (rec?.materi_3) mat.push(rec.materi_3);
       if (rec?.materi_4) mat.push(rec.materi_4);
 
+      const na = Number(rec?.nilai_akhir) || 0;
+      const predikat = rec?.predikat || (na >= 90 ? "A" : na >= 80 ? "B" : na >= 70 ? "C" : "D");
+
       mapelDetails[m.kode_mapel] = {
         lm: count > 0 ? Math.round(tot / count) : 0,
         sts: Number(rec?.nilai_uts) || 0,
         sas: Number(rec?.nilai_uas) || 0,
         lingkup_materi: mat.join("; ") || "-",
+        nilai_akhir: na,
+        predikat: predikat,
       };
 
-      scores[m.kode_mapel] = Number(rec?.nilai_akhir) || 0;
+      scores[m.kode_mapel] = na;
+      if (na > 0) {
+        totalScore += na;
+        mapelCount++;
+      }
     });
+
+    const averageScore = mapelCount > 0 ? Math.round(totalScore / mapelCount) : 0;
 
     const rw = allWali.find(
       w => w.tahun_ajaran === tahun && w.semester === semester && w.nis === siswa.nis
@@ -466,8 +527,10 @@ export function getLeggerDataByKelas(
     return {
       nis: siswa.nis,
       nama: siswa.nama_siswa,
-      scores: scores,
-      mapelDetails: mapelDetails,
+      scores,
+      mapelDetails,
+      totalScore,
+      averageScore,
       ekskul: eks,
       sakit: rw?.sakit || 0,
       izin: rw?.izin || 0,
@@ -477,22 +540,64 @@ export function getLeggerDataByKelas(
     };
   });
 
-  return { success: true, mapel: mapelList, siswa: dataSiswa };
+  // 2. Hitung Peringkat (Ranking) berdasarkan totalScore
+  const sortedScores = [...rawSiswa].sort((a, b) => b.totalScore - a.totalScore);
+  const dataSiswa: SiswaLegger[] = rawSiswa.map(s => {
+    const rank = sortedScores.findIndex(item => item.nis === s.nis) + 1;
+    return { ...s, ranking: rank };
+  });
+
+  // 3. Hitung Rata-rata Kelas per Mata Pelajaran
+  const classAverageMapel: Record<string, number> = {};
+  mapelList.forEach(m => {
+    let sum = 0;
+    let count = 0;
+    dataSiswa.forEach(s => {
+      const val = s.scores[m.kode_mapel];
+      if (val > 0) {
+        sum += val;
+        count++;
+      }
+    });
+    classAverageMapel[m.kode_mapel] = count > 0 ? Math.round(sum / count) : 0;
+  });
+
+  let totalAvgSum = 0;
+  let totalAvgCount = 0;
+  Object.values(classAverageMapel).forEach(v => {
+    if (v > 0) {
+      totalAvgSum += v;
+      totalAvgCount++;
+    }
+  });
+  const totalClassAverage = totalAvgCount > 0 ? Math.round(totalAvgSum / totalAvgCount) : 0;
+
+  return {
+    success: true,
+    mapel: mapelList,
+    siswa: dataSiswa,
+    classAverageMapel,
+    totalClassAverage,
+  };
 }
 
-export function getSchoolConfig(): SchoolConfig {
-  return getLocalData<SchoolConfig>(STORAGE_KEYS.CONFIG, DEFAULT_SCHOOL_CONFIG);
+export function getSchoolConfig(madrasahId: MadrasahId): SchoolConfig {
+  const keys = getStorageKeys(madrasahId);
+  return getLocalData<SchoolConfig>(keys.CONFIG, SCHOOL_CONFIGS[madrasahId]);
 }
 
-export function updateSchoolConfig(config: SchoolConfig): void {
-  setLocalData(STORAGE_KEYS.CONFIG, config);
+export function updateSchoolConfig(madrasahId: MadrasahId, config: SchoolConfig): void {
+  const keys = getStorageKeys(madrasahId);
+  setLocalData(keys.CONFIG, config);
 }
 
-export function saveUserTtd(userId: string, ttdBase64: string): void {
-  const users = getLocalData<User[]>(STORAGE_KEYS.USERS, SEED_USERS);
+export function saveUserTtd(madrasahId: MadrasahId, userId: string, ttdBase64: string): void {
+  const keys = getStorageKeys(madrasahId);
+  const defUsers = madrasahId === "mts" ? SEED_USERS_MTS : SEED_USERS_MA;
+  const users = getLocalData<User[]>(keys.USERS, defUsers);
   const idx = users.findIndex(u => u.id === userId);
   if (idx >= 0) {
     users[idx].ttd_url = ttdBase64;
-    setLocalData(STORAGE_KEYS.USERS, users);
+    setLocalData(keys.USERS, users);
   }
 }
