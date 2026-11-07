@@ -200,6 +200,58 @@ export interface AcademicPeriod {
   is_active?: boolean;
 }
 
+// Log & Riwayat Aktivitas Login Seluruh Pengguna
+export interface LoginLogItem {
+  id: string;
+  madrasah_id: MadrasahId;
+  user_id: string;
+  nama_user: string;
+  username: string;
+  role: string;
+  timestamp: string;
+  browser_device: string;
+  status: 'success' | 'failed';
+  ip_address?: string;
+}
+
+// Matriks Visualisasi Pengisian Nilai Per Kelas & Mapel
+export interface MatriksMapelItem {
+  kode_mapel: string;
+  nama_mapel: string;
+  guru_pengampu: string;
+  total_siswa: number;
+  siswa_ternilai: number;
+  status: 'lengkap' | 'sebagian' | 'kosong';
+  is_sent: boolean;
+  tanggal_kirim?: string;
+}
+
+export interface MatriksKelasProgress {
+  kelas: string;
+  total_siswa: number;
+  total_mapel: number;
+  mapel_lengkap: number;
+  mapel_sebagian: number;
+  mapel_kosong: number;
+  persen_progres: number;
+  status_kelas: 'lengkap' | 'sebagian' | 'kosong';
+  details: MatriksMapelItem[];
+}
+
+export interface MatriksOverviewMadrasah {
+  tahun: string;
+  semester: string;
+  label_periode: string;
+  total_kelas: number;
+  total_mapel: number;
+  total_siswa: number;
+  rata_rata_persen: number;
+  kelas_lengkap: number;
+  kelas_sebagian: number;
+  kelas_kosong: number;
+  list_kelas: MatriksKelasProgress[];
+}
+
 export interface SchoolConfig {
   id: MadrasahId;
   nama_yayasan: string;

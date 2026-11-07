@@ -16,6 +16,10 @@ import {
   SchoolConfig,
   SiswaLegger,
   AcademicPeriod,
+  LoginLogItem,
+  MatriksMapelItem,
+  MatriksKelasProgress,
+  MatriksOverviewMadrasah,
 } from "@/types";
 import {
   SCHOOL_CONFIGS,
@@ -50,6 +54,7 @@ function getStorageKeys(madrasahId: MadrasahId) {
     P5RA: `rapor_nusa_${madrasahId}_p5ra_v2`,
     CONFIG: `rapor_nusa_${madrasahId}_config_v2`,
     PERIODS: `rapor_nusa_${madrasahId}_periods_v2`,
+    LOGIN_LOGS: `rapor_nusa_${madrasahId}_login_logs_v1`,
   };
 }
 
@@ -113,6 +118,127 @@ export function initializeLocalStorage(): void {
   });
 }
 
+// Helper deteksi perangkat user
+export function getBrowserDeviceInfo(): string {
+  if (typeof window === "undefined") return "Server / System";
+  const ua = navigator.userAgent;
+  let browser = "Browser";
+  if (ua.includes("Firefox")) browser = "Firefox";
+  else if (ua.includes("Edg")) browser = "Edge";
+  else if (ua.includes("Chrome")) browser = "Chrome";
+  else if (ua.includes("Safari")) browser = "Safari";
+
+  let os = "Desktop";
+  if (/Android/i.test(ua)) os = "Android";
+  else if (/iPhone|iPad|iPod/i.test(ua)) os = "iOS";
+  else if (/Windows/i.test(ua)) os = "Windows";
+  else if (/Macintosh/i.test(ua)) os = "MacOS";
+  else if (/Linux/i.test(ua)) os = "Linux";
+
+  return `${browser} (${os})`;
+}
+
+export function recordLoginLog(
+  madrasahId: MadrasahId,
+  user: { id?: string; nama_user: string; username: string; role: string },
+  status: "success" | "failed"
+): void {
+  const keys = getStorageKeys(madrasahId);
+  const now = new Date();
+  const timestamp = now.toLocaleDateString("id-ID", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+  });
+
+  const newLog: LoginLogItem = {
+    id: `log_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
+    madrasah_id: madrasahId,
+    user_id: user.id || "guest",
+    nama_user: user.nama_user || user.username,
+    username: user.username,
+    role: user.role || "guru",
+    timestamp,
+    browser_device: getBrowserDeviceInfo(),
+    status,
+  };
+
+  const logs = getLocalData<LoginLogItem[]>(keys.LOGIN_LOGS, []);
+  const updated = [newLog, ...logs].slice(0, 150);
+  setLocalData(keys.LOGIN_LOGS, updated);
+}
+
+export function getLoginLogs(madrasahId: MadrasahId): LoginLogItem[] {
+  const keys = getStorageKeys(madrasahId);
+  const logs = getLocalData<LoginLogItem[]>(keys.LOGIN_LOGS, []);
+  if (logs.length > 0) return logs;
+
+  // Sediakan seed log awal yang representatif jika belum pernah ada
+  const seedLogs: LoginLogItem[] = [
+    {
+      id: "log_seed_1",
+      madrasah_id: madrasahId,
+      user_id: "admin",
+      nama_user: "Operator Madrasah",
+      username: "admin",
+      role: "admin",
+      timestamp: new Date(Date.now() - 12 * 60 * 1000).toLocaleDateString("id-ID", {
+        day: "2-digit",
+        month: "short",
+        year: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+      }),
+      browser_device: "Chrome (Windows)",
+      status: "success",
+    },
+    {
+      id: "log_seed_2",
+      madrasah_id: madrasahId,
+      user_id: "kamad",
+      nama_user: madrasahId === "mts" ? "M. Zen Pamuji, S.Pd." : "Drs. H. M. Syuhadak",
+      username: "kamad",
+      role: "kamad",
+      timestamp: new Date(Date.now() - 48 * 60 * 1000).toLocaleDateString("id-ID", {
+        day: "2-digit",
+        month: "short",
+        year: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+      }),
+      browser_device: "Safari (iOS)",
+      status: "success",
+    },
+    {
+      id: "log_seed_3",
+      madrasah_id: madrasahId,
+      user_id: "guru_1",
+      nama_user: madrasahId === "mts" ? "A. Fatoni, S.Ag" : "Dra. Siti Aminah",
+      username: madrasahId === "mts" ? "fatoni" : "aminah",
+      role: "guru",
+      timestamp: new Date(Date.now() - 110 * 60 * 1000).toLocaleDateString("id-ID", {
+        day: "2-digit",
+        month: "short",
+        year: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+      }),
+      browser_device: "Chrome (Android)",
+      status: "success",
+    },
+  ];
+  setLocalData(keys.LOGIN_LOGS, seedLogs);
+  return seedLogs;
+}
+
+export function clearLoginLogs(madrasahId: MadrasahId): void {
+  const keys = getStorageKeys(madrasahId);
+  setLocalData(keys.LOGIN_LOGS, []);
+}
+
 // =====================================================================
 // 1. OTENTIKASI PENGGUNA BERDASARKAN KREDENSIAL ASLI
 // =====================================================================
@@ -140,6 +266,7 @@ export async function loginUser(
 
   if (!found) {
     const schoolName = madrasahId === "mts" ? "MTs Ma'arif NU 2" : "MA Ma'arif Nurus Salam";
+    recordLoginLog(madrasahId, { nama_user: username, username, role: "unknown" }, "failed");
     return {
       success: false,
       message: `Username "${username}" tidak terdaftar di ${schoolName}! Pastikan memilih madrasah yang sesuai atau minta akun ke Operator.`,
@@ -148,6 +275,7 @@ export async function loginUser(
 
   // Verifikasi Password (Default '123' atau '123456' atau custom password)
   if (found.password && found.password !== pInput && pInput !== "123" && pInput !== "123456") {
+    recordLoginLog(madrasahId, found, "failed");
     return { success: false, message: "Kata sandi salah!" };
   }
 
@@ -173,6 +301,9 @@ export async function loginUser(
   const isKamad = effectiveRole === "kamad";
   const isWali = effectiveRole === "wali_kelas" || effectiveRole === "guru_walikelas" || isAdmin;
   const isGuru = effectiveRole === "guru" || effectiveRole === "guru_walikelas" || isAdmin;
+
+  // Catat login sukses ke riwayat log
+  recordLoginLog(madrasahId, enrichedUser, "success");
 
   return {
     success: true,
@@ -1165,5 +1296,137 @@ export function addAcademicYear(
     success: true,
     message: `Tahun ajaran ${tahunStr} (Gasal & Genap) berhasil ditambahkan!`,
     periods: updated,
+  };
+}
+
+// =====================================================================
+// 14. MATRIKS VISUALISASI PENGISIAN NILAI MADRASAH (MAPEL & KELAS)
+// =====================================================================
+export function getMatriksNilaiMadrasah(
+  madrasahId: MadrasahId,
+  tahun?: string,
+  semester?: string
+): MatriksOverviewMadrasah {
+  const curPeriod = getActivePeriod(madrasahId);
+  const activeTahun = tahun || curPeriod.tahun;
+  const activeSem = semester || curPeriod.semester;
+
+  const keys = getStorageKeys(madrasahId);
+  const defSiswa = madrasahId === "mts" ? SEED_SISWA_MTS : SEED_SISWA_MA;
+  const defMapel = madrasahId === "mts" ? SEED_MAPEL_MTS : SEED_MAPEL_MA;
+  const defClasses = madrasahId === "mts" ? SEED_CLASSES_MTS : SEED_CLASSES_MA;
+
+  const siswaList = getLocalData<Siswa[]>(keys.SISWA, defSiswa);
+  const mapelList = getLocalData<Mapel[]>(keys.MAPEL, defMapel);
+  const allNilai = getLocalData<NilaiMapelItem[]>(keys.NILAI, []);
+  const allStatus = getLocalData<StatusKirimNilai[]>(keys.STATUS_KIRIM, []);
+  const assignments = getTeacherAssignments(madrasahId);
+
+  // Ambil kelas terurut
+  const rawList = Array.from(new Set(siswaList.map(s => s.kelas.trim().toUpperCase())));
+  const sortedClasses = sortRombelList(rawList.length > 0 ? rawList : defClasses);
+
+  let totalSiswaMadrasah = 0;
+  let totalPersenSum = 0;
+  let kelasLengkapCount = 0;
+  let kelasSebagianCount = 0;
+  let kelasKosongCount = 0;
+
+  const listKelas: MatriksKelasProgress[] = sortedClasses.map(kelas => {
+    const siswaDiKelas = siswaList.filter(s => s.kelas.trim().toUpperCase() === kelas);
+    const totalSiswaKelas = siswaDiKelas.length;
+    totalSiswaMadrasah += totalSiswaKelas;
+
+    let mapelLengkap = 0;
+    let mapelSebagian = 0;
+    let mapelKosong = 0;
+
+    const details: MatriksMapelItem[] = mapelList.map(m => {
+      const assign = assignments.find(a => a.kode_mapel === m.kode_mapel && a.kelas === kelas);
+      const stat = allStatus.find(s => s.kode_mapel === m.kode_mapel && s.kelas === kelas);
+      const isSent = Boolean(stat?.is_sent);
+
+      // Hitung siswa di kelas ini yang sudah memiliki data nilai untuk mapel ini
+      const nilaiMapelSiswa = allNilai.filter(
+        n =>
+          n.tahun_ajaran === activeTahun &&
+          n.semester === activeSem &&
+          n.kode_mapel.toLowerCase() === m.kode_mapel.toLowerCase() &&
+          siswaDiKelas.some(s => s.nis === n.nis) &&
+          (Number(n.nilai_uts) > 0 ||
+            Number(n.nilai_uas) > 0 ||
+            Number(n.nilai_harian_1) > 0 ||
+            (n.nilai_akhir !== undefined && Number(n.nilai_akhir) > 0))
+      );
+
+      const siswaTernilai = nilaiMapelSiswa.length;
+
+      let statusItem: 'lengkap' | 'sebagian' | 'kosong' = 'kosong';
+      if (isSent || (totalSiswaKelas > 0 && siswaTernilai >= totalSiswaKelas)) {
+        statusItem = 'lengkap';
+        mapelLengkap++;
+      } else if (siswaTernilai > 0) {
+        statusItem = 'sebagian';
+        mapelSebagian++;
+      } else {
+        statusItem = 'kosong';
+        mapelKosong++;
+      }
+
+      return {
+        kode_mapel: m.kode_mapel,
+        nama_mapel: m.nama_mapel,
+        guru_pengampu: stat?.guru_pengampu || (assign ? assign.guru_nama : "Menunggu Pengisian"),
+        total_siswa: totalSiswaKelas,
+        siswa_ternilai: siswaTernilai,
+        status: statusItem,
+        is_sent: isSent,
+        tanggal_kirim: stat?.tanggal_kirim,
+      };
+    });
+
+    const totalMapel = mapelList.length;
+    const persenProgres = totalMapel > 0 ? Math.round((mapelLengkap / totalMapel) * 100) : 0;
+    totalPersenSum += persenProgres;
+
+    let statusKelas: 'lengkap' | 'sebagian' | 'kosong' = 'kosong';
+    if (persenProgres === 100) {
+      statusKelas = 'lengkap';
+      kelasLengkapCount++;
+    } else if (mapelLengkap > 0 || mapelSebagian > 0) {
+      statusKelas = 'sebagian';
+      kelasSebagianCount++;
+    } else {
+      statusKelas = 'kosong';
+      kelasKosongCount++;
+    }
+
+    return {
+      kelas,
+      total_siswa: totalSiswaKelas,
+      total_mapel: totalMapel,
+      mapel_lengkap: mapelLengkap,
+      mapel_sebagian: mapelSebagian,
+      mapel_kosong: mapelKosong,
+      persen_progres: persenProgres,
+      status_kelas: statusKelas,
+      details,
+    };
+  });
+
+  const rataRata = sortedClasses.length > 0 ? Math.round(totalPersenSum / sortedClasses.length) : 0;
+
+  return {
+    tahun: activeTahun,
+    semester: activeSem,
+    label_periode: `${activeSem === "1" ? "Gasal" : "Genap"} ${activeTahun}`,
+    total_kelas: sortedClasses.length,
+    total_mapel: mapelList.length,
+    total_siswa: totalSiswaMadrasah,
+    rata_rata_persen: rataRata,
+    kelas_lengkap: kelasLengkapCount,
+    kelas_sebagian: kelasSebagianCount,
+    kelas_kosong: kelasKosongCount,
+    list_kelas: listKelas,
   };
 }
