@@ -580,7 +580,7 @@ export default function HomePage() {
                 <input
                   type="text"
                   required
-                  placeholder="Contoh: a_munawir, admin_mts"
+                  placeholder="Isikan username"
                   value={usernameInput}
                   onChange={e => setUsernameInput(e.target.value)}
                   className="w-full px-3.5 py-2.5 rounded-lg border-2 border-retro-border bg-white text-xs font-bold text-retro-black shadow-retro-sm focus:outline-none focus:border-brand-500 focus:shadow-retro transition"
@@ -594,7 +594,7 @@ export default function HomePage() {
                 <input
                   type="password"
                   required
-                  placeholder="Masukkan password"
+                  placeholder="Masukkan kata sandi"
                   value={passwordInput}
                   onChange={e => setPasswordInput(e.target.value)}
                   className="w-full px-3.5 py-2.5 rounded-lg border-2 border-retro-border bg-white text-xs font-bold text-retro-black shadow-retro-sm focus:outline-none focus:border-brand-500 focus:shadow-retro transition"

@@ -1383,7 +1383,7 @@ export default function AdminDashboard({
                   required
                   value={newUsername}
                   onChange={e => setNewUsername(e.target.value)}
-                  placeholder="Contoh: sitifatimah"
+                  placeholder="Isikan username"
                   className="w-full text-xs py-2 px-3 rounded-lg border-2 border-retro-border bg-white font-mono font-bold shadow-retro-sm focus:border-brand-500"
                 />
               </div>
