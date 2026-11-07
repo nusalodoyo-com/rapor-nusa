@@ -468,22 +468,24 @@ export default function HomePage() {
   const isDualRole = currentUser.role === "guru_walikelas" || Boolean(currentUser.kelas_diampu && currentUser.kelas_diampu !== "-");
 
   return (
-    <div className="min-h-screen bg-retro-bg retro-grid-pattern flex flex-col">
-      <Navbar
-        currentUser={currentUser}
-        currentConfig={activeCfg}
-        activePeriod={activePeriod || undefined}
-        academicPeriods={academicPeriods}
-        onSelectPeriod={handleSelectPeriod}
-        onLogout={handleLogout}
-        onSwitchMadrasah={handleSwitchMadrasah}
-        onOpenLegger={() => handleOpenLegger()}
-        onOpenCetakRapor={() => handleOpenCetakRapor()}
-        onOpenSearch={() => setIsSearchOpen(true)}
-        isWali={currentUser.role === "wali_kelas" || currentUser.role === "guru_walikelas" || isDualRole}
-      />
+    <div className={`min-h-screen bg-retro-bg retro-grid-pattern flex flex-col ${isCetakRaporOpen ? "print:bg-white print:p-0 print:m-0" : ""}`}>
+      <div className="no-print">
+        <Navbar
+          currentUser={currentUser}
+          currentConfig={activeCfg}
+          activePeriod={activePeriod || undefined}
+          academicPeriods={academicPeriods}
+          onSelectPeriod={handleSelectPeriod}
+          onLogout={handleLogout}
+          onSwitchMadrasah={handleSwitchMadrasah}
+          onOpenLegger={() => handleOpenLegger()}
+          onOpenCetakRapor={() => handleOpenCetakRapor()}
+          onOpenSearch={() => setIsSearchOpen(true)}
+          isWali={currentUser.role === "wali_kelas" || currentUser.role === "guru_walikelas" || isDualRole}
+        />
+      </div>
 
-      <main className="flex-1 max-w-7xl w-full mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-6 space-y-5 sm:space-y-6">
+      <main className="no-print flex-1 max-w-7xl w-full mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-6 space-y-5 sm:space-y-6">
         {/* DUAL ROLE SWITCHER PILL (Guru Mapel vs Wali Kelas) */}
         {isDualRole && currentUser.role !== "admin" && currentUser.role !== "kamad" && (
           <div className="card-retro p-3 sm:p-4 flex flex-wrap items-center justify-between gap-3 no-print bg-retro-cream">

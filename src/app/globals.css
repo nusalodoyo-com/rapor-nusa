@@ -80,65 +80,97 @@
    ===================================================================== */
 @page {
   size: A4 portrait;
-  margin: 8mm 10mm;
+  margin: 5mm 7mm;
 }
 
 @media print {
   @page {
     size: 210mm 297mm;
-    margin: 8mm 10mm;
+    margin: 5mm 7mm;
   }
 
+  /* Sembunyikan SEMUA elemen web di luar area cetak */
   .no-print,
-  header,
   nav,
+  header,
   footer,
   aside,
-  .btn,
+  main,
   button,
+  .btn,
   .print-hide {
     display: none !important;
   }
 
   html, body {
     width: 210mm !important;
+    height: 297mm !important;
     background: #ffffff !important;
+    background-image: none !important;
     color: #000000 !important;
     padding: 0 !important;
     margin: 0 !important;
-    font-size: 8.5pt !important;
+    overflow: hidden !important;
+    font-size: 8pt !important;
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
   }
 
-  /* Single-page A4 Layout Container dengan Breathing Space Elegan */
+  /* Kontainer Area Cetak Rapor Murni */
+  #rapor-printable-area {
+    position: static !important;
+    width: 100% !important;
+    max-width: 196mm !important;
+    margin: 0 auto !important;
+    padding: 0 !important;
+    background: #ffffff !important;
+    background-color: #ffffff !important;
+    box-shadow: none !important;
+    border: none !important;
+    display: block !important;
+    overflow: visible !important;
+  }
+
+  /* Single-page A4 Layout Container: Terkunci tepat 1 halaman A4 */
   .rapor-single-page {
     width: 100% !important;
-    max-width: 190mm !important;
+    max-width: 196mm !important;
+    height: 285mm !important;
+    max-height: 285mm !important;
     margin: 0 auto !important;
-    padding: 2mm 0 !important;
+    padding: 0 !important;
     box-sizing: border-box !important;
+    overflow: hidden !important;
     display: flex !important;
     flex-direction: column !important;
     justify-content: space-between !important;
     page-break-inside: avoid !important;
     page-break-before: avoid !important;
     page-break-after: avoid !important;
+    break-inside: avoid !important;
+    break-after: avoid !important;
   }
 
   table, tr, td, th {
     page-break-inside: avoid !important;
+    break-inside: avoid !important;
   }
 
   .signature-block {
     page-break-inside: avoid !important;
+    break-inside: avoid !important;
   }
 
   .rapor-print-container {
     width: 100% !important;
-    max-width: 190mm !important;
+    max-width: 196mm !important;
+    height: 285mm !important;
+    max-height: 285mm !important;
     margin: 0 auto !important;
-    padding: 6mm 0 !important;
+    padding: 4mm 0 !important;
+    overflow: hidden !important;
+    page-break-after: avoid !important;
+    break-after: avoid !important;
   }
 
   .legger-print-container {

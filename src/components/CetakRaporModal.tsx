@@ -94,8 +94,8 @@ export default function CetakRaporModal({
   const isMts = config.id === "mts";
 
   return (
-    <div className="fixed inset-0 z-50 overflow-y-auto bg-black/75 backdrop-blur-sm flex items-center justify-center p-2 sm:p-4">
-      <div className="card-retro-lg bg-white border-3 border-retro-border shadow-retro-xl w-full max-w-5xl max-h-[96vh] flex flex-col overflow-hidden">
+    <div className="fixed inset-0 z-50 overflow-y-auto bg-black/75 backdrop-blur-sm flex items-center justify-center p-2 sm:p-4 print:p-0 print:m-0 print:static print:bg-white print:overflow-visible print:block">
+      <div className="card-retro-lg bg-white border-3 border-retro-border shadow-retro-xl w-full max-w-5xl max-h-[96vh] flex flex-col overflow-hidden print:border-none print:shadow-none print:m-0 print:p-0 print:max-w-none print:max-h-none print:overflow-visible print:block">
         {/* Modal Controls Bar (Hidden during print) */}
         <div className="p-3 sm:p-4 border-b-2 border-retro-border bg-retro-cream no-print flex flex-wrap items-center justify-between gap-3">
           <div className="flex flex-wrap items-center gap-3 flex-1 min-w-[280px]">
@@ -189,8 +189,8 @@ export default function CetakRaporModal({
           </div>
         </div>
 
-        {/* Modal Printable Sheet (A4 Portrait Container Berbasis ReLaXed) */}
-        <div className="flex-1 overflow-y-auto p-3 sm:p-6 bg-slate-200/90 flex justify-center print:p-0 print:bg-white print:overflow-visible">
+        {/* Modal Printable Sheet (A4 Portrait Container) */}
+        <div id="rapor-printable-area" className="flex-1 overflow-y-auto p-3 sm:p-6 bg-slate-200/90 flex justify-center print:p-0 print:m-0 print:bg-white print:overflow-visible print:block">
           {activeTab === "cover" ? (
             /* ================= COVER RAPOR MADRASAH ================= */
             <div className="rapor-print-container bg-white shadow-xl border border-slate-300 p-12 w-full max-w-[210mm] min-h-[297mm] flex flex-col justify-between text-center text-slate-900 leading-normal">
