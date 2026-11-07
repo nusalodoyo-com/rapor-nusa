@@ -65,20 +65,20 @@ export default function CetakRaporModal({
   const mapelC = leggerData.mapel.filter(m => m.kelompok === "C");
 
   return (
-    <div className="fixed inset-0 z-50 overflow-y-auto bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-2 sm:p-4">
-      <div className="bg-white rounded-2xl shadow-2xl border border-slate-200 w-full max-w-5xl max-h-[95vh] flex flex-col">
+    <div className="fixed inset-0 z-50 overflow-y-auto bg-black/70 backdrop-blur-sm flex items-center justify-center p-2 sm:p-4">
+      <div className="card-retro-lg bg-white border-3 border-retro-border shadow-retro-xl w-full max-w-5xl max-h-[96vh] flex flex-col overflow-hidden">
         {/* Modal Controls Bar (Hidden during print) */}
-        <div className="p-4 border-b border-slate-200 bg-slate-50 rounded-t-2xl no-print flex flex-wrap items-center justify-between gap-3">
-          <div className="flex items-center gap-3 flex-1 min-w-[280px]">
+        <div className="p-3.5 sm:p-4 border-b-2 border-retro-border bg-retro-cream no-print flex flex-wrap items-center justify-between gap-3">
+          <div className="flex flex-wrap items-center gap-3 flex-1 min-w-[260px]">
             {/* Student Selector */}
-            <div className="flex-1">
-              <label className="text-xs font-bold text-slate-700 block mb-1">
-                Pilih Siswa ({config.nama_madrasah}):
+            <div className="flex-1 min-w-[180px]">
+              <label className="text-[11px] font-black text-retro-black uppercase block mb-1">
+                Pilih Siswa ({config.jenjang}):
               </label>
               <select
                 value={selectedNis}
                 onChange={e => setSelectedNis(e.target.value)}
-                className="w-full text-xs py-1.5 px-3 rounded-lg border border-slate-300 bg-white font-medium focus:ring-2 focus:ring-emerald-500"
+                className="w-full text-xs py-1.5 px-3 rounded-lg border-2 border-retro-border bg-white font-black text-retro-black shadow-retro-sm"
               >
                 <option value="">-- Pilih Siswa Kelas {kelas} --</option>
                 {leggerData.siswa.map(s => (
@@ -90,46 +90,37 @@ export default function CetakRaporModal({
             </div>
 
             {/* Tab: Lembar Rapor vs Cover vs P5RA */}
-            <div className="flex items-center bg-slate-200 p-0.5 rounded-lg mt-4">
+            <div className="flex items-center gap-1.5 mt-2 sm:mt-4">
               <button
                 type="button"
                 onClick={() => setActiveTab("rapor")}
-                className={`px-3 py-1.5 text-xs font-semibold rounded-md transition ${
-                  activeTab === "rapor" ? "bg-white text-emerald-800 shadow-sm" : "text-slate-600 hover:text-slate-900"
-                }`}
+                className={activeTab === "rapor" ? "btn-retro-primary px-3 py-1.5 text-xs flex items-center gap-1" : "btn-retro-white px-3 py-1.5 text-xs flex items-center gap-1"}
               >
-                <FileText className="w-3.5 h-3.5 inline mr-1" />
-                Lembar Nilai
+                <FileText className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline">Lembar</span> Nilai
               </button>
               <button
                 type="button"
                 onClick={() => setActiveTab("p5ra")}
-                className={`px-3 py-1.5 text-xs font-semibold rounded-md transition ${
-                  activeTab === "p5ra" ? "bg-white text-rose-700 shadow-sm" : "text-slate-600 hover:text-slate-900"
-                }`}
+                className={activeTab === "p5ra" ? "btn-retro bg-red-600 text-white px-3 py-1.5 text-xs flex items-center gap-1" : "btn-retro-white px-3 py-1.5 text-xs flex items-center gap-1"}
               >
-                <Heart className="w-3.5 h-3.5 inline mr-1 text-rose-500" />
-                Rapor P5RA (KBC)
+                <Heart className="w-3.5 h-3.5 text-red-500" />
+                <span>P5RA</span>
               </button>
               <button
                 type="button"
                 onClick={() => setActiveTab("cover")}
-                className={`px-3 py-1.5 text-xs font-semibold rounded-md transition ${
-                  activeTab === "cover" ? "bg-white text-emerald-800 shadow-sm" : "text-slate-600 hover:text-slate-900"
-                }`}
+                className={activeTab === "cover" ? "btn-retro-yellow px-3 py-1.5 text-xs flex items-center gap-1" : "btn-retro-white px-3 py-1.5 text-xs flex items-center gap-1"}
               >
-                <BookOpen className="w-3.5 h-3.5 inline mr-1" />
-                Cover Rapor
+                <BookOpen className="w-3.5 h-3.5" />
+                <span>Cover</span>
               </button>
             </div>
 
             {/* Upload TTD Wali Kelas */}
-            <div className="w-48">
-              <label className="text-xs font-bold text-slate-700 block mb-1">
-                TTD Wali Kelas:
-              </label>
-              <label className="flex items-center justify-center px-3 py-1.5 text-xs font-semibold rounded-lg border border-dashed border-slate-300 hover:border-emerald-500 hover:bg-emerald-50 cursor-pointer transition text-slate-600 bg-white">
-                <Upload className="w-3.5 h-3.5 mr-1 text-emerald-600" />
+            <div className="w-36 sm:w-44 mt-2 sm:mt-4">
+              <label className="flex items-center justify-center px-3 py-1.5 text-xs font-black rounded-lg border-2 border-dashed border-retro-border bg-white hover:bg-brand-50 cursor-pointer shadow-retro-sm transition text-retro-black">
+                <Upload className="w-3.5 h-3.5 mr-1 text-brand-600" />
                 <span>{ttdBase64 ? "Ganti TTD" : "Upload TTD"}</span>
                 <input
                   type="file"
@@ -145,16 +136,17 @@ export default function CetakRaporModal({
             <button
               onClick={handlePrint}
               disabled={!selectedNis}
-              className="inline-flex items-center px-4 py-2 text-xs font-bold rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white transition shadow-sm disabled:opacity-40"
+              className="btn-retro-primary px-4 py-2 text-xs flex items-center gap-1.5 disabled:opacity-40"
             >
-              <Printer className="w-4 h-4 mr-1.5" />
-              Cetak {activeTab === "rapor" ? "Rapor Nilai" : activeTab === "p5ra" ? "Rapor P5RA" : "Cover"} (A4)
+              <Printer className="w-4 h-4" />
+              <span>Cetak (A4)</span>
             </button>
             <button
               onClick={onClose}
-              className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-200 transition"
+              className="btn-retro bg-retro-orange text-white p-2"
+              title="Tutup"
             >
-              <X className="w-5 h-5" />
+              <X className="w-4 h-4" />
             </button>
           </div>
         </div>

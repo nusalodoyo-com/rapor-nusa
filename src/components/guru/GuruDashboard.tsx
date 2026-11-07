@@ -185,7 +185,6 @@ export default function GuruDashboard({
         dataNilai,
         updated
       );
-      // Reload
       const reloaded = getNilaiByKelasMapel(
         madrasahId,
         tahun,
@@ -198,7 +197,7 @@ export default function GuruDashboard({
 
     setNotification({
       type: "success",
-      message: `Bobot penilaian berhasil diperbarui (Formatif: ${bobot.bobot_formatif}%, STS: ${bobot.bobot_sts}%, SAS: ${bobot.bobot_sas}%)!`,
+      message: `Bobot penilaian diperbarui: Formatif ${bobot.bobot_formatif}%, STS ${bobot.bobot_sts}%, SAS ${bobot.bobot_sas}%!`,
     });
   };
 
@@ -230,7 +229,7 @@ export default function GuruDashboard({
     if (!activeAssignment) return;
 
     const confirmSend = window.confirm(
-      `Apakah Anda yakin ingin MENGIRIM nilai ${activeAssignment.nama_mapel} (${activeAssignment.kelas}) ke Wali Kelas?\n\nSetelah dikirim, nilai akan terintegrasi ke Legger & Rapor siswa dan data akan terkunci sementara.`
+      `KIRIM nilai ${activeAssignment.nama_mapel} (${activeAssignment.kelas}) ke Wali Kelas?\n\nNilai akan terintegrasi langsung ke Legger & Rapor siswa dan data terkunci sementara.`
     );
     if (!confirmSend) return;
 
@@ -274,7 +273,7 @@ export default function GuruDashboard({
     if (!activeAssignment) return;
 
     const confirmCancel = window.confirm(
-      `Buka kembali kunci pengeditan nilai ${activeAssignment.nama_mapel} (${activeAssignment.kelas})?`
+      `Buka kunci pengeditan nilai ${activeAssignment.nama_mapel} (${activeAssignment.kelas})?`
     );
     if (!confirmCancel) return;
 
@@ -336,7 +335,7 @@ export default function GuruDashboard({
 
         setDataNilai(merged);
         handleSaveNilai(merged);
-        alert("Berhasil mengimpor dan menyimpan nilai dari Excel!");
+        alert("Berhasil mengimpor nilai dari file Excel!");
       }
     } catch (err: any) {
       alert("Gagal membaca Excel: " + err.message);
@@ -344,27 +343,27 @@ export default function GuruDashboard({
   };
 
   return (
-    <div className="space-y-6">
-      {/* Top Banner Info Guru */}
-      <div className="bg-gradient-to-r from-[#045e07] via-[#009600] to-[#064e0a] rounded-2xl p-5 text-white shadow-lg flex flex-wrap items-center justify-between gap-4">
-        <div className="flex items-center space-x-4">
-          <div className="w-12 h-12 rounded-2xl bg-white p-1 border-2 border-[#00ab00] flex items-center justify-center shadow-md overflow-hidden flex-shrink-0">
+    <div className="space-y-5 sm:space-y-6">
+      {/* Top Banner Info Guru Retro */}
+      <div className="card-retro-lg bg-retro-cream p-5 sm:p-6 border-3 border-retro-border flex flex-wrap items-center justify-between gap-4 shadow-retro-lg">
+        <div className="flex items-center space-x-3.5">
+          <div className="w-12 h-12 rounded-xl bg-white p-1 border-2 border-retro-border shadow-retro-sm flex items-center justify-center overflow-hidden flex-shrink-0">
             <img src="/logo.png" alt="Logo" className="w-full h-full object-contain" />
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <span className="px-2 py-0.5 rounded-full bg-white/20 text-[#cef7cf] text-[10px] font-bold uppercase tracking-wider">
-                Portal Guru Mapel • {config.jenjang}
+              <span className="badge-retro bg-brand-500 text-white">
+                GURU MAPEL • {config.jenjang}
               </span>
-              <span className="text-xs text-[#cef7cf] font-mono">
+              <span className="badge-retro bg-retro-yellow text-retro-black">
                 NIP: {currentUser.nip || "-"}
               </span>
             </div>
-            <h2 className="text-lg font-black tracking-tight uppercase">
+            <h2 className="text-lg sm:text-xl font-black uppercase text-retro-black mt-1">
               {currentUser.nama_user}
             </h2>
-            <p className="text-xs text-[#eafbea] font-medium">
-              {config.nama_madrasah} • Memegang {assignments.length} Rombel / Penugasan
+            <p className="text-xs text-slate-600 font-bold">
+              {config.nama_madrasah} • Mengampu {assignments.length} Rombel
             </p>
           </div>
         </div>
@@ -374,10 +373,10 @@ export default function GuruDashboard({
           {currentUser.kelas_diampu && currentUser.kelas_diampu !== "-" && onSwitchToWali && (
             <button
               onClick={onSwitchToWali}
-              className="px-3.5 py-2 rounded-xl bg-amber-500 hover:bg-amber-600 text-slate-900 font-bold text-xs flex items-center gap-1.5 shadow transition"
+              className="btn-retro bg-retro-yellow hover:bg-amber-400 text-retro-black px-3.5 py-2 text-xs flex items-center gap-1.5"
             >
               <UserCheck className="w-4 h-4" />
-              <span>Beralih ke Tugas Wali Kelas ({currentUser.kelas_diampu})</span>
+              <span>Beralih ke Tugas Wali ({currentUser.kelas_diampu})</span>
             </button>
           )}
         </div>
@@ -385,31 +384,31 @@ export default function GuruDashboard({
 
       {/* No Assignments Warning */}
       {assignments.length === 0 ? (
-        <div className="bg-white p-8 rounded-2xl border border-amber-200 text-center space-y-3 shadow-sm">
-          <div className="w-14 h-14 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center mx-auto">
-            <AlertCircle className="w-8 h-8" />
+        <div className="card-retro p-8 text-center space-y-3 bg-white">
+          <div className="w-14 h-14 rounded-xl bg-amber-100 border-2 border-retro-border shadow-retro-sm text-retro-black flex items-center justify-center mx-auto">
+            <AlertCircle className="w-8 h-8 text-amber-600" />
           </div>
-          <h3 className="text-base font-bold text-slate-800">
-            Belum Ada Pembagian Tugas Mengajar
+          <h3 className="text-base font-black text-retro-black uppercase">
+            Belum Ada Tugas Mengajar
           </h3>
-          <p className="text-xs text-slate-500 max-w-md mx-auto">
-            Admin/Operator Madrasah belum menetapkan mata pelajaran dan kelas yang Anda ampu di aplikasi RDM. Silakan hubungi operator madrasah untuk melakukan penugasan mengajar.
+          <p className="text-xs text-slate-600 max-w-md mx-auto font-medium">
+            Operator madrasah belum menetapkan mapel & kelas yang Anda ampu di sistem RDM. Silakan hubungi operator madrasah untuk melakukan penugasan mengajar.
           </p>
         </div>
       ) : (
         <>
-          {/* Controls: Rombel & Mapel Selector + Bobot + Kirim Status */}
-          <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
+          {/* Controls: Rombel Selector + Bobot + Kirim Status */}
+          <div className="card-retro p-4 sm:p-5 space-y-4 bg-white">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-3 sm:gap-4">
               {/* Selector Rombel & Mapel */}
               <div className="md:col-span-2">
-                <label className="text-xs font-bold text-slate-700 block mb-1">
-                  Pilih Mata Pelajaran & Kelas yang Diampu:
+                <label className="text-xs font-black text-retro-black uppercase block mb-1">
+                  Pilih Mata Pelajaran & Kelas:
                 </label>
                 <select
                   value={selectedAssignId}
                   onChange={e => setSelectedAssignId(e.target.value)}
-                  className="w-full text-xs py-2.5 px-3 rounded-xl border border-slate-300 bg-white font-bold text-slate-800 focus:ring-2 focus:ring-emerald-500"
+                  className="w-full text-xs py-2.5 px-3 rounded-lg border-2 border-retro-border bg-retro-cream font-black text-retro-black shadow-retro-sm focus:border-brand-500"
                 >
                   {assignments.map(a => (
                     <option key={a.id} value={a.id}>
@@ -421,50 +420,50 @@ export default function GuruDashboard({
 
               {/* Tahun Ajaran */}
               <div>
-                <label className="text-xs font-bold text-slate-700 block mb-1">
-                  Tahun Ajaran:
+                <label className="text-xs font-black text-retro-black uppercase block mb-1">
+                  Semester & Tahun:
                 </label>
-                <div className="flex items-center text-xs py-2 px-3 rounded-xl border border-slate-200 bg-slate-50 font-semibold text-slate-700">
-                  <Calendar className="w-4 h-4 mr-1.5 text-emerald-600" />
+                <div className="flex items-center text-xs py-2 px-3 rounded-lg border-2 border-retro-border bg-slate-50 font-bold text-retro-black shadow-retro-sm">
+                  <Calendar className="w-4 h-4 mr-1.5 text-brand-600" />
                   <span>{tahun} (Gasal)</span>
                 </div>
               </div>
 
               {/* Button Atur Bobot */}
               <div>
-                <label className="text-xs font-bold text-slate-700 block mb-1">
+                <label className="text-xs font-black text-retro-black uppercase block mb-1">
                   Bobot Penilaian (RDM):
                 </label>
                 <button
                   onClick={() => setIsBobotOpen(!isBobotOpen)}
-                  className="w-full py-2 px-3 rounded-xl bg-teal-50 hover:bg-teal-100 text-teal-800 border border-teal-200 text-xs font-bold flex items-center justify-between transition"
+                  className="w-full py-2 px-3 rounded-lg bg-retro-cream hover:bg-slate-100 border-2 border-retro-border text-xs font-black flex items-center justify-between shadow-retro-sm"
                 >
                   <div className="flex items-center gap-1.5">
-                    <Sliders className="w-3.5 h-3.5 text-teal-600" />
+                    <Sliders className="w-3.5 h-3.5 text-brand-700" />
                     <span>F:{bobot.bobot_formatif}% STS:{bobot.bobot_sts}% SAS:{bobot.bobot_sas}%</span>
                   </div>
-                  <span className="text-[10px] text-teal-600 underline">Ubah</span>
+                  <span className="badge-retro bg-retro-yellow text-retro-black text-[9px]">Ubah</span>
                 </button>
               </div>
             </div>
 
             {/* Panel Form Edit Bobot (Expandable) */}
             {isBobotOpen && (
-              <form onSubmit={handleSaveBobot} className="p-4 rounded-xl bg-slate-50 border border-slate-200 space-y-3">
-                <div className="flex items-center justify-between">
-                  <h4 className="text-xs font-bold text-slate-800 flex items-center gap-1.5">
-                    <Sliders className="w-4 h-4 text-emerald-600" />
+              <form onSubmit={handleSaveBobot} className="p-4 rounded-xl border-2 border-retro-border bg-retro-cream space-y-3 shadow-retro-sm">
+                <div className="flex flex-wrap items-center justify-between gap-2 border-b-2 border-retro-border pb-2">
+                  <h4 className="text-xs font-black text-retro-black uppercase flex items-center gap-1.5">
+                    <Sliders className="w-4 h-4 text-brand-600" />
                     <span>Pengaturan Bobot Penilaian — {activeAssignment?.nama_mapel} ({activeAssignment?.kelas})</span>
                   </h4>
-                  <span className="text-[11px] text-slate-500">
-                    Sesuai Video 2 RDM, total bobot harus tepat 100%.
+                  <span className="text-[11px] text-slate-500 font-bold">
+                    Sesuai RDM, total bobot harus tepat 100%.
                   </span>
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                   <div>
-                    <label className="text-[11px] font-bold text-slate-600 block mb-1">
-                      Formatif / Rata-rata Harian (LM 1-4) %:
+                    <label className="text-[11px] font-black text-retro-black uppercase block mb-1">
+                      Formatif / Rata Harian (LM 1-4) %:
                     </label>
                     <input
                       type="number"
@@ -472,11 +471,11 @@ export default function GuruDashboard({
                       max={80}
                       value={bobot.bobot_formatif}
                       onChange={e => setBobot({ ...bobot, bobot_formatif: Number(e.target.value) })}
-                      className="w-full text-xs py-1.5 px-3 rounded-lg border border-slate-300 bg-white font-semibold"
+                      className="w-full text-xs py-1.5 px-3 rounded-lg border-2 border-retro-border bg-white font-bold shadow-retro-sm"
                     />
                   </div>
                   <div>
-                    <label className="text-[11px] font-bold text-slate-600 block mb-1">
+                    <label className="text-[11px] font-black text-retro-black uppercase block mb-1">
                       Sumatif Tengah Semester (STS) %:
                     </label>
                     <input
@@ -485,11 +484,11 @@ export default function GuruDashboard({
                       max={50}
                       value={bobot.bobot_sts}
                       onChange={e => setBobot({ ...bobot, bobot_sts: Number(e.target.value) })}
-                      className="w-full text-xs py-1.5 px-3 rounded-lg border border-slate-300 bg-white font-semibold"
+                      className="w-full text-xs py-1.5 px-3 rounded-lg border-2 border-retro-border bg-white font-bold shadow-retro-sm"
                     />
                   </div>
                   <div>
-                    <label className="text-[11px] font-bold text-slate-600 block mb-1">
+                    <label className="text-[11px] font-black text-retro-black uppercase block mb-1">
                       Sumatif Akhir Semester (SAS) %:
                     </label>
                     <input
@@ -498,28 +497,28 @@ export default function GuruDashboard({
                       max={50}
                       value={bobot.bobot_sas}
                       onChange={e => setBobot({ ...bobot, bobot_sas: Number(e.target.value) })}
-                      className="w-full text-xs py-1.5 px-3 rounded-lg border border-slate-300 bg-white font-semibold"
+                      className="w-full text-xs py-1.5 px-3 rounded-lg border-2 border-retro-border bg-white font-bold shadow-retro-sm"
                     />
                   </div>
                 </div>
 
                 <div className="flex items-center justify-between pt-2">
-                  <span className="text-xs font-bold text-slate-700">
-                    Total: <strong className={bobot.bobot_formatif + bobot.bobot_sts + bobot.bobot_sas === 100 ? "text-emerald-600" : "text-rose-600"}>
+                  <span className="text-xs font-black text-retro-black">
+                    Total: <strong className={bobot.bobot_formatif + bobot.bobot_sts + bobot.bobot_sas === 100 ? "text-brand-600" : "text-red-600"}>
                       {bobot.bobot_formatif + bobot.bobot_sts + bobot.bobot_sas}%
-                    </strong> (Harus 100%)
+                    </strong> (Wajib 100%)
                   </span>
                   <div className="flex items-center gap-2">
                     <button
                       type="button"
                       onClick={() => setIsBobotOpen(false)}
-                      className="px-3 py-1.5 rounded-lg border border-slate-300 text-xs font-semibold text-slate-600 hover:bg-slate-100"
+                      className="btn-retro-white px-3 py-1.5 text-xs"
                     >
                       Batal
                     </button>
                     <button
                       type="submit"
-                      className="px-4 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-sm"
+                      className="btn-retro-primary px-4 py-1.5 text-xs"
                     >
                       Simpan Bobot
                     </button>
@@ -529,30 +528,29 @@ export default function GuruDashboard({
             )}
 
             {/* Toolbar Status Kirim & Excel */}
-            <div className="flex flex-wrap items-center justify-between gap-3 pt-2 border-t border-slate-100">
+            <div className="flex flex-wrap items-center justify-between gap-3 pt-3 border-t-2 border-retro-border">
               {/* Left: Status Badge & Kirim Button */}
-              <div className="flex items-center gap-3">
+              <div className="flex flex-wrap items-center gap-2.5">
                 {statusKirim.is_sent ? (
-                  <div className="flex items-center gap-2">
-                    <span className="inline-flex items-center px-3 py-1.5 rounded-xl bg-emerald-100 text-emerald-800 text-xs font-bold border border-emerald-300">
-                      <CheckCircle2 className="w-4 h-4 mr-1.5 text-emerald-600" />
-                      Nilai Terkirim ke Wali Kelas ({statusKirim.tanggal_kirim || "Terkonfirmasi"})
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="badge-retro bg-brand-500 text-white text-xs py-1 px-3">
+                      ✓ Nilai Terkirim ke Wali ({statusKirim.tanggal_kirim || "Terkonfirmasi"})
                     </span>
                     <button
                       onClick={handleBatalKirim}
-                      className="inline-flex items-center px-3 py-1.5 rounded-xl bg-rose-50 text-rose-700 hover:bg-rose-100 text-xs font-bold border border-rose-200 transition"
-                      title="Batal kirim untuk membuka kunci edit nilai"
+                      className="btn-retro bg-retro-orange text-white hover:bg-red-600 px-3 py-1.5 text-xs flex items-center gap-1"
+                      title="Batalkan kirim untuk membuka edit nilai"
                     >
-                      <Unlock className="w-3.5 h-3.5 mr-1 text-rose-600" />
-                      <span>Batalkan Kirim (Edit Nilai)</span>
+                      <Unlock className="w-3.5 h-3.5" />
+                      <span>Buka Kunci Nilai</span>
                     </button>
                   </div>
                 ) : (
                   <button
                     onClick={handleKirimNilai}
-                    className="inline-flex items-center px-4 py-2 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white text-xs font-black shadow-md shadow-emerald-600/20 transition transform hover:-translate-y-0.5"
+                    className="btn-retro-primary px-4 py-2 text-xs flex items-center gap-1.5"
                   >
-                    <Send className="w-4 h-4 mr-1.5" />
+                    <Send className="w-4 h-4" />
                     <span>KIRIM NILAI KE WALI KELAS</span>
                   </button>
                 )}
@@ -563,16 +561,16 @@ export default function GuruDashboard({
                 <button
                   type="button"
                   onClick={handleDownloadExcel}
-                  className="inline-flex items-center px-3 py-1.5 text-xs font-semibold rounded-xl bg-emerald-50 text-emerald-800 border border-emerald-200 hover:bg-emerald-100 transition"
+                  className="btn-retro-white px-3 py-1.5 text-xs flex items-center gap-1"
                 >
-                  <FileSpreadsheet className="w-4 h-4 mr-1 text-emerald-600" />
-                  <span>Unduh Template (.xlsx)</span>
+                  <FileSpreadsheet className="w-4 h-4 text-brand-600" />
+                  <span>Unduh Excel</span>
                 </button>
 
                 {!statusKirim.is_sent && (
-                  <label className="inline-flex items-center px-3 py-1.5 text-xs font-semibold rounded-xl bg-teal-50 text-teal-800 border border-teal-200 hover:bg-teal-100 cursor-pointer transition">
-                    <Upload className="w-4 h-4 mr-1 text-teal-600" />
-                    <span>Impor Excel (.xlsx)</span>
+                  <label className="btn-retro bg-retro-yellow text-retro-black hover:bg-amber-300 px-3 py-1.5 text-xs flex items-center gap-1 cursor-pointer">
+                    <Upload className="w-4 h-4" />
+                    <span>Unggah Excel</span>
                     <input
                       type="file"
                       accept=".xlsx"
@@ -588,23 +586,23 @@ export default function GuruDashboard({
           {/* Toast Notification */}
           {notification && (
             <div
-              className={`p-3 rounded-xl text-xs flex items-center justify-between ${
+              className={`p-3.5 rounded-xl border-2 border-retro-border text-xs font-black shadow-retro-sm flex items-center justify-between ${
                 notification.type === "success"
-                  ? "bg-emerald-50 border border-emerald-200 text-emerald-800"
-                  : "bg-rose-50 border border-rose-200 text-rose-800"
+                  ? "bg-brand-100 text-brand-900"
+                  : "bg-red-100 text-red-900"
               }`}
             >
               <div className="flex items-center gap-2">
                 {notification.type === "success" ? (
-                  <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                  <CheckCircle2 className="w-4 h-4 text-brand-700" />
                 ) : (
-                  <AlertCircle className="w-4 h-4 text-rose-600" />
+                  <AlertCircle className="w-4 h-4 text-red-700" />
                 )}
                 <span>{notification.message}</span>
               </div>
               <button
                 onClick={() => setNotification(null)}
-                className="text-slate-400 hover:text-slate-600 font-bold ml-2"
+                className="text-retro-black hover:text-red-700 font-black ml-2"
               >
                 ✕
               </button>

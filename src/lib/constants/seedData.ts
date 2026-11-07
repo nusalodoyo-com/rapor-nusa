@@ -1,7 +1,8 @@
 import { Siswa, Mapel, Ekskul, User, SchoolConfig, MadrasahId } from "@/types";
 import { SEED_CLASSES_MTS, SEED_SISWA_MTS } from "./mtsStudents";
+import { REAL_TEACHERS_MTS, REAL_TEACHERS_MA } from "./teachersData";
 
-export { SEED_CLASSES_MTS, SEED_SISWA_MTS };
+export { SEED_CLASSES_MTS, SEED_SISWA_MTS, REAL_TEACHERS_MTS, REAL_TEACHERS_MA };
 
 // =====================================================================
 // KONFIGURASI PROFIL DUA MADRASAH (KMA 1503 TAHUN 2025)
@@ -49,9 +50,8 @@ export const SCHOOL_CONFIGS: Record<MadrasahId, SchoolConfig> = {
 };
 
 // =====================================================================
-// USER ACCOUNTS: KOSONGKAN SELURUH DATA GURU SESUAI INSTRUKSI!
-// HANYA AKUN DEFAULT ADMINISTRATOR & KEPALA MADRASAH
-// Seluruh akun Guru Mata Pelajaran & Wali Kelas dibuat oleh Admin di web
+// USER ACCOUNTS: 87 GURU NYATA DENGAN PASSWORD 'Matsamuda22'
+// BESERTA OPERATOR ADMIN & KEPALA MADRASAH
 // =====================================================================
 
 export const SEED_USERS_MTS: User[] = [
@@ -73,6 +73,7 @@ export const SEED_USERS_MTS: User[] = [
     role: "kamad",
     kelas_diampu: "-",
   },
+  ...REAL_TEACHERS_MTS,
 ];
 
 export const SEED_USERS_MA: User[] = [
@@ -94,6 +95,7 @@ export const SEED_USERS_MA: User[] = [
     role: "kamad",
     kelas_diampu: "-",
   },
+  ...REAL_TEACHERS_MA,
 ];
 
 // =====================================================================
@@ -120,64 +122,52 @@ export const SEED_SISWA_MA: Siswa[] = [
 ];
 
 // =====================================================================
-// STRUKTUR MATA PELAJARAN RESMI KMA NOMOR 1503 TAHUN 2025
-// (Termasuk Mapel Pilihan Koding & Kecerdasan Artifisial / AI)
+// MATA PELAJARAN KMA 1503 TAHUN 2025
 // =====================================================================
 
 export const SEED_MAPEL_MTS: Mapel[] = [
-  // Kelompok A: Pendidikan Agama Islam & Bahasa Arab
-  { id: "m-mts-1", madrasah_id: "mts", kode_mapel: "QH", nama_mapel: "Al-Qur'an Hadis", kelompok: "A", kkm: 75, fase: "D", urutan: 1 },
-  { id: "m-mts-2", madrasah_id: "mts", kode_mapel: "AA", nama_mapel: "Akidah Akhlak", kelompok: "A", kkm: 75, fase: "D", urutan: 2 },
-  { id: "m-mts-3", madrasah_id: "mts", kode_mapel: "FIK", nama_mapel: "Fikih", kelompok: "A", kkm: 75, fase: "D", urutan: 3 },
-  { id: "m-mts-4", madrasah_id: "mts", kode_mapel: "SKI", nama_mapel: "Sejarah Kebudayaan Islam", kelompok: "A", kkm: 75, fase: "D", urutan: 4 },
-  { id: "m-mts-5", madrasah_id: "mts", kode_mapel: "BARAB", nama_mapel: "Bahasa Arab", kelompok: "A", kkm: 75, fase: "D", urutan: 5 },
-  
-  // Kelompok B: Umum (Nasional)
-  { id: "m-mts-6", madrasah_id: "mts", kode_mapel: "PPKN", nama_mapel: "Pendidikan Pancasila", kelompok: "B", kkm: 75, fase: "D", urutan: 6 },
-  { id: "m-mts-7", madrasah_id: "mts", kode_mapel: "BINDO", nama_mapel: "Bahasa Indonesia", kelompok: "B", kkm: 75, fase: "D", urutan: 7 },
-  { id: "m-mts-8", madrasah_id: "mts", kode_mapel: "MTK", nama_mapel: "Matematika", kelompok: "B", kkm: 72, fase: "D", urutan: 8 },
-  { id: "m-mts-9", madrasah_id: "mts", kode_mapel: "IPA", nama_mapel: "Ilmu Pengetahuan Alam (IPA)", kelompok: "B", kkm: 72, fase: "D", urutan: 9 },
-  { id: "m-mts-10", madrasah_id: "mts", kode_mapel: "IPS", nama_mapel: "Ilmu Pengetahuan Sosial (IPS)", kelompok: "B", kkm: 75, fase: "D", urutan: 10 },
-  { id: "m-mts-11", madrasah_id: "mts", kode_mapel: "BING", nama_mapel: "Bahasa Inggris", kelompok: "B", kkm: 72, fase: "D", urutan: 11 },
-  { id: "m-mts-12", madrasah_id: "mts", kode_mapel: "PJOK", nama_mapel: "Pendidikan Jasmani, Olahraga, dan Kesehatan", kelompok: "B", kkm: 75, fase: "D", urutan: 12 },
-  { id: "m-mts-13", madrasah_id: "mts", kode_mapel: "INF", nama_mapel: "Informatika", kelompok: "B", kkm: 75, fase: "D", urutan: 13 },
-  { id: "m-mts-14", madrasah_id: "mts", kode_mapel: "SBK", nama_mapel: "Seni dan Budaya", kelompok: "B", kkm: 75, fase: "D", urutan: 14 },
-  
-  // Kelompok C: Mata Pelajaran Pilihan KMA 1503/2025 & Muatan Lokal
-  { id: "m-mts-15", madrasah_id: "mts", kode_mapel: "AI-KODING", nama_mapel: "Koding dan Kecerdasan Artifisial (AI)", kelompok: "C", kkm: 75, fase: "D", urutan: 15 },
-  { id: "m-mts-16", madrasah_id: "mts", kode_mapel: "ASWAJA", nama_mapel: "Aswaja / Ke-NU-an", kelompok: "C", kkm: 75, fase: "D", urutan: 16 },
-  { id: "m-mts-17", madrasah_id: "mts", kode_mapel: "BJAWA", nama_mapel: "Bahasa Jawa", kelompok: "C", kkm: 75, fase: "D", urutan: 17 },
+  { id: "mts-m-1", madrasah_id: "mts", kode_mapel: "QH", nama_mapel: "Al-Qur'an Hadis", kelompok: "A", kkm: 75, fase: "D", urutan: 1 },
+  { id: "mts-m-2", madrasah_id: "mts", kode_mapel: "AA", nama_mapel: "Akidah Akhlak", kelompok: "A", kkm: 75, fase: "D", urutan: 2 },
+  { id: "mts-m-3", madrasah_id: "mts", kode_mapel: "FIK", nama_mapel: "Fikih", kelompok: "A", kkm: 75, fase: "D", urutan: 3 },
+  { id: "mts-m-4", madrasah_id: "mts", kode_mapel: "SKI", nama_mapel: "Sejarah Kebudayaan Islam", kelompok: "A", kkm: 75, fase: "D", urutan: 4 },
+  { id: "mts-m-5", madrasah_id: "mts", kode_mapel: "BARAB", nama_mapel: "Bahasa Arab", kelompok: "A", kkm: 75, fase: "D", urutan: 5 },
+  { id: "mts-m-6", madrasah_id: "mts", kode_mapel: "PPKN", nama_mapel: "Pendidikan Pancasila", kelompok: "B", kkm: 75, fase: "D", urutan: 6 },
+  { id: "mts-m-7", madrasah_id: "mts", kode_mapel: "BINDO", nama_mapel: "Bahasa Indonesia", kelompok: "B", kkm: 75, fase: "D", urutan: 7 },
+  { id: "mts-m-8", madrasah_id: "mts", kode_mapel: "MTK", nama_mapel: "Matematika", kelompok: "B", kkm: 75, fase: "D", urutan: 8 },
+  { id: "mts-m-9", madrasah_id: "mts", kode_mapel: "IPA", nama_mapel: "Ilmu Pengetahuan Alam", kelompok: "B", kkm: 75, fase: "D", urutan: 9 },
+  { id: "mts-m-10", madrasah_id: "mts", kode_mapel: "IPS", nama_mapel: "Ilmu Pengetahuan Sosial", kelompok: "B", kkm: 75, fase: "D", urutan: 10 },
+  { id: "mts-m-11", madrasah_id: "mts", kode_mapel: "BING", nama_mapel: "Bahasa Inggris", kelompok: "B", kkm: 75, fase: "D", urutan: 11 },
+  { id: "mts-m-12", madrasah_id: "mts", kode_mapel: "PJOK", nama_mapel: "Pendidikan Jasmani, Olahraga & Kesehatan", kelompok: "B", kkm: 75, fase: "D", urutan: 12 },
+  { id: "mts-m-13", madrasah_id: "mts", kode_mapel: "INF", nama_mapel: "Informatika", kelompok: "B", kkm: 75, fase: "D", urutan: 13 },
+  { id: "mts-m-14", madrasah_id: "mts", kode_mapel: "SBK", nama_mapel: "Seni Budaya & Prakarya", kelompok: "B", kkm: 75, fase: "D", urutan: 14 },
+  { id: "mts-m-15", madrasah_id: "mts", kode_mapel: "AI", nama_mapel: "Koding dan Kecerdasan Artifisial", kelompok: "C", kkm: 75, fase: "D", urutan: 15 },
+  { id: "mts-m-16", madrasah_id: "mts", kode_mapel: "ASWAJA", nama_mapel: "Ke-NU-an / Aswaja", kelompok: "C", kkm: 75, fase: "D", urutan: 16 },
+  { id: "mts-m-17", madrasah_id: "mts", kode_mapel: "BJAWA", nama_mapel: "Bahasa Jawa", kelompok: "C", kkm: 75, fase: "D", urutan: 17 },
 ];
 
 export const SEED_MAPEL_MA: Mapel[] = [
-  // Kelompok A: PAI & Bahasa Arab (Khas Madrasah)
-  { id: "m-ma-1", madrasah_id: "ma", kode_mapel: "QH", nama_mapel: "Al-Qur'an Hadis", kelompok: "A", kkm: 75, fase: "E", urutan: 1 },
-  { id: "m-ma-2", madrasah_id: "ma", kode_mapel: "AA", nama_mapel: "Akidah Akhlak", kelompok: "A", kkm: 75, fase: "E", urutan: 2 },
-  { id: "m-ma-3", madrasah_id: "ma", kode_mapel: "FIK", nama_mapel: "Fikih", kelompok: "A", kkm: 75, fase: "E", urutan: 3 },
-  { id: "m-ma-4", madrasah_id: "ma", kode_mapel: "SKI", nama_mapel: "Sejarah Kebudayaan Islam", kelompok: "A", kkm: 75, fase: "E", urutan: 4 },
-  { id: "m-ma-5", madrasah_id: "ma", kode_mapel: "BARAB", nama_mapel: "Bahasa Arab", kelompok: "A", kkm: 75, fase: "E", urutan: 5 },
-  
-  // Kelompok B: Umum (Nasional)
-  { id: "m-ma-6", madrasah_id: "ma", kode_mapel: "PPKN", nama_mapel: "Pendidikan Pancasila", kelompok: "B", kkm: 75, fase: "E", urutan: 6 },
-  { id: "m-ma-7", madrasah_id: "ma", kode_mapel: "BINDO", nama_mapel: "Bahasa Indonesia", kelompok: "B", kkm: 75, fase: "E", urutan: 7 },
-  { id: "m-ma-8", madrasah_id: "ma", kode_mapel: "BING", nama_mapel: "Bahasa Inggris", kelompok: "B", kkm: 72, fase: "E", urutan: 8 },
-  { id: "m-ma-9", madrasah_id: "ma", kode_mapel: "MTK", nama_mapel: "Matematika", kelompok: "B", kkm: 72, fase: "E", urutan: 9 },
-  { id: "m-ma-10", madrasah_id: "ma", kode_mapel: "SEJ", nama_mapel: "Sejarah", kelompok: "B", kkm: 75, fase: "E", urutan: 10 },
-  { id: "m-ma-11", madrasah_id: "ma", kode_mapel: "PJOK", nama_mapel: "Pendidikan Jasmani, Olahraga, dan Kesehatan", kelompok: "B", kkm: 75, fase: "E", urutan: 11 },
-  { id: "m-ma-12", madrasah_id: "ma", kode_mapel: "SBK", nama_mapel: "Seni dan Budaya", kelompok: "B", kkm: 75, fase: "E", urutan: 12 },
-  { id: "m-ma-13", madrasah_id: "ma", kode_mapel: "PKWU", nama_mapel: "Prakarya dan Kewirausahaan", kelompok: "B", kkm: 75, fase: "E", urutan: 13 },
-  
-  // Kelompok C: Mata Pelajaran Pilihan Fase F & Mulok KMA 1503/2025
-  { id: "m-ma-14", madrasah_id: "ma", kode_mapel: "BIO", nama_mapel: "Biologi", kelompok: "C", kkm: 72, fase: "F", urutan: 14 },
-  { id: "m-ma-15", madrasah_id: "ma", kode_mapel: "FIS", nama_mapel: "Fisika", kelompok: "C", kkm: 70, fase: "F", urutan: 15 },
-  { id: "m-ma-16", madrasah_id: "ma", kode_mapel: "KIM", nama_mapel: "Kimia", kelompok: "C", kkm: 70, fase: "F", urutan: 16 },
-  { id: "m-ma-17", madrasah_id: "ma", kode_mapel: "MTK-TL", nama_mapel: "Matematika Tingkat Lanjut", kelompok: "C", kkm: 70, fase: "F", urutan: 17 },
-  { id: "m-ma-18", madrasah_id: "ma", kode_mapel: "EKO", nama_mapel: "Ekonomi", kelompok: "C", kkm: 75, fase: "F", urutan: 18 },
-  { id: "m-ma-19", madrasah_id: "ma", kode_mapel: "SOS", nama_mapel: "Sosiologi", kelompok: "C", kkm: 75, fase: "F", urutan: 19 },
-  { id: "m-ma-20", madrasah_id: "ma", kode_mapel: "GEO", nama_mapel: "Geografi", kelompok: "C", kkm: 75, fase: "F", urutan: 20 },
-  { id: "m-ma-21", madrasah_id: "ma", kode_mapel: "AI-MA", nama_mapel: "Koding dan Kecerdasan Artifisial (AI)", kelompok: "C", kkm: 75, fase: "F", urutan: 21 },
-  { id: "m-ma-22", madrasah_id: "ma", kode_mapel: "ASWAJA", nama_mapel: "Ke-NU-an / Riset Madrasah", kelompok: "C", kkm: 75, fase: "F", urutan: 22 },
-  { id: "m-ma-23", madrasah_id: "ma", kode_mapel: "BJAWA", nama_mapel: "Bahasa Jawa", kelompok: "C", kkm: 75, fase: "F", urutan: 23 },
+  { id: "ma-m-1", madrasah_id: "ma", kode_mapel: "QH", nama_mapel: "Al-Qur'an Hadis", kelompok: "A", kkm: 75, fase: "E", urutan: 1 },
+  { id: "ma-m-2", madrasah_id: "ma", kode_mapel: "AA", nama_mapel: "Akidah Akhlak", kelompok: "A", kkm: 75, fase: "E", urutan: 2 },
+  { id: "ma-m-3", madrasah_id: "ma", kode_mapel: "FIK", nama_mapel: "Fikih", kelompok: "A", kkm: 75, fase: "E", urutan: 3 },
+  { id: "ma-m-4", madrasah_id: "ma", kode_mapel: "SKI", nama_mapel: "Sejarah Kebudayaan Islam", kelompok: "A", kkm: 75, fase: "E", urutan: 4 },
+  { id: "ma-m-5", madrasah_id: "ma", kode_mapel: "BARAB", nama_mapel: "Bahasa Arab", kelompok: "A", kkm: 75, fase: "E", urutan: 5 },
+  { id: "ma-m-6", madrasah_id: "ma", kode_mapel: "PPKN", nama_mapel: "Pendidikan Pancasila", kelompok: "B", kkm: 75, fase: "E", urutan: 6 },
+  { id: "ma-m-7", madrasah_id: "ma", kode_mapel: "BINDO", nama_mapel: "Bahasa Indonesia", kelompok: "B", kkm: 75, fase: "E", urutan: 7 },
+  { id: "ma-m-8", madrasah_id: "ma", kode_mapel: "MTK", nama_mapel: "Matematika", kelompok: "B", kkm: 75, fase: "E", urutan: 8 },
+  { id: "ma-m-9", madrasah_id: "ma", kode_mapel: "BING", nama_mapel: "Bahasa Inggris", kelompok: "B", kkm: 75, fase: "E", urutan: 9 },
+  { id: "ma-m-10", madrasah_id: "ma", kode_mapel: "SEJ", nama_mapel: "Sejarah Indonesia", kelompok: "B", kkm: 75, fase: "E", urutan: 10 },
+  { id: "ma-m-11", madrasah_id: "ma", kode_mapel: "PJOK", nama_mapel: "Pendidikan Jasmani, Olahraga & Kesehatan", kelompok: "B", kkm: 75, fase: "E", urutan: 11 },
+  { id: "ma-m-12", madrasah_id: "ma", kode_mapel: "SBK", nama_mapel: "Seni Budaya", kelompok: "B", kkm: 75, fase: "E", urutan: 12 },
+  { id: "ma-m-13", madrasah_id: "ma", kode_mapel: "PKWU", nama_mapel: "Prakarya & Kewirausahaan", kelompok: "B", kkm: 75, fase: "E", urutan: 13 },
+  { id: "ma-m-14", madrasah_id: "ma", kode_mapel: "BIO", nama_mapel: "Biologi (Peminatan)", kelompok: "C", kkm: 75, fase: "E", urutan: 14 },
+  { id: "ma-m-15", madrasah_id: "ma", kode_mapel: "FIS", nama_mapel: "Fisika (Peminatan)", kelompok: "C", kkm: 75, fase: "E", urutan: 15 },
+  { id: "ma-m-16", madrasah_id: "ma", kode_mapel: "KIM", nama_mapel: "Kimia (Peminatan)", kelompok: "C", kkm: 75, fase: "E", urutan: 16 },
+  { id: "ma-m-17", madrasah_id: "ma", kode_mapel: "EKO", nama_mapel: "Ekonomi (Peminatan)", kelompok: "C", kkm: 75, fase: "E", urutan: 17 },
+  { id: "ma-m-18", madrasah_id: "ma", kode_mapel: "SOS", nama_mapel: "Sosiologi (Peminatan)", kelompok: "C", kkm: 75, fase: "E", urutan: 18 },
+  { id: "ma-m-19", madrasah_id: "ma", kode_mapel: "GEO", nama_mapel: "Geografi (Peminatan)", kelompok: "C", kkm: 75, fase: "E", urutan: 19 },
+  { id: "ma-m-20", madrasah_id: "ma", kode_mapel: "AI", nama_mapel: "Koding dan Kecerdasan Artifisial", kelompok: "C", kkm: 75, fase: "E", urutan: 20 },
+  { id: "ma-m-21", madrasah_id: "ma", kode_mapel: "ASWAJA", nama_mapel: "Aswaja / Ke-NU-an", kelompok: "C", kkm: 75, fase: "E", urutan: 21 },
+  { id: "ma-m-22", madrasah_id: "ma", kode_mapel: "BJAWA", nama_mapel: "Bahasa Jawa", kelompok: "C", kkm: 75, fase: "E", urutan: 22 },
 ];
 
 // =====================================================================
@@ -185,19 +175,23 @@ export const SEED_MAPEL_MA: Mapel[] = [
 // =====================================================================
 
 export const SEED_EKSKUL_MTS: Ekskul[] = [
-  { id: "e-mts-1", madrasah_id: "mts", nama_ekskul: "Pramuka Gugus Depan MTs" },
-  { id: "e-mts-2", madrasah_id: "mts", nama_ekskul: "Hadrah Al-Banjari" },
-  { id: "e-mts-3", madrasah_id: "mts", nama_ekskul: "Tahfidzul Qur'an" },
-  { id: "e-mts-4", madrasah_id: "mts", nama_ekskul: "PMR Madya" },
-  { id: "e-mts-5", madrasah_id: "mts", nama_ekskul: "Futsal / Bola Voli" },
-  { id: "e-mts-6", madrasah_id: "mts", nama_ekskul: "Robotik & Koding Remaja" },
+  { id: "mts-e-1", madrasah_id: "mts", nama_ekskul: "Pramuka Ma'arif" },
+  { id: "mts-e-2", madrasah_id: "mts", nama_ekskul: "PMR (Palang Merah Remaja)" },
+  { id: "mts-e-3", madrasah_id: "mts", nama_ekskul: "Hadrah / Banjari" },
+  { id: "mts-e-4", madrasah_id: "mts", nama_ekskul: "Tahfidz Al-Qur'an" },
+  { id: "mts-e-5", madrasah_id: "mts", nama_ekskul: "Futsal" },
+  { id: "mts-e-6", madrasah_id: "mts", nama_ekskul: "Pagar Nusa (Pencak Silat)" },
+  { id: "mts-e-7", madrasah_id: "mts", nama_ekskul: "English Club" },
+  { id: "mts-e-8", madrasah_id: "mts", nama_ekskul: "Robotika & Koding" },
 ];
 
 export const SEED_EKSKUL_MA: Ekskul[] = [
-  { id: "e-ma-1", madrasah_id: "ma", nama_ekskul: "Pramuka Penegak" },
-  { id: "e-ma-2", madrasah_id: "ma", nama_ekskul: "Hadrah & Shalawat" },
-  { id: "e-ma-3", madrasah_id: "ma", nama_ekskul: "Qiro'ah & Tahfidz" },
-  { id: "e-ma-4", madrasah_id: "ma", nama_ekskul: "PMR Wira" },
-  { id: "e-ma-5", madrasah_id: "ma", nama_ekskul: "Karya Ilmiah Remaja (KIR / Riset)" },
-  { id: "e-ma-6", madrasah_id: "ma", nama_ekskul: "Futsal" },
+  { id: "ma-e-1", madrasah_id: "ma", nama_ekskul: "Pramuka Ambalan" },
+  { id: "ma-e-2", madrasah_id: "ma", nama_ekskul: "KIR (Karya Ilmiah Remaja)" },
+  { id: "ma-e-3", madrasah_id: "ma", nama_ekskul: "Hadrah & Shalawat" },
+  { id: "ma-e-4", madrasah_id: "ma", nama_ekskul: "Kajian Kitab Kuning" },
+  { id: "ma-e-5", madrasah_id: "ma", nama_ekskul: "Pagar Nusa" },
+  { id: "ma-e-6", madrasah_id: "ma", nama_ekskul: "Jurnalistik & Multimedia" },
+  { id: "ma-e-7", madrasah_id: "ma", nama_ekskul: "Bola Voli" },
+  { id: "ma-e-8", madrasah_id: "ma", nama_ekskul: "Arabic Club" },
 ];

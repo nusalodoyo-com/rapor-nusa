@@ -33,7 +33,6 @@ export default function NilaiEkskulTable({ initialData, onSave, isSaving }: Prop
   };
 
   const handleSave = () => {
-    // Hanya simpan siswa yang dicentang
     const selected = data.filter(d => d.checked);
     if (selected.length === 0) {
       alert("Centang minimal 1 siswa yang mengikuti kegiatan ekskul ini!");
@@ -44,46 +43,46 @@ export default function NilaiEkskulTable({ initialData, onSave, isSaving }: Prop
 
   return (
     <div className="space-y-4">
-      <div className="overflow-x-auto rounded-xl border border-slate-200 shadow-sm bg-white custom-scrollbar">
+      <div className="overflow-x-auto rounded-xl border-2 border-retro-border shadow-retro bg-white custom-scrollbar">
         <table className="w-full text-xs text-left border-collapse">
           <thead>
-            <tr className="bg-slate-100 border-b border-slate-200 text-slate-700">
+            <tr className="bg-retro-yellow text-retro-black font-black uppercase border-b-2 border-retro-border">
               <th className="py-2.5 px-3 text-center w-12">
                 <input
                   type="checkbox"
                   checked={selectAll}
                   onChange={e => toggleSelectAll(e.target.checked)}
-                  className="rounded border-slate-300 text-emerald-600 focus:ring-emerald-500"
+                  className="rounded border-2 border-retro-border text-brand-600 focus:ring-brand-500 w-4 h-4"
                 />
               </th>
-              <th className="py-2.5 px-3 font-bold text-center w-28">NIS</th>
-              <th className="py-2.5 px-3 font-bold min-w-[200px]">Nama Siswa</th>
-              <th className="py-2.5 px-3 font-bold w-40 text-center">Predikat</th>
-              <th className="py-2.5 px-3 font-bold min-w-[260px]">Keterangan / Capaian Kegiatan</th>
+              <th className="py-2.5 px-3 text-center w-28">NIS</th>
+              <th className="py-2.5 px-3 min-w-[200px]">Nama Siswa</th>
+              <th className="py-2.5 px-3 w-40 text-center">Predikat</th>
+              <th className="py-2.5 px-3 min-w-[260px]">Keterangan / Capaian Kegiatan</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-slate-100">
-            {data.map((item, index) => (
-              <tr key={item.nis} className={index % 2 === 0 ? "bg-white hover:bg-slate-50" : "bg-slate-50/50 hover:bg-slate-50"}>
+          <tbody className="divide-y-2 divide-slate-100 font-bold">
+            {data.map((item) => (
+              <tr key={item.nis} className="hover:bg-brand-50/40">
                 <td className="py-2 px-3 text-center">
                   <input
                     type="checkbox"
                     checked={item.checked || false}
                     onChange={e => handleRowChange(item.nis, "checked", e.target.checked)}
-                    className="rounded border-slate-300 text-emerald-600 focus:ring-emerald-500"
+                    className="rounded border-2 border-retro-border text-brand-600 focus:ring-brand-500 w-4 h-4"
                   />
                 </td>
-                <td className="py-2 px-3 text-center font-mono font-semibold text-slate-600 bg-slate-50/80">
+                <td className="py-2 px-3 text-center font-mono font-bold text-slate-600 bg-slate-50/60">
                   {item.nis}
                 </td>
-                <td className="py-2 px-3 font-medium text-slate-800">
+                <td className="py-2 px-3 text-retro-black">
                   {item.nama_siswa}
                 </td>
-                <td className="p-1 text-center">
+                <td className="p-1.5 text-center">
                   <select
                     value={item.predikat || "Baik"}
                     onChange={e => handleRowChange(item.nis, "predikat", e.target.value)}
-                    className="w-full text-xs py-1 px-2 rounded border border-slate-300 focus:ring-1 focus:ring-emerald-500 bg-white"
+                    className="w-full text-xs py-1.5 px-2 rounded-lg border-2 border-retro-border font-black shadow-retro-sm bg-white"
                   >
                     <option value="Sangat Baik">Sangat Baik</option>
                     <option value="Baik">Baik</option>
@@ -91,13 +90,13 @@ export default function NilaiEkskulTable({ initialData, onSave, isSaving }: Prop
                     <option value="Kurang">Kurang</option>
                   </select>
                 </td>
-                <td className="p-1">
+                <td className="p-1.5">
                   <input
                     type="text"
                     value={item.keterangan || ""}
                     onChange={e => handleRowChange(item.nis, "keterangan", e.target.value)}
                     placeholder="Contoh: Menguasai teknik dasar dengan disiplin..."
-                    className="w-full text-xs px-2 py-1 rounded border border-slate-300 focus:ring-1 focus:ring-emerald-500"
+                    className="w-full text-xs px-2.5 py-1.5 rounded-lg border-2 border-retro-border bg-white shadow-retro-sm font-semibold"
                   />
                 </td>
               </tr>
@@ -106,14 +105,14 @@ export default function NilaiEkskulTable({ initialData, onSave, isSaving }: Prop
         </table>
       </div>
 
-      <div className="flex justify-between items-center bg-white p-3 rounded-xl border border-slate-200">
-        <span className="text-xs text-slate-500">
+      <div className="card-retro p-3.5 flex flex-wrap justify-between items-center gap-3 bg-white">
+        <span className="text-xs font-black text-retro-black">
           Peserta Terpilih: <strong>{data.filter(d => d.checked).length}</strong> dari {data.length} siswa
         </span>
         <button
           onClick={handleSave}
           disabled={isSaving}
-          className="inline-flex items-center px-5 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-xs transition shadow-md shadow-emerald-600/20 disabled:opacity-50"
+          className="btn-retro-primary px-5 py-2.5 text-xs uppercase disabled:opacity-50"
         >
           {isSaving ? "Menyimpan..." : "💾 Simpan Nilai Ekstrakurikuler"}
         </button>

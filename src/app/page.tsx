@@ -14,7 +14,6 @@ import {
   getDropdownOptions,
   getLeggerDataByKelas,
   getSchoolConfig,
-  getRekapKirimNilaiKelas,
 } from "@/lib/storage";
 import Navbar from "@/components/Navbar";
 import AdminDashboard from "@/components/admin/AdminDashboard";
@@ -28,14 +27,12 @@ import {
   Building2,
   ArrowRight,
   ChevronLeft,
-  UserCheck,
-  BookOpen,
-  BarChart3,
-  CheckCircle2,
-  Clock,
   Sparkles,
   Shield,
   Layers,
+  KeyRound,
+  UserCheck,
+  CheckCircle2,
 } from "lucide-react";
 
 export default function HomePage() {
@@ -116,7 +113,7 @@ export default function HomePage() {
           setDualRoleMode("guru");
         }
       } else {
-        setLoginError(res.message || "Gagal login. Periksa username dan password.");
+        setLoginError(res.message || "Gagal login. Periksa username dan kata sandi.");
       }
     } catch (err: any) {
       setLoginError("Terjadi kesalahan: " + err.message);
@@ -131,9 +128,9 @@ export default function HomePage() {
     setPasswordInput("");
   };
 
-  const quickLoginAs = (userKey: string) => {
+  const quickLoginAs = (userKey: string, pass: string = "123") => {
     setUsernameInput(userKey);
-    setPasswordInput("123456");
+    setPasswordInput(pass);
   };
 
   // Buka Modal Legger
@@ -156,21 +153,17 @@ export default function HomePage() {
     setIsCetakRaporOpen(true);
   };
 
-  // ================= VIEW 1: PILIHAN MADRASAH (PRE-LOGIN) =================
+  // ================= VIEW 1: PILIHAN MADRASAH (BOLD RETRO-MODERNISM) =================
   if (!selectedMadrasah) {
     return (
-      <main className="min-h-screen bg-gradient-to-br from-[#021306] via-[#05260f] to-[#010e05] flex flex-col justify-between p-4 sm:p-8 text-white relative overflow-hidden">
-        {/* Glow ambient effects matching logo green */}
-        <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-96 h-96 bg-[#00ab00]/15 rounded-full blur-3xl pointer-events-none"></div>
-
-        <div className="max-w-4xl w-full mx-auto my-auto py-8 relative z-10">
+      <main className="min-h-screen bg-[#07130a] retro-dark-grid flex flex-col justify-between p-4 sm:p-8 text-white relative">
+        <div className="max-w-4xl w-full mx-auto my-auto py-6 sm:py-10 relative z-10">
           {/* Hero Header with Logo Utama */}
-          <div className="text-center space-y-4 mb-10">
+          <div className="text-center space-y-4 mb-8 sm:mb-12">
             {/* Logo Utama Tersemat */}
             <div className="flex flex-col items-center justify-center">
-              <div className="relative mb-3 group cursor-pointer">
-                <div className="absolute -inset-1.5 rounded-3xl bg-gradient-to-r from-[#00ab00] via-[#35d13b] to-[#00ab00] opacity-80 blur-xl group-hover:opacity-100 transition duration-700 animate-pulse"></div>
-                <div className="relative w-28 h-28 sm:w-32 sm:h-32 bg-white rounded-3xl p-3 shadow-2xl border-2 border-[#00ab00] flex items-center justify-center transform group-hover:scale-105 transition duration-300">
+              <div className="relative mb-4 group cursor-pointer">
+                <div className="w-24 h-24 sm:w-32 sm:h-32 bg-white rounded-2xl p-2.5 sm:p-3 border-3 border-retro-black shadow-[6px_6px_0px_0px_#00ab00] group-hover:shadow-[8px_8px_0px_0px_#ffc83b] group-hover:-translate-y-1 transition-all duration-200 flex items-center justify-center">
                   <img
                     src="/logo.png"
                     alt="Logo Utama Rapor Digital Madrasah"
@@ -179,94 +172,110 @@ export default function HomePage() {
                 </div>
               </div>
 
-              <div className="inline-flex items-center space-x-2 px-4 py-1.5 rounded-full bg-[#00ab00]/20 text-[#a3efa5] text-xs font-bold backdrop-blur-md border border-[#00ab00]/40 shadow-inner">
-                <Sparkles className="w-3.5 h-3.5 text-[#35d13b]" />
-                <span>Sistem Penilaian Rapor Madrasah KMA 1503 / 2025</span>
+              <div className="inline-flex items-center space-x-2 px-3.5 py-1.5 rounded-lg border-2 border-retro-border bg-retro-yellow text-retro-black font-black text-[11px] sm:text-xs uppercase tracking-wider shadow-retro-sm">
+                <Sparkles className="w-4 h-4 text-retro-black" />
+                <span>STANDAR KMA NOMOR 1503 TAHUN 2025</span>
               </div>
             </div>
 
-            <h1 className="text-2xl sm:text-4xl font-black tracking-tight uppercase text-white drop-shadow-md">
+            <h1 className="text-2xl sm:text-4xl md:text-5xl font-black tracking-tight uppercase text-white drop-shadow-[2px_2px_0px_#00ab00]">
               PORTAL RAPOR DIGITAL MADRASAH
             </h1>
-            <p className="text-xs sm:text-sm text-slate-300 max-w-xl mx-auto leading-relaxed">
-              Silakan pilih lembaga madrasah Anda sebelum masuk ke sistem penilaian agar seluruh data, kurikulum, dan kredensial terisolasi sempurna.
+            <p className="text-xs sm:text-sm text-slate-300 max-w-xl mx-auto leading-relaxed px-2 font-medium">
+              Sistem penilaian terintegrasi untuk Guru Mata Pelajaran, Wali Kelas, dan Operator. Pilih lembaga untuk memulai sesi kerja terisolasi.
             </p>
           </div>
 
-          {/* Kartu Pilihan Dua Madrasah */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-3xl mx-auto">
+          {/* Kartu Pilihan Dua Madrasah (Chunky Retro Brutalist Cards) */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8 max-w-3xl mx-auto">
             {/* KARTU 1: MTs Ma'arif NU 2 Sutojayan */}
             <div
               onClick={() => handleSelectMadrasah("mts")}
-              className="group bg-slate-900/80 hover:bg-[#00ab00]/10 border-2 border-[#00ab00]/30 hover:border-[#00ab00] rounded-2xl p-6 cursor-pointer transition-all duration-300 shadow-xl hover:shadow-2xl hover:shadow-[#00ab00]/20 flex flex-col justify-between relative overflow-hidden"
+              className="bg-retro-cream text-retro-black border-3 border-retro-border rounded-2xl p-6 sm:p-7 cursor-pointer transition-all duration-200 shadow-retro-lg hover:shadow-retro-xl hover:-translate-x-1 hover:-translate-y-1 flex flex-col justify-between group relative"
             >
-              <div className="absolute top-0 right-0 w-24 h-24 bg-[#00ab00]/10 rounded-full blur-2xl group-hover:bg-[#00ab00]/20 transition"></div>
+              <div className="absolute top-3 right-3">
+                <span className="badge-retro bg-brand-500 text-white">
+                  35 Rombel
+                </span>
+              </div>
+
               <div>
-                <div className="flex items-center justify-between mb-4">
-                  <div className="w-14 h-14 rounded-2xl bg-white p-1.5 flex items-center justify-center border-2 border-[#00ab00] shadow-md group-hover:scale-105 transition">
-                    <img src="/logo.png" alt="Logo MTs" className="w-full h-full object-contain" />
-                  </div>
-                  <span className="px-3 py-1 rounded-full bg-[#00ab00]/20 text-[#35d13b] font-extrabold text-xs tracking-wider uppercase border border-[#00ab00]/40">
-                    Jenjang MTs
-                  </span>
+                <div className="w-14 h-14 rounded-xl bg-white p-2 border-2 border-retro-border shadow-retro-sm mb-4 group-hover:rotate-3 transition duration-200">
+                  <img src="/logo.png" alt="Logo MTs" className="w-full h-full object-contain" />
                 </div>
-                <h3 className="text-lg font-black text-white group-hover:text-[#35d13b] transition uppercase leading-tight">
+                
+                <span className="badge-retro bg-retro-yellow text-retro-black mb-2">
+                  Jenjang MTs
+                </span>
+                
+                <h3 className="text-lg sm:text-xl font-black text-retro-black uppercase leading-tight mt-1">
                   MTs MA&apos;ARIF NU 2 SUTOJAYAN
                 </h3>
-                <p className="text-xs text-slate-400 mt-1 font-medium">
+                <p className="text-xs text-slate-600 font-bold mt-1">
                   LP Ma&apos;arif NU Kabupaten Blitar
                 </p>
-                <div className="mt-4 pt-3 border-t border-slate-800 space-y-1 text-xs text-slate-300">
-                  <p>• <strong>Tingkat:</strong> Kelas VII, VIII, IX (35 Rombel)</p>
-                  <p>• <strong>Siswa Aktif:</strong> 1.280 Peserta Didik</p>
+
+                <div className="mt-5 pt-4 border-t-2 border-dashed border-slate-300 space-y-1.5 text-xs text-slate-700 font-semibold">
+                  <p>• <strong>Peserta Didik:</strong> 1.280 Siswa Aktif</p>
+                  <p>• <strong>NSM / NPSN:</strong> 121235050045 / 20582201</p>
                   <p>• <strong>Kepala Madrasah:</strong> Ahmad Ulil Amin, Lc., M.S.I.</p>
                 </div>
               </div>
 
-              <div className="mt-6 flex items-center justify-between text-xs font-bold text-[#35d13b] group-hover:text-[#6de271]">
-                <span>Masuk ke Rapor MTs</span>
-                <ArrowRight className="w-4 h-4 transform group-hover:translate-x-1.5 transition" />
+              <div className="mt-6 pt-4 border-t-2 border-retro-border flex items-center justify-between text-xs font-black uppercase text-brand-700 group-hover:text-retro-black">
+                <span>Buka Rapor MTs</span>
+                <span className="w-8 h-8 rounded-lg bg-brand-500 text-white border-2 border-retro-border shadow-retro-sm flex items-center justify-center group-hover:translate-x-1 transition">
+                  <ArrowRight className="w-4 h-4" />
+                </span>
               </div>
             </div>
 
             {/* KARTU 2: MA Ma'arif Nurus Salam */}
             <div
               onClick={() => handleSelectMadrasah("ma")}
-              className="group bg-slate-900/80 hover:bg-[#00ab00]/10 border-2 border-[#00ab00]/30 hover:border-[#00ab00] rounded-2xl p-6 cursor-pointer transition-all duration-300 shadow-xl hover:shadow-2xl hover:shadow-[#00ab00]/20 flex flex-col justify-between relative overflow-hidden"
+              className="bg-retro-cream text-retro-black border-3 border-retro-border rounded-2xl p-6 sm:p-7 cursor-pointer transition-all duration-200 shadow-retro-lg hover:shadow-retro-xl hover:-translate-x-1 hover:-translate-y-1 flex flex-col justify-between group relative"
             >
-              <div className="absolute top-0 right-0 w-24 h-24 bg-[#00ab00]/10 rounded-full blur-2xl group-hover:bg-[#00ab00]/20 transition"></div>
+              <div className="absolute top-3 right-3">
+                <span className="badge-retro bg-retro-blue text-white">
+                  Kelas X, XI, XII
+                </span>
+              </div>
+
               <div>
-                <div className="flex items-center justify-between mb-4">
-                  <div className="w-14 h-14 rounded-2xl bg-white p-1.5 flex items-center justify-center border-2 border-[#00ab00] shadow-md group-hover:scale-105 transition">
-                    <img src="/logo.png" alt="Logo MA" className="w-full h-full object-contain" />
-                  </div>
-                  <span className="px-3 py-1 rounded-full bg-[#00ab00]/20 text-[#35d13b] font-extrabold text-xs tracking-wider uppercase border border-[#00ab00]/40">
-                    Jenjang MA
-                  </span>
+                <div className="w-14 h-14 rounded-xl bg-white p-2 border-2 border-retro-border shadow-retro-sm mb-4 group-hover:rotate-3 transition duration-200">
+                  <img src="/logo.png" alt="Logo MA" className="w-full h-full object-contain" />
                 </div>
-                <h3 className="text-lg font-black text-white group-hover:text-[#35d13b] transition uppercase leading-tight">
+                
+                <span className="badge-retro bg-retro-yellow text-retro-black mb-2">
+                  Jenjang MA
+                </span>
+                
+                <h3 className="text-lg sm:text-xl font-black text-retro-black uppercase leading-tight mt-1">
                   MA MA&apos;ARIF NURUS SALAM
                 </h3>
-                <p className="text-xs text-slate-400 mt-1 font-medium">
+                <p className="text-xs text-slate-600 font-bold mt-1">
                   Yayasan Nurul Ulum Blitar
                 </p>
-                <div className="mt-4 pt-3 border-t border-slate-800 space-y-1 text-xs text-slate-300">
-                  <p>• <strong>Tingkat:</strong> Kelas X, XI, XII</p>
+
+                <div className="mt-5 pt-4 border-t-2 border-dashed border-slate-300 space-y-1.5 text-xs text-slate-700 font-semibold">
+                  <p>• <strong>Peminatan:</strong> IPA, IPS, Keagamaan</p>
                   <p>• <strong>NSM / NPSN:</strong> 131235050062 / 69978521</p>
                   <p>• <strong>Kepala Madrasah:</strong> M. Zen Pamuji, S.Pd.</p>
                 </div>
               </div>
 
-              <div className="mt-6 flex items-center justify-between text-xs font-bold text-[#35d13b] group-hover:text-[#6de271]">
-                <span>Masuk ke Rapor MA</span>
-                <ArrowRight className="w-4 h-4 transform group-hover:translate-x-1.5 transition" />
+              <div className="mt-6 pt-4 border-t-2 border-retro-border flex items-center justify-between text-xs font-black uppercase text-brand-700 group-hover:text-retro-black">
+                <span>Buka Rapor MA</span>
+                <span className="w-8 h-8 rounded-lg bg-brand-500 text-white border-2 border-retro-border shadow-retro-sm flex items-center justify-center group-hover:translate-x-1 transition">
+                  <ArrowRight className="w-4 h-4" />
+                </span>
               </div>
             </div>
           </div>
         </div>
 
-        <footer className="text-center text-xs text-slate-500 pb-4 relative z-10">
-          © {new Date().getFullYear()} Rapor Digital Madrasah • Sesuai KMA Nomor 1503 Tahun 2025
+        <footer className="text-center text-xs text-slate-400 pb-4 relative z-10 font-bold">
+          © {new Date().getFullYear()} Rapor Digital Madrasah • Bold Retro-Modernism Edition
         </footer>
       </main>
     );
@@ -278,59 +287,62 @@ export default function HomePage() {
     const activeCfg = schoolConfig || getSchoolConfig(selectedMadrasah);
 
     return (
-      <main className="min-h-screen bg-gradient-to-br from-[#021306] via-[#05260f] to-[#010e05] flex items-center justify-center p-4 relative">
-        <div className="w-full max-w-md bg-white rounded-2xl shadow-2xl overflow-hidden border-2 border-[#00ab00]/30">
-          {/* Header Box with Logo */}
-          <div className="p-6 text-center text-white relative bg-gradient-to-r from-[#045e07] via-[#009600] to-[#064e0a]">
+      <main className="min-h-screen bg-[#07130a] retro-dark-grid flex items-center justify-center p-3 sm:p-6 relative">
+        <div className="w-full max-w-md bg-white rounded-2xl border-3 border-retro-border shadow-[8px_8px_0px_0px_#121814] overflow-hidden my-auto">
+          {/* Header Box Retro */}
+          <div className="p-5 sm:p-6 text-center text-white relative bg-[#06330b] border-b-3 border-retro-border">
             <button
               onClick={handleSwitchMadrasah}
-              className="absolute top-4 left-4 p-1.5 rounded-lg bg-black/20 hover:bg-black/30 text-white text-xs flex items-center gap-1 transition"
-              title="Ganti Madrasah"
+              className="absolute top-4 left-4 btn-retro bg-white text-retro-black px-2.5 py-1 text-[11px] flex items-center gap-1 shadow-retro-sm"
+              title="Ganti Lembaga"
             >
-              <ChevronLeft className="w-4 h-4" />
+              <ChevronLeft className="w-3.5 h-3.5" />
               <span>Ganti</span>
             </button>
 
-            <div className="w-16 h-16 rounded-2xl bg-white p-2 flex items-center justify-center mx-auto mb-3 shadow-xl border-2 border-[#00ab00]">
+            <div className="w-16 h-16 rounded-xl bg-white p-2 flex items-center justify-center mx-auto mb-3 border-2 border-retro-border shadow-retro-sm">
               <img src="/logo.png" alt="Logo Utama" className="w-full h-full object-contain" />
             </div>
-            <h2 className="text-base font-black tracking-tight uppercase">
+            
+            <span className="badge-retro bg-retro-yellow text-retro-black mb-1.5">
+              {activeCfg.jenjang} • KMA 1503/2025
+            </span>
+            
+            <h2 className="text-base sm:text-lg font-black tracking-tight uppercase text-white leading-tight">
               {activeCfg.nama_madrasah}
             </h2>
-            <p className="text-[11px] text-[#cef7cf] font-medium">
+            <p className="text-[11px] text-brand-200 font-bold mt-0.5">
               {activeCfg.nama_yayasan}
             </p>
-            <span className="inline-block mt-1 px-3 py-0.5 rounded-full bg-white/20 text-[10px] font-bold uppercase tracking-wider">
-              Portal RDM {activeCfg.jenjang} • KMA 1503/2025
-            </span>
           </div>
 
           {/* Form Box */}
-          <div className="p-6 space-y-4">
+          <div className="p-5 sm:p-6 space-y-4 bg-retro-cream">
             {loginError && (
-              <div className="p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-xs font-medium">
-                {loginError}
+              <div className="p-3 rounded-lg bg-red-100 border-2 border-red-600 text-red-900 text-xs font-black shadow-retro-sm flex items-start gap-2">
+                <span>⚠️</span>
+                <span>{loginError}</span>
               </div>
             )}
 
-            <form onSubmit={handleLogin} className="space-y-3">
+            <form onSubmit={handleLogin} className="space-y-3.5">
               <div>
-                <label className="text-xs font-bold text-slate-700 block mb-1">
+                <label className="text-xs font-black text-retro-black uppercase block mb-1">
                   Username Akun:
                 </label>
                 <input
                   type="text"
                   required
-                  placeholder="Masukkan username"
+                  placeholder="Contoh: a_munawir, admin_mts"
                   value={usernameInput}
                   onChange={e => setUsernameInput(e.target.value)}
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-[#00ab00] text-xs font-medium"
+                  className="w-full px-3.5 py-2.5 rounded-lg border-2 border-retro-border bg-white text-xs font-bold text-retro-black shadow-retro-sm focus:outline-none focus:border-brand-500 focus:shadow-retro transition"
                 />
               </div>
 
               <div>
-                <label className="text-xs font-bold text-slate-700 block mb-1">
-                  Password:
+                <label className="text-xs font-black text-retro-black uppercase block mb-1">
+                  Kata Sandi:
                 </label>
                 <input
                   type="password"
@@ -338,68 +350,68 @@ export default function HomePage() {
                   placeholder="Masukkan password"
                   value={passwordInput}
                   onChange={e => setPasswordInput(e.target.value)}
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-[#00ab00] text-xs font-medium"
+                  className="w-full px-3.5 py-2.5 rounded-lg border-2 border-retro-border bg-white text-xs font-bold text-retro-black shadow-retro-sm focus:outline-none focus:border-brand-500 focus:shadow-retro transition"
                 />
               </div>
 
               <button
                 type="submit"
                 disabled={isLoggingIn}
-                className="w-full py-2.5 rounded-xl text-white font-bold text-xs uppercase tracking-wider transition shadow-lg bg-[#00ab00] hover:bg-[#009600] shadow-[#00ab00]/30 disabled:opacity-50"
+                className="w-full py-3 btn-retro-primary text-xs font-black uppercase tracking-wider disabled:opacity-50 mt-2"
               >
-                {isLoggingIn ? "Memverifikasi..." : "Masuk ke Sistem"}
+                {isLoggingIn ? "MEMVERIFIKASI..." : "MASUK KE SISTEM →"}
               </button>
             </form>
 
-            {/* Quick Demo Access Badges */}
-            <div className="pt-3 border-t border-slate-100">
-              <span className="text-[10px] uppercase font-bold text-slate-400 block mb-2">
-                Akses Awal Administrator & Kamad:
+            {/* Quick Demo Access Badges (Retro Stamp Stickers) */}
+            <div className="pt-4 border-t-2 border-dashed border-slate-300">
+              <span className="text-[10px] uppercase font-black text-slate-500 block mb-2">
+                Akses Instan & Kredensial Guru:
               </span>
               <div className="grid grid-cols-2 gap-2">
                 {isMts ? (
                   <>
                     <button
                       type="button"
-                      onClick={() => quickLoginAs("admin_mts")}
-                      className="p-2 rounded-xl bg-purple-50 text-purple-900 border border-purple-200 hover:bg-purple-100 text-left text-[11px] font-semibold transition"
+                      onClick={() => quickLoginAs("admin_mts", "123")}
+                      className="p-2 rounded-lg bg-white border-2 border-retro-border shadow-retro-sm hover:bg-slate-50 text-left text-[11px] font-black transition active:translate-x-0.5"
                     >
                       ⚡ <strong>admin_mts</strong>
-                      <span className="block text-[9px] text-purple-600 font-normal">Operator / Admin MTs</span>
+                      <span className="block text-[9px] text-slate-600 font-semibold">Operator MTs</span>
                     </button>
                     <button
                       type="button"
-                      onClick={() => quickLoginAs("kamad_mts")}
-                      className="p-2 rounded-xl bg-blue-50 text-blue-900 border border-blue-200 hover:bg-blue-100 text-left text-[11px] font-semibold transition"
+                      onClick={() => quickLoginAs("a_munawir", "Matsamuda22")}
+                      className="p-2 rounded-lg bg-retro-yellow border-2 border-retro-border shadow-retro-sm hover:bg-amber-300 text-left text-[11px] font-black transition active:translate-x-0.5"
                     >
-                      👑 <strong>kamad_mts</strong>
-                      <span className="block text-[9px] text-blue-600 font-normal">Kepala MTs (Ulil Amin)</span>
+                      👨‍🏫 <strong>a_munawir</strong>
+                      <span className="block text-[9px] text-slate-800 font-semibold">Guru MTs (87 Guru)</span>
                     </button>
                   </>
                 ) : (
                   <>
                     <button
                       type="button"
-                      onClick={() => quickLoginAs("admin_ma")}
-                      className="p-2 rounded-xl bg-purple-50 text-purple-900 border border-purple-200 hover:bg-purple-100 text-left text-[11px] font-semibold transition"
+                      onClick={() => quickLoginAs("admin_ma", "123")}
+                      className="p-2 rounded-lg bg-white border-2 border-retro-border shadow-retro-sm hover:bg-slate-50 text-left text-[11px] font-black transition active:translate-x-0.5"
                     >
                       ⚡ <strong>admin_ma</strong>
-                      <span className="block text-[9px] text-purple-600 font-normal">Operator / Admin MA</span>
+                      <span className="block text-[9px] text-slate-600 font-semibold">Operator MA</span>
                     </button>
                     <button
                       type="button"
-                      onClick={() => quickLoginAs("kamad_ma")}
-                      className="p-2 rounded-xl bg-blue-50 text-blue-900 border border-blue-200 hover:bg-blue-100 text-left text-[11px] font-semibold transition"
+                      onClick={() => quickLoginAs("a_munawir", "Matsamuda22")}
+                      className="p-2 rounded-lg bg-retro-yellow border-2 border-retro-border shadow-retro-sm hover:bg-amber-300 text-left text-[11px] font-black transition active:translate-x-0.5"
                     >
-                      👑 <strong>kamad_ma</strong>
-                      <span className="block text-[9px] text-blue-600 font-normal">Kepala MA (M. Zen Pamuji)</span>
+                      👨‍🏫 <strong>a_munawir</strong>
+                      <span className="block text-[9px] text-slate-800 font-semibold">Guru MA (87 Guru)</span>
                     </button>
                   </>
                 )}
               </div>
-              <p className="text-[10px] text-slate-400 mt-3 italic text-center">
-                * Catatan RDM: Data guru dikosongkan secara default. Admin membuat akun guru dan menugaskan mapel & kelas secara dinamis di dashboard admin.
-              </p>
+              <div className="p-2 bg-emerald-50 border-2 border-brand-500 rounded-lg mt-3 text-[10px] text-brand-900 font-bold">
+                ✓ Seluruh 87 Guru MTs & MA telah aktif dengan password: <code className="bg-white px-1 py-0.5 border border-retro-border rounded font-black text-brand-700">Matsamuda22</code>
+              </div>
             </div>
           </div>
         </div>
@@ -412,7 +424,7 @@ export default function HomePage() {
   const isDualRole = currentUser.role === "guru_walikelas" || Boolean(currentUser.kelas_diampu && currentUser.kelas_diampu !== "-");
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col">
+    <div className="min-h-screen bg-retro-bg retro-grid-pattern flex flex-col">
       <Navbar
         currentUser={currentUser}
         currentConfig={activeCfg}
@@ -423,34 +435,35 @@ export default function HomePage() {
         isWali={currentUser.role === "wali_kelas" || currentUser.role === "guru_walikelas" || isDualRole}
       />
 
-      <main className="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 lg:p-8 space-y-6">
+      <main className="flex-1 max-w-7xl w-full mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-6 space-y-5 sm:space-y-6">
         {/* DUAL ROLE SWITCHER PILL (Guru Mapel vs Wali Kelas) */}
         {isDualRole && currentUser.role !== "admin" && currentUser.role !== "kamad" && (
-          <div className="bg-white p-2.5 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between no-print">
+          <div className="card-retro p-3 sm:p-4 flex flex-wrap items-center justify-between gap-3 no-print bg-retro-cream">
             <div className="flex items-center space-x-2">
-              <span className="text-xs font-bold text-slate-700 pl-2">
-                Mode Penugasan Anda:
+              <span className="badge-retro bg-brand-500 text-white">PENUGASAN GANDA</span>
+              <span className="text-xs font-black text-retro-black hidden sm:inline">
+                Pilih mode pengerjaan:
               </span>
             </div>
-            <div className="flex items-center bg-slate-100 p-1 rounded-xl">
+            <div className="flex items-center bg-white p-1 rounded-xl border-2 border-retro-border shadow-retro-sm">
               <button
                 type="button"
                 onClick={() => setDualRoleMode("guru")}
-                className={`px-4 py-1.5 text-xs font-bold rounded-lg transition ${
+                className={`px-3 sm:px-4 py-1.5 text-xs font-black rounded-lg transition-all ${
                   dualRoleMode === "guru"
-                    ? "bg-emerald-600 text-white shadow-sm"
-                    : "text-slate-600 hover:text-slate-900"
+                    ? "bg-brand-500 text-white shadow-retro-sm"
+                    : "text-retro-black hover:bg-slate-100"
                 }`}
               >
-                👨‍🏫 Guru Mata Pelajaran
+                👨‍🏫 Guru Mapel
               </button>
               <button
                 type="button"
                 onClick={() => setDualRoleMode("wali")}
-                className={`px-4 py-1.5 text-xs font-bold rounded-lg transition ${
+                className={`px-3 sm:px-4 py-1.5 text-xs font-black rounded-lg transition-all ${
                   dualRoleMode === "wali"
-                    ? "bg-teal-600 text-white shadow-sm"
-                    : "text-slate-600 hover:text-slate-900"
+                    ? "bg-retro-yellow text-retro-black shadow-retro-sm"
+                    : "text-retro-black hover:bg-slate-100"
                 }`}
               >
                 📋 Wali Kelas ({currentUser.kelas_diampu})
@@ -498,30 +511,30 @@ export default function HomePage() {
 
         {/* 4. VIEW KEPALA MADRASAH (KAMAD) */}
         {currentUser.role === "kamad" && (
-          <div className="space-y-6">
-            <div className="bg-gradient-to-r from-blue-900 via-indigo-900 to-slate-900 rounded-2xl p-6 text-white shadow-xl flex flex-wrap items-center justify-between gap-4">
+          <div className="space-y-5">
+            <div className="card-retro-lg bg-retro-cream p-6 border-3 border-retro-border flex flex-wrap items-center justify-between gap-4">
               <div>
-                <span className="px-3 py-1 rounded-full bg-blue-500/20 text-blue-200 text-xs font-bold uppercase tracking-wider">
-                  Dashboard Kepala Madrasah
+                <span className="badge-retro bg-brand-500 text-white mb-2">
+                  DASHBOARD KEPALA MADRASAH
                 </span>
-                <h2 className="text-xl font-black uppercase mt-2">
+                <h2 className="text-xl sm:text-2xl font-black uppercase text-retro-black">
                   {currentUser.nama_user}
                 </h2>
-                <p className="text-xs text-blue-100 font-medium mt-1">
+                <p className="text-xs text-slate-600 font-bold mt-1">
                   {activeCfg.nama_madrasah} • NSM: {activeCfg.nsm}
                 </p>
               </div>
 
-              <div className="flex items-center gap-2">
+              <div className="flex flex-wrap items-center gap-2">
                 <button
                   onClick={() => handleOpenLegger()}
-                  className="px-4 py-2 rounded-xl bg-white text-blue-950 hover:bg-blue-50 font-bold text-xs shadow transition"
+                  className="btn-retro-white px-4 py-2 text-xs"
                 >
                   📊 Tinjau Legger Kelas
                 </button>
                 <button
                   onClick={() => handleOpenCetakRapor()}
-                  className="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs shadow transition"
+                  className="btn-retro-yellow px-4 py-2 text-xs"
                 >
                   🖨️ Cetak Lembar Rapor
                 </button>
@@ -529,21 +542,26 @@ export default function HomePage() {
             </div>
 
             {/* Monitoring per Rombel */}
-            <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-5 space-y-4">
-              <h3 className="text-sm font-bold text-slate-800">
-                Monitoring Progres Nilai Seluruh Rombel ({dropdowns.kelas.length} Kelas)
-              </h3>
-              <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 gap-3">
+            <div className="card-retro p-5 space-y-4">
+              <div className="flex items-center justify-between border-b-2 border-retro-border pb-3">
+                <h3 className="text-sm font-black uppercase text-retro-black">
+                  Monitoring Progres Nilai Seluruh Rombel ({dropdowns.kelas.length} Kelas)
+                </h3>
+                <span className="badge-retro bg-retro-yellow text-retro-black">
+                  KMA 1503/2025
+                </span>
+              </div>
+              <div className="grid grid-cols-2 xs:grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-3">
                 {dropdowns.kelas.map(k => (
                   <div
                     key={k}
                     onClick={() => handleOpenLegger(k)}
-                    className="p-3 rounded-xl border border-slate-200 hover:border-emerald-500 hover:bg-emerald-50/50 cursor-pointer transition text-center space-y-1 shadow-sm"
+                    className="p-3 rounded-xl border-2 border-retro-border bg-white hover:bg-brand-50 hover:-translate-y-0.5 shadow-retro-sm cursor-pointer transition text-center space-y-1"
                   >
-                    <span className="text-xs font-black text-slate-800 block">
+                    <span className="text-xs font-black text-retro-black block">
                       Kelas {k}
                     </span>
-                    <span className="text-[10px] text-emerald-700 font-semibold block">
+                    <span className="text-[10px] text-brand-700 font-black block">
                       Lihat Legger →
                     </span>
                   </div>

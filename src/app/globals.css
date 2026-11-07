@@ -4,15 +4,60 @@
 
 @layer base {
   body {
-    @apply bg-slate-50 text-slate-900 antialiased font-sans;
+    @apply bg-retro-bg text-retro-black antialiased font-sans selection:bg-brand-500 selection:text-white;
   }
 }
 
-/* Brand Theme Enhancements matching Logo Green #00ab00 */
+/* Bold Retro-Modernism CSS Tokens */
 :root {
   --brand-primary: #00ab00;
-  --brand-primary-dark: #045e07;
-  --brand-primary-light: #eafbea;
+  --brand-dark: #045e07;
+  --brand-light: #eafbea;
+  --retro-border: #121814;
+}
+
+/* Retro Grid Background Pattern */
+.retro-grid-pattern {
+  background-size: 28px 28px;
+  background-image: 
+    linear-gradient(to right, rgba(18, 24, 20, 0.06) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(18, 24, 20, 0.06) 1px, transparent 1px);
+}
+
+.retro-dark-grid {
+  background-size: 32px 32px;
+  background-image: 
+    linear-gradient(to right, rgba(255, 255, 255, 0.07) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.07) 1px, transparent 1px);
+}
+
+/* Tactile Retro Buttons */
+.btn-retro {
+  @apply border-2 border-retro-border font-black text-xs uppercase tracking-wider rounded-lg transition-all duration-150 shadow-retro active:translate-x-0.5 active:translate-y-0.5 active:shadow-retro-sm;
+}
+
+.btn-retro-primary {
+  @apply btn-retro bg-brand-500 hover:bg-brand-600 text-white hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-retro-lg;
+}
+
+.btn-retro-yellow {
+  @apply btn-retro bg-retro-yellow hover:bg-amber-400 text-retro-black hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-retro-lg;
+}
+
+.btn-retro-white {
+  @apply btn-retro bg-white hover:bg-slate-50 text-retro-black hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-retro-lg;
+}
+
+.card-retro {
+  @apply bg-white border-2 border-retro-border rounded-xl shadow-retro;
+}
+
+.card-retro-lg {
+  @apply bg-white border-2 border-retro-border rounded-2xl shadow-retro-lg;
+}
+
+.badge-retro {
+  @apply inline-flex items-center px-2.5 py-0.5 rounded-md border-2 border-retro-border text-[10px] font-black uppercase tracking-wider shadow-retro-sm;
 }
 
 @keyframes pulseSlow {
@@ -32,7 +77,6 @@
 
 /* Print styling specifically for A4 Rapor & Legger */
 @media print {
-  /* Hilangkan elemen non-print */
   .no-print,
   header,
   nav,
@@ -54,7 +98,6 @@
     print-color-adjust: exact !important;
   }
 
-  /* Prevent page-break inside tables and signature blocks */
   table, tr, td, th {
     page-break-inside: avoid !important;
   }
@@ -63,7 +106,6 @@
     page-break-inside: avoid !important;
   }
 
-  /* Rapor Individu: A4 Portrait */
   .rapor-print-container {
     width: 100% !important;
     max-width: 210mm !important;
@@ -71,7 +113,6 @@
     padding: 10mm 15mm !important;
   }
 
-  /* Legger: A4 Landscape */
   .legger-print-container {
     width: 100% !important;
     max-width: 297mm !important;

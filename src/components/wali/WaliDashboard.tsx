@@ -10,7 +10,6 @@ import {
   NilaiP5RAItem,
   NilaiEkskulItem,
   StatusKirimNilai,
-  TeacherAssignment,
 } from "@/types";
 import {
   getRaporWaliByKelas,
@@ -21,8 +20,6 @@ import {
   simpanNilaiEkskulBatch,
   getStatusKirimNilai,
   getTeacherAssignments,
-  getHomeroomAssignments,
-  getSiswaByKelas,
 } from "@/lib/storage";
 import {
   ClipboardCheck,
@@ -180,26 +177,26 @@ export default function WaliDashboard({
   const persenTerkirim = totalMapel > 0 ? Math.round((mapelTerkirim / totalMapel) * 100) : 0;
 
   return (
-    <div className="space-y-6">
-      {/* Top Banner Wali Kelas */}
-      <div className="bg-gradient-to-r from-[#045e07] via-[#009600] to-[#064e0a] rounded-2xl p-5 text-white shadow-lg flex flex-wrap items-center justify-between gap-4">
-        <div className="flex items-center space-x-4">
-          <div className="w-12 h-12 rounded-2xl bg-white p-1 border-2 border-[#00ab00] flex items-center justify-center shadow-md overflow-hidden flex-shrink-0">
+    <div className="space-y-5 sm:space-y-6">
+      {/* Top Banner Wali Kelas Retro */}
+      <div className="card-retro-lg bg-retro-cream p-5 sm:p-6 border-3 border-retro-border flex flex-wrap items-center justify-between gap-4 shadow-retro-lg">
+        <div className="flex items-center space-x-3.5">
+          <div className="w-12 h-12 rounded-xl bg-white p-1 border-2 border-retro-border shadow-retro-sm flex items-center justify-center overflow-hidden flex-shrink-0">
             <img src="/logo.png" alt="Logo" className="w-full h-full object-contain" />
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <span className="px-2 py-0.5 rounded-full bg-white/20 text-[#cef7cf] text-[10px] font-bold uppercase tracking-wider">
-                Portal Wali Kelas • {config.jenjang}
+              <span className="badge-retro bg-brand-500 text-white">
+                WALI KELAS • {config.jenjang}
               </span>
-              <span className="text-xs text-[#cef7cf] font-mono">
+              <span className="badge-retro bg-retro-yellow text-retro-black">
                 Kelas {activeKelas}
               </span>
             </div>
-            <h2 className="text-lg font-black tracking-tight uppercase">
+            <h2 className="text-lg sm:text-xl font-black uppercase text-retro-black mt-1">
               {currentUser.nama_user}
             </h2>
-            <p className="text-xs text-[#eafbea] font-medium">
+            <p className="text-xs text-slate-600 font-bold">
               {config.nama_madrasah} • Membina {dataWali.length} Siswa
             </p>
           </div>
@@ -210,38 +207,38 @@ export default function WaliDashboard({
           {onSwitchToGuru && (
             <button
               onClick={onSwitchToGuru}
-              className="px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 text-white text-xs font-semibold backdrop-blur transition"
+              className="btn-retro bg-white text-retro-black px-3 py-1.5 text-xs flex items-center gap-1"
             >
-              👨‍🏫 Beralih ke Guru Mapel
+              👨‍🏫 Ke Guru Mapel
             </button>
           )}
 
           <button
             onClick={() => onOpenLegger(activeKelas)}
-            className="px-3.5 py-2 rounded-xl bg-teal-500 hover:bg-teal-600 text-white font-bold text-xs flex items-center gap-1.5 shadow transition"
+            className="btn-retro bg-white text-retro-black hover:bg-slate-50 px-3.5 py-2 text-xs flex items-center gap-1.5"
           >
-            <BarChart3 className="w-4 h-4" />
+            <BarChart3 className="w-4 h-4 text-brand-600" />
             <span>Legger & Ranking</span>
           </button>
 
           <button
             onClick={() => onOpenCetakRapor(activeKelas)}
-            className="px-3.5 py-2 rounded-xl bg-white hover:bg-slate-100 text-emerald-950 font-black text-xs flex items-center gap-1.5 shadow transition"
+            className="btn-retro bg-retro-yellow text-retro-black hover:bg-amber-400 px-3.5 py-2 text-xs flex items-center gap-1.5"
           >
-            <Printer className="w-4 h-4 text-emerald-700" />
-            <span>Cetak Lembar Rapor</span>
+            <Printer className="w-4 h-4" />
+            <span>Cetak Rapor Digital</span>
           </button>
         </div>
       </div>
 
-      {/* Selector Rombel (jika wali memegang lebih dari 1 kelas atau admin membuka) */}
-      <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex flex-wrap items-center justify-between gap-4">
+      {/* Selector Rombel & Progress Bar */}
+      <div className="card-retro p-4 flex flex-wrap items-center justify-between gap-4 bg-white">
         <div className="flex items-center gap-3">
-          <label className="text-xs font-bold text-slate-700">Pilih Rombel:</label>
+          <label className="text-xs font-black text-retro-black uppercase">Pilih Rombel:</label>
           <select
             value={activeKelas}
             onChange={e => setActiveKelas(e.target.value)}
-            className="text-xs py-1.5 px-3 rounded-xl border border-slate-300 bg-white font-bold text-slate-800 focus:ring-2 focus:ring-emerald-500"
+            className="text-xs py-1.5 px-3 rounded-lg border-2 border-retro-border bg-retro-cream font-black text-retro-black shadow-retro-sm"
           >
             {allKelas.map(k => (
               <option key={k} value={k}>
@@ -254,17 +251,17 @@ export default function WaliDashboard({
         {/* Progress bar nilai masuk */}
         <div className="flex items-center gap-3">
           <div className="text-right">
-            <span className="text-xs font-bold text-slate-700 block">
+            <span className="text-xs font-black text-retro-black block">
               Nilai Mapel Masuk: {mapelTerkirim} / {totalMapel} ({persenTerkirim}%)
             </span>
-            <span className="text-[10px] text-slate-400">
-              {mapelTerkirim === totalMapel ? "Semua nilai mapel lengkap!" : "Menunggu pengiriman guru mapel"}
+            <span className="text-[10px] text-slate-500 font-bold">
+              {mapelTerkirim === totalMapel ? "✓ Semua mapel telah lengkap!" : "Menunggu pengiriman guru mapel"}
             </span>
           </div>
-          <div className="w-32 h-2.5 bg-slate-100 rounded-full overflow-hidden border border-slate-200">
+          <div className="w-28 sm:w-36 h-3 bg-retro-cream rounded-full border-2 border-retro-border overflow-hidden">
             <div
-              className={`h-full transition-all duration-500 ${
-                persenTerkirim === 100 ? "bg-emerald-500" : "bg-teal-500"
+              className={`h-full transition-all duration-300 ${
+                persenTerkirim === 100 ? "bg-brand-500" : "bg-retro-yellow"
               }`}
               style={{ width: `${persenTerkirim}%` }}
             ></div>
@@ -272,65 +269,45 @@ export default function WaliDashboard({
         </div>
       </div>
 
-      {/* Tab Navigation */}
-      <div className="flex border-b border-slate-200 space-x-2 overflow-x-auto">
+      {/* Tab Navigation (Retro Badges) */}
+      <div className="flex items-center gap-2 bg-retro-cream p-2 rounded-xl border-2 border-retro-border shadow-retro-sm overflow-x-auto">
         <button
           onClick={() => setActiveTab("monitoring")}
-          className={`py-2.5 px-4 text-xs font-bold border-b-2 flex items-center gap-2 transition whitespace-nowrap ${
-            activeTab === "monitoring"
-              ? "border-emerald-600 text-emerald-700 bg-emerald-50/50 rounded-t-xl"
-              : "border-transparent text-slate-600 hover:text-slate-900"
-          }`}
+          className={activeTab === "monitoring" ? "btn-retro-primary px-3.5 py-2 text-xs flex items-center gap-1.5 whitespace-nowrap" : "btn-retro-white px-3.5 py-2 text-xs flex items-center gap-1.5 whitespace-nowrap"}
         >
-          <Clock className="w-4 h-4" />
-          <span>Status Masuknya Nilai Mapel</span>
+          <Clock className="w-3.5 h-3.5" />
+          <span>Status Nilai Mapel</span>
         </button>
 
         <button
           onClick={() => setActiveTab("presensi")}
-          className={`py-2.5 px-4 text-xs font-bold border-b-2 flex items-center gap-2 transition whitespace-nowrap ${
-            activeTab === "presensi"
-              ? "border-emerald-600 text-emerald-700 bg-emerald-50/50 rounded-t-xl"
-              : "border-transparent text-slate-600 hover:text-slate-900"
-          }`}
+          className={activeTab === "presensi" ? "btn-retro-primary px-3.5 py-2 text-xs flex items-center gap-1.5 whitespace-nowrap" : "btn-retro-white px-3.5 py-2 text-xs flex items-center gap-1.5 whitespace-nowrap"}
         >
-          <ClipboardCheck className="w-4 h-4" />
-          <span>Presensi Ketidakhadiran (S/I/A)</span>
+          <ClipboardCheck className="w-3.5 h-3.5" />
+          <span>Presensi Siswa (S/I/A)</span>
         </button>
 
         <button
           onClick={() => setActiveTab("catatan")}
-          className={`py-2.5 px-4 text-xs font-bold border-b-2 flex items-center gap-2 transition whitespace-nowrap ${
-            activeTab === "catatan"
-              ? "border-emerald-600 text-emerald-700 bg-emerald-50/50 rounded-t-xl"
-              : "border-transparent text-slate-600 hover:text-slate-900"
-          }`}
+          className={activeTab === "catatan" ? "btn-retro-primary px-3.5 py-2 text-xs flex items-center gap-1.5 whitespace-nowrap" : "btn-retro-white px-3.5 py-2 text-xs flex items-center gap-1.5 whitespace-nowrap"}
         >
-          <FileText className="w-4 h-4" />
+          <FileText className="w-3.5 h-3.5" />
           <span>Catatan Karakter & Kenaikan</span>
         </button>
 
         <button
           onClick={() => setActiveTab("p5ra")}
-          className={`py-2.5 px-4 text-xs font-bold border-b-2 flex items-center gap-2 transition whitespace-nowrap ${
-            activeTab === "p5ra"
-              ? "border-emerald-600 text-emerald-700 bg-emerald-50/50 rounded-t-xl"
-              : "border-transparent text-slate-600 hover:text-slate-900"
-          }`}
+          className={activeTab === "p5ra" ? "btn-retro-yellow px-3.5 py-2 text-xs flex items-center gap-1.5 whitespace-nowrap" : "btn-retro-white px-3.5 py-2 text-xs flex items-center gap-1.5 whitespace-nowrap"}
         >
-          <Heart className="w-4 h-4 text-rose-500" />
-          <span>Kokurikuler P5RA (KBC - Panca Cinta)</span>
+          <Heart className="w-3.5 h-3.5 text-red-600" />
+          <span>Kokurikuler P5RA (KBC)</span>
         </button>
 
         <button
           onClick={() => setActiveTab("ekskul")}
-          className={`py-2.5 px-4 text-xs font-bold border-b-2 flex items-center gap-2 transition whitespace-nowrap ${
-            activeTab === "ekskul"
-              ? "border-emerald-600 text-emerald-700 bg-emerald-50/50 rounded-t-xl"
-              : "border-transparent text-slate-600 hover:text-slate-900"
-          }`}
+          className={activeTab === "ekskul" ? "btn-retro-primary px-3.5 py-2 text-xs flex items-center gap-1.5 whitespace-nowrap" : "btn-retro-white px-3.5 py-2 text-xs flex items-center gap-1.5 whitespace-nowrap"}
         >
-          <Award className="w-4 h-4" />
+          <Award className="w-3.5 h-3.5" />
           <span>Ekstrakurikuler</span>
         </button>
       </div>
@@ -338,23 +315,23 @@ export default function WaliDashboard({
       {/* Toast Notification */}
       {notification && (
         <div
-          className={`p-3 rounded-xl text-xs flex items-center justify-between ${
+          className={`p-3.5 rounded-xl border-2 border-retro-border text-xs font-black shadow-retro-sm flex items-center justify-between ${
             notification.type === "success"
-              ? "bg-emerald-50 border border-emerald-200 text-emerald-800"
-              : "bg-rose-50 border border-rose-200 text-rose-800"
+              ? "bg-brand-100 text-brand-900"
+              : "bg-red-100 text-red-900"
           }`}
         >
           <div className="flex items-center gap-2">
             {notification.type === "success" ? (
-              <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+              <CheckCircle2 className="w-4 h-4 text-brand-700" />
             ) : (
-              <AlertCircle className="w-4 h-4 text-rose-600" />
+              <AlertCircle className="w-4 h-4 text-red-700" />
             )}
             <span>{notification.message}</span>
           </div>
           <button
             onClick={() => setNotification(null)}
-            className="text-slate-400 hover:text-slate-600 font-bold ml-2"
+            className="text-retro-black hover:text-red-700 font-black ml-2"
           >
             ✕
           </button>
@@ -363,64 +340,62 @@ export default function WaliDashboard({
 
       {/* TAB 1: STATUS MASUKNYA NILAI MAPEL */}
       {activeTab === "monitoring" && (
-        <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-          <div className="p-4 border-b border-slate-100 flex items-center justify-between">
+        <div className="card-retro p-5 space-y-4 bg-white">
+          <div className="flex flex-wrap items-center justify-between border-b-2 border-retro-border pb-3 gap-2">
             <div>
-              <h3 className="text-sm font-bold text-slate-800">
+              <h3 className="text-xs sm:text-sm font-black text-retro-black uppercase tracking-wider">
                 Status Pengiriman Nilai Mata Pelajaran (KMA 1503 Tahun 2025)
               </h3>
-              <p className="text-xs text-slate-500">
-                Nilai yang sudah dikirimkan oleh Guru Mapel secara otomatis muncul di Legger dan Lembar Rapor Kelas {activeKelas}.
+              <p className="text-[11px] text-slate-500 font-bold">
+                Nilai yang sudah dikirim oleh Guru Mapel secara otomatis masuk ke Legger dan Rapor Kelas {activeKelas}.
               </p>
             </div>
-            <span className="text-xs font-bold px-3 py-1 rounded-full bg-slate-100 text-slate-700">
+            <span className="badge-retro bg-retro-yellow text-retro-black">
               {mapelTerkirim} / {totalMapel} Terkirim
             </span>
           </div>
 
-          <div className="overflow-x-auto">
+          <div className="overflow-x-auto rounded-xl border-2 border-retro-border shadow-retro-sm">
             <table className="w-full text-xs text-left">
-              <thead className="bg-slate-50 border-b border-slate-200 text-slate-700">
+              <thead className="bg-retro-yellow text-retro-black font-black border-b-2 border-retro-border uppercase">
                 <tr>
-                  <th className="py-2.5 px-4 font-bold w-12 text-center">No</th>
-                  <th className="py-2.5 px-3 font-bold w-24">Kelompok</th>
-                  <th className="py-2.5 px-3 font-bold">Mata Pelajaran</th>
-                  <th className="py-2.5 px-3 font-bold">Guru Pengampu</th>
-                  <th className="py-2.5 px-3 font-bold text-center w-36">Status RDM</th>
-                  <th className="py-2.5 px-4 font-bold text-center w-48">Waktu Pengiriman</th>
+                  <th className="py-2.5 px-3 font-black w-10 text-center">No</th>
+                  <th className="py-2.5 px-3 font-black w-24">Kelompok</th>
+                  <th className="py-2.5 px-3 font-black">Mata Pelajaran</th>
+                  <th className="py-2.5 px-3 font-black">Guru Pengampu</th>
+                  <th className="py-2.5 px-3 font-black text-center w-36">Status RDM</th>
+                  <th className="py-2.5 px-3 font-black text-center w-44">Waktu Kirim</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100">
+              <tbody className="divide-y-2 divide-slate-100 font-bold">
                 {rekapKirim.map((row, idx) => (
-                  <tr key={row.kode} className="hover:bg-slate-50 transition">
-                    <td className="py-2.5 px-4 text-center font-mono text-slate-500 font-semibold">
+                  <tr key={row.kode} className="hover:bg-brand-50/40">
+                    <td className="py-2.5 px-3 text-center font-mono text-slate-500 font-bold">
                       {idx + 1}
                     </td>
                     <td className="py-2.5 px-3">
-                      <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-100 text-slate-700">
+                      <span className="badge-retro bg-retro-cream text-retro-black text-[9px]">
                         Kel. {row.kelompok}
                       </span>
                     </td>
-                    <td className="py-2.5 px-3 font-bold text-slate-800">
+                    <td className="py-2.5 px-3 text-retro-black">
                       {row.nama} ({row.kode})
                     </td>
-                    <td className="py-2.5 px-3 text-slate-600 font-medium">
+                    <td className="py-2.5 px-3 text-slate-700">
                       {row.guru}
                     </td>
                     <td className="py-2.5 px-3 text-center">
                       {row.status.is_sent ? (
-                        <span className="inline-flex items-center px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-800 text-[11px] font-bold">
-                          <CheckCircle2 className="w-3.5 h-3.5 mr-1 text-emerald-600" />
-                          Terkirim
+                        <span className="badge-retro bg-brand-500 text-white">
+                          ✓ Terkirim
                         </span>
                       ) : (
-                        <span className="inline-flex items-center px-2.5 py-1 rounded-full bg-amber-100 text-amber-800 text-[11px] font-semibold">
-                          <Clock className="w-3.5 h-3.5 mr-1 text-amber-600" />
-                          Menunggu Guru
+                        <span className="badge-retro bg-amber-200 text-retro-black">
+                          ⏳ Menunggu Guru
                         </span>
                       )}
                     </td>
-                    <td className="py-2.5 px-4 text-center text-[11px] text-slate-500 font-mono">
+                    <td className="py-2.5 px-3 text-center text-[11px] text-slate-500 font-mono">
                       {row.status.tanggal_kirim || "-"}
                     </td>
                   </tr>
@@ -433,46 +408,46 @@ export default function WaliDashboard({
 
       {/* TAB 2: PRESENSI SISWA (S/I/A) */}
       {activeTab === "presensi" && (
-        <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-5 space-y-4">
-          <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+        <div className="card-retro p-5 space-y-4 bg-white">
+          <div className="flex flex-wrap items-center justify-between border-b-2 border-retro-border pb-3 gap-2">
             <div>
-              <h3 className="text-sm font-bold text-slate-800">
+              <h3 className="text-xs sm:text-sm font-black text-retro-black uppercase tracking-wider">
                 Rekap Kehadiran Siswa Semester Ini
               </h3>
-              <p className="text-xs text-slate-500">
-                Masukkan akumulasi hari Sakit (S), Izin (I), dan Tanpa Keterangan / Alpha (A).
+              <p className="text-[11px] text-slate-500 font-bold">
+                Input akumulasi hari Sakit (S), Izin (I), dan Alpha (A) untuk Kelas {activeKelas}.
               </p>
             </div>
             <button
               onClick={handleSaveWali}
               disabled={isSaving}
-              className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-md shadow-emerald-600/20 transition disabled:opacity-50"
+              className="btn-retro-primary px-4 py-2 text-xs flex items-center gap-1.5"
             >
               {isSaving ? "Menyimpan..." : "💾 Simpan Presensi"}
             </button>
           </div>
 
-          <div className="overflow-x-auto rounded-xl border border-slate-200">
+          <div className="overflow-x-auto rounded-xl border-2 border-retro-border shadow-retro-sm">
             <table className="w-full text-xs text-left">
-              <thead className="bg-slate-50 border-b border-slate-200 text-slate-700">
+              <thead className="bg-retro-yellow text-retro-black font-black border-b-2 border-retro-border uppercase">
                 <tr>
-                  <th className="py-2.5 px-3 font-bold text-center w-24">NIS</th>
-                  <th className="py-2.5 px-3 font-bold">Nama Siswa</th>
-                  <th className="py-2.5 px-2 font-bold text-center w-28 bg-emerald-50 text-emerald-900">Sakit (Hari)</th>
-                  <th className="py-2.5 px-2 font-bold text-center w-28 bg-teal-50 text-teal-900">Izin (Hari)</th>
-                  <th className="py-2.5 px-2 font-bold text-center w-28 bg-rose-50 text-rose-900">Alpha (Hari)</th>
+                  <th className="py-2.5 px-3 text-center w-24">NIS</th>
+                  <th className="py-2.5 px-3">Nama Siswa</th>
+                  <th className="py-2.5 px-2 text-center w-28 bg-emerald-100 text-emerald-950">Sakit (S)</th>
+                  <th className="py-2.5 px-2 text-center w-28 bg-teal-100 text-teal-950">Izin (I)</th>
+                  <th className="py-2.5 px-2 text-center w-28 bg-rose-100 text-rose-950">Alpha (A)</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100">
-                {dataWali.map((row, idx) => (
-                  <tr key={row.nis} className="hover:bg-slate-50">
-                    <td className="py-2 px-3 text-center font-mono font-semibold text-slate-600">
+              <tbody className="divide-y-2 divide-slate-100 font-bold">
+                {dataWali.map((row) => (
+                  <tr key={row.nis} className="hover:bg-brand-50/40">
+                    <td className="py-2 px-3 text-center font-mono text-slate-600">
                       {row.nis}
                     </td>
-                    <td className="py-2 px-3 font-medium text-slate-800">
+                    <td className="py-2 px-3 text-retro-black">
                       {row.nama_siswa}
                     </td>
-                    <td className="p-1 text-center bg-emerald-50/20">
+                    <td className="p-1.5 text-center bg-emerald-50/40">
                       <input
                         type="number"
                         min={0}
@@ -483,10 +458,10 @@ export default function WaliDashboard({
                             prev.map(r => (r.nis === row.nis ? { ...r, sakit: val } : r))
                           );
                         }}
-                        className="w-16 text-center font-semibold py-1 rounded border border-slate-300 focus:ring-1 focus:ring-emerald-500"
+                        className="w-16 text-center font-black py-1 rounded-lg border-2 border-retro-border bg-white shadow-retro-sm"
                       />
                     </td>
-                    <td className="p-1 text-center bg-teal-50/20">
+                    <td className="p-1.5 text-center bg-teal-50/40">
                       <input
                         type="number"
                         min={0}
@@ -497,10 +472,10 @@ export default function WaliDashboard({
                             prev.map(r => (r.nis === row.nis ? { ...r, izin: val } : r))
                           );
                         }}
-                        className="w-16 text-center font-semibold py-1 rounded border border-slate-300 focus:ring-1 focus:ring-emerald-500"
+                        className="w-16 text-center font-black py-1 rounded-lg border-2 border-retro-border bg-white shadow-retro-sm"
                       />
                     </td>
-                    <td className="p-1 text-center bg-rose-50/20">
+                    <td className="p-1.5 text-center bg-rose-50/40">
                       <input
                         type="number"
                         min={0}
@@ -511,7 +486,7 @@ export default function WaliDashboard({
                             prev.map(r => (r.nis === row.nis ? { ...r, tanpa_keterangan: val } : r))
                           );
                         }}
-                        className="w-16 text-center font-semibold py-1 rounded border border-rose-300 focus:ring-1 focus:ring-rose-500 text-rose-700 bg-rose-50/30"
+                        className="w-16 text-center font-black py-1 rounded-lg border-2 border-red-600 bg-red-50 text-red-900 shadow-retro-sm"
                       />
                     </td>
                   </tr>
@@ -524,45 +499,45 @@ export default function WaliDashboard({
 
       {/* TAB 3: CATATAN WALI KELAS & KEPUTUSAN */}
       {activeTab === "catatan" && (
-        <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-5 space-y-4">
-          <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+        <div className="card-retro p-5 space-y-4 bg-white">
+          <div className="flex flex-wrap items-center justify-between border-b-2 border-retro-border pb-3 gap-2">
             <div>
-              <h3 className="text-sm font-bold text-slate-800">
-                Catatan Karakter, Motivasi & Keputusan Kenaikan
+              <h3 className="text-xs sm:text-sm font-black text-retro-black uppercase tracking-wider">
+                Catatan Perkembangan Karakter & Keputusan Kenaikan
               </h3>
-              <p className="text-xs text-slate-500">
-                Catatan ini akan dicetak di bagian Lembar Evaluasi Belajar Rapor Siswa.
+              <p className="text-[11px] text-slate-500 font-bold">
+                Dicetak pada lembar Evaluasi Belajar Rapor Siswa.
               </p>
             </div>
             <button
               onClick={handleSaveWali}
               disabled={isSaving}
-              className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-md shadow-emerald-600/20 transition disabled:opacity-50"
+              className="btn-retro-primary px-4 py-2 text-xs flex items-center gap-1.5"
             >
               {isSaving ? "Menyimpan..." : "💾 Simpan Catatan"}
             </button>
           </div>
 
-          <div className="overflow-x-auto rounded-xl border border-slate-200">
+          <div className="overflow-x-auto rounded-xl border-2 border-retro-border shadow-retro-sm">
             <table className="w-full text-xs text-left">
-              <thead className="bg-slate-50 border-b border-slate-200 text-slate-700">
+              <thead className="bg-retro-yellow text-retro-black font-black border-b-2 border-retro-border uppercase">
                 <tr>
-                  <th className="py-2.5 px-3 font-bold text-center w-24">NIS</th>
-                  <th className="py-2.5 px-3 font-bold w-44">Nama Siswa</th>
-                  <th className="py-2.5 px-3 font-bold">Catatan Perkembangan Karakter</th>
-                  <th className="py-2.5 px-3 font-bold text-center w-40">Keputusan</th>
+                  <th className="py-2.5 px-3 text-center w-24">NIS</th>
+                  <th className="py-2.5 px-3 w-48">Nama Siswa</th>
+                  <th className="py-2.5 px-3">Catatan Perkembangan Karakter & Motivasi</th>
+                  <th className="py-2.5 px-3 text-center w-40">Keputusan</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100">
-                {dataWali.map((row, idx) => (
-                  <tr key={row.nis} className="hover:bg-slate-50">
-                    <td className="py-2 px-3 text-center font-mono font-semibold text-slate-600">
+              <tbody className="divide-y-2 divide-slate-100 font-bold">
+                {dataWali.map((row) => (
+                  <tr key={row.nis} className="hover:bg-brand-50/40">
+                    <td className="py-2 px-3 text-center font-mono text-slate-600">
                       {row.nis}
                     </td>
-                    <td className="py-2 px-3 font-medium text-slate-800">
+                    <td className="py-2 px-3 text-retro-black">
                       {row.nama_siswa}
                     </td>
-                    <td className="p-1">
+                    <td className="p-1.5">
                       <input
                         type="text"
                         value={row.catatan_wali || ""}
@@ -573,10 +548,10 @@ export default function WaliDashboard({
                           );
                         }}
                         placeholder="Ananda menunjukkan ketekunan dan kesopanan yang baik..."
-                        className="w-full text-xs py-1.5 px-2.5 rounded border border-slate-300 focus:ring-1 focus:ring-emerald-500"
+                        className="w-full text-xs py-1.5 px-2.5 rounded-lg border-2 border-retro-border bg-white shadow-retro-sm font-semibold"
                       />
                     </td>
-                    <td className="p-1 text-center">
+                    <td className="p-1.5 text-center">
                       <select
                         value={row.keputusan || "-"}
                         onChange={e => {
@@ -585,7 +560,7 @@ export default function WaliDashboard({
                             prev.map(r => (r.nis === row.nis ? { ...r, keputusan: val } : r))
                           );
                         }}
-                        className="w-full text-xs py-1.5 px-2 rounded border border-slate-300 font-semibold bg-white"
+                        className="w-full text-xs py-1.5 px-2 rounded-lg border-2 border-retro-border bg-retro-cream font-black shadow-retro-sm"
                       >
                         <option value="-">-</option>
                         <option value="Naik Kelas">Naik Kelas</option>
@@ -602,52 +577,52 @@ export default function WaliDashboard({
         </div>
       )}
 
-      {/* TAB 4: KOKURIKULER P5RA (KBC - KURIKULUM BERBASIS CINTA KMA 1503/2025) */}
+      {/* TAB 4: KOKURIKULER P5RA (KBC - PANCA CINTA KMA 1503/2025) */}
       {activeTab === "p5ra" && (
-        <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-5 space-y-4">
-          <div className="flex flex-wrap items-center justify-between border-b border-slate-100 pb-3 gap-3">
+        <div className="card-retro p-5 space-y-4 bg-white">
+          <div className="flex flex-wrap items-center justify-between border-b-2 border-retro-border pb-3 gap-3">
             <div>
               <div className="flex items-center gap-2">
-                <Heart className="w-5 h-5 text-rose-500" />
-                <h3 className="text-sm font-bold text-slate-800">
+                <Heart className="w-5 h-5 text-red-600" />
+                <h3 className="text-xs sm:text-sm font-black text-retro-black uppercase tracking-wider">
                   Kokurikuler P5RA Terintegrasi KBC (Kurikulum Berbasis Cinta)
                 </h3>
               </div>
-              <p className="text-xs text-slate-500">
-                Sesuai KMA Nomor 1503 Tahun 2025, dimensi projek berlandaskan <strong>Panca Cinta</strong>: Cinta Allah & Rasul, Cinta Ilmu, Cinta Lingkungan, Cinta Sesama, dan Cinta Tanah Air.
+              <p className="text-[11px] text-slate-500 font-bold">
+                Sesuai KMA Nomor 1503 Tahun 2025, dimensi projek berlandaskan <strong>Panca Cinta</strong>.
               </p>
             </div>
             <button
               onClick={handleSaveP5RA}
               disabled={isSaving}
-              className="px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs shadow-md shadow-rose-600/20 transition disabled:opacity-50"
+              className="btn-retro bg-red-600 hover:bg-red-700 text-white px-4 py-2 text-xs flex items-center gap-1.5"
             >
-              {isSaving ? "Menyimpan..." : "💾 Simpan Nilai P5RA / KBC"}
+              {isSaving ? "Menyimpan..." : "💾 Simpan P5RA / KBC"}
             </button>
           </div>
 
-          <div className="overflow-x-auto rounded-xl border border-slate-200">
+          <div className="overflow-x-auto rounded-xl border-2 border-retro-border shadow-retro-sm">
             <table className="w-full text-xs text-left">
-              <thead className="bg-rose-50/40 border-b border-rose-100 text-slate-700">
+              <thead className="bg-retro-yellow text-retro-black font-black border-b-2 border-retro-border uppercase">
                 <tr>
-                  <th className="py-2.5 px-3 font-bold text-center w-24">NIS</th>
-                  <th className="py-2.5 px-3 font-bold w-44">Nama Siswa</th>
-                  <th className="py-2.5 px-3 font-bold w-48">Tema Projek</th>
-                  <th className="py-2.5 px-3 font-bold w-48">Dimensi Panca Cinta</th>
-                  <th className="py-2.5 px-3 font-bold text-center w-36">Predikat</th>
-                  <th className="py-2.5 px-3 font-bold">Catatan Deskripsi Projek</th>
+                  <th className="py-2.5 px-3 text-center w-24">NIS</th>
+                  <th className="py-2.5 px-3 w-44">Nama Siswa</th>
+                  <th className="py-2.5 px-3 w-44">Tema Projek</th>
+                  <th className="py-2.5 px-3 w-44">Dimensi Panca Cinta</th>
+                  <th className="py-2.5 px-3 text-center w-36">Predikat</th>
+                  <th className="py-2.5 px-3">Catatan Deskripsi Projek</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100">
+              <tbody className="divide-y-2 divide-slate-100 font-bold">
                 {dataP5RA.map(row => (
-                  <tr key={row.nis} className="hover:bg-slate-50">
-                    <td className="py-2 px-3 text-center font-mono font-semibold text-slate-600">
+                  <tr key={row.nis} className="hover:bg-brand-50/40">
+                    <td className="py-2 px-3 text-center font-mono text-slate-600">
                       {row.nis}
                     </td>
-                    <td className="py-2 px-3 font-medium text-slate-800">
+                    <td className="py-2 px-3 text-retro-black">
                       {row.nama_siswa}
                     </td>
-                    <td className="p-1">
+                    <td className="p-1.5">
                       <input
                         type="text"
                         value={row.tema}
@@ -657,10 +632,10 @@ export default function WaliDashboard({
                             prev.map(p => (p.nis === row.nis ? { ...p, tema: val } : p))
                           );
                         }}
-                        className="w-full text-xs py-1 px-2 rounded border border-slate-300"
+                        className="w-full text-xs py-1 px-2 rounded-lg border-2 border-retro-border bg-white shadow-retro-sm"
                       />
                     </td>
-                    <td className="p-1">
+                    <td className="p-1.5">
                       <select
                         value={row.dimensi}
                         onChange={e => {
@@ -669,7 +644,7 @@ export default function WaliDashboard({
                             prev.map(p => (p.nis === row.nis ? { ...p, dimensi: val } : p))
                           );
                         }}
-                        className="w-full text-xs py-1 px-2 rounded border border-slate-300 font-semibold"
+                        className="w-full text-xs py-1 px-2 rounded-lg border-2 border-retro-border bg-white font-black shadow-retro-sm"
                       >
                         <option value="Cinta Allah & Rasul">Cinta Allah & Rasul</option>
                         <option value="Cinta Ilmu">Cinta Ilmu</option>
@@ -678,7 +653,7 @@ export default function WaliDashboard({
                         <option value="Cinta Tanah Air">Cinta Tanah Air</option>
                       </select>
                     </td>
-                    <td className="p-1 text-center">
+                    <td className="p-1.5 text-center">
                       <select
                         value={row.predikat}
                         onChange={e => {
@@ -687,7 +662,7 @@ export default function WaliDashboard({
                             prev.map(p => (p.nis === row.nis ? { ...p, predikat: val } : p))
                           );
                         }}
-                        className="w-full text-xs py-1 px-2 rounded border border-slate-300 font-bold text-center"
+                        className="w-full text-xs py-1 px-2 rounded-lg border-2 border-retro-border bg-retro-yellow font-black text-center shadow-retro-sm"
                       >
                         <option value="MB">MB (Mulai Berkembang)</option>
                         <option value="BSh">BSh (Berkembang Sesuai Harapan)</option>
@@ -695,7 +670,7 @@ export default function WaliDashboard({
                         <option value="SAB">SAB (Sangat Amat Berkembang)</option>
                       </select>
                     </td>
-                    <td className="p-1">
+                    <td className="p-1.5">
                       <input
                         type="text"
                         value={row.deskripsi}
@@ -705,7 +680,7 @@ export default function WaliDashboard({
                             prev.map(p => (p.nis === row.nis ? { ...p, deskripsi: val } : p))
                           );
                         }}
-                        className="w-full text-xs py-1 px-2 rounded border border-slate-300"
+                        className="w-full text-xs py-1 px-2 rounded-lg border-2 border-retro-border bg-white shadow-retro-sm"
                       />
                     </td>
                   </tr>
@@ -718,14 +693,14 @@ export default function WaliDashboard({
 
       {/* TAB 5: EKSTRAKURIKULER */}
       {activeTab === "ekskul" && (
-        <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-5 space-y-4">
-          <div className="flex flex-wrap items-center justify-between border-b border-slate-100 pb-3 gap-3">
+        <div className="card-retro p-5 space-y-4 bg-white">
+          <div className="flex flex-wrap items-center justify-between border-b-2 border-retro-border pb-3 gap-3">
             <div className="flex items-center gap-3">
-              <label className="text-xs font-bold text-slate-700">Pilih Ekstrakurikuler:</label>
+              <label className="text-xs font-black text-retro-black uppercase">Pilih Ekstrakurikuler:</label>
               <select
                 value={selectedEkskul}
                 onChange={e => setSelectedEkskul(e.target.value)}
-                className="text-xs py-1.5 px-3 rounded-xl border border-slate-300 bg-white font-bold text-slate-800"
+                className="text-xs py-1.5 px-3 rounded-lg border-2 border-retro-border bg-retro-cream font-black text-retro-black shadow-retro-sm"
               >
                 {allEkskul.map(e => (
                   <option key={e} value={e}>
@@ -737,32 +712,32 @@ export default function WaliDashboard({
             <button
               onClick={handleSaveEkskul}
               disabled={isSaving}
-              className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-md shadow-emerald-600/20 transition disabled:opacity-50"
+              className="btn-retro-primary px-4 py-2 text-xs flex items-center gap-1.5"
             >
               {isSaving ? "Menyimpan..." : "💾 Simpan Nilai Ekskul"}
             </button>
           </div>
 
-          <div className="overflow-x-auto rounded-xl border border-slate-200">
+          <div className="overflow-x-auto rounded-xl border-2 border-retro-border shadow-retro-sm">
             <table className="w-full text-xs text-left">
-              <thead className="bg-slate-50 border-b border-slate-200 text-slate-700">
+              <thead className="bg-retro-yellow text-retro-black font-black border-b-2 border-retro-border uppercase">
                 <tr>
-                  <th className="py-2.5 px-3 font-bold text-center w-24">NIS</th>
-                  <th className="py-2.5 px-3 font-bold w-44">Nama Siswa</th>
-                  <th className="py-2.5 px-3 font-bold text-center w-40">Predikat</th>
-                  <th className="py-2.5 px-3 font-bold">Keterangan / Capaian Ekskul</th>
+                  <th className="py-2.5 px-3 text-center w-24">NIS</th>
+                  <th className="py-2.5 px-3 w-48">Nama Siswa</th>
+                  <th className="py-2.5 px-3 text-center w-36">Predikat</th>
+                  <th className="py-2.5 px-3">Keterangan / Capaian Ekskul</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100">
+              <tbody className="divide-y-2 divide-slate-100 font-bold">
                 {dataEkskul.map(row => (
-                  <tr key={row.nis} className="hover:bg-slate-50">
-                    <td className="py-2 px-3 text-center font-mono font-semibold text-slate-600">
+                  <tr key={row.nis} className="hover:bg-brand-50/40">
+                    <td className="py-2 px-3 text-center font-mono text-slate-600">
                       {row.nis}
                     </td>
-                    <td className="py-2 px-3 font-medium text-slate-800">
+                    <td className="py-2 px-3 text-retro-black">
                       {row.nama_siswa}
                     </td>
-                    <td className="p-1 text-center">
+                    <td className="p-1.5 text-center">
                       <select
                         value={row.predikat}
                         onChange={e => {
@@ -771,7 +746,7 @@ export default function WaliDashboard({
                             prev.map(x => (x.nis === row.nis ? { ...x, predikat: val } : x))
                           );
                         }}
-                        className="w-full text-xs py-1 px-2 rounded border border-slate-300 font-bold text-center"
+                        className="w-full text-xs py-1 px-2 rounded-lg border-2 border-retro-border bg-white font-black text-center shadow-retro-sm"
                       >
                         <option value="Sangat Baik">Sangat Baik</option>
                         <option value="Baik">Baik</option>
@@ -779,7 +754,7 @@ export default function WaliDashboard({
                         <option value="Kurang">Kurang</option>
                       </select>
                     </td>
-                    <td className="p-1">
+                    <td className="p-1.5">
                       <input
                         type="text"
                         value={row.keterangan || ""}
@@ -789,8 +764,8 @@ export default function WaliDashboard({
                             prev.map(x => (x.nis === row.nis ? { ...x, keterangan: val } : x))
                           );
                         }}
-                        placeholder="Aktif dan menunjukkan kedisiplinan serta dedikasi tinggi..."
-                        className="w-full text-xs py-1 px-2 rounded border border-slate-300"
+                        placeholder="Aktif dan menunjukkan kedisiplinan serta dedikasi..."
+                        className="w-full text-xs py-1 px-2 rounded-lg border-2 border-retro-border bg-white shadow-retro-sm"
                       />
                     </td>
                   </tr>

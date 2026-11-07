@@ -2,7 +2,7 @@
 
 import React from "react";
 import { User, SchoolConfig } from "@/types";
-import { GraduationCap, LogOut, User as UserIcon, ShieldCheck, ArrowLeftRight } from "lucide-react";
+import { LogOut, User as UserIcon, ShieldCheck, ArrowLeftRight, BarChart3, Printer } from "lucide-react";
 
 interface Props {
   currentUser: User | null;
@@ -26,59 +26,64 @@ export default function Navbar({
   const isMts = currentConfig.id === "mts";
 
   return (
-    <header className="bg-white border-b border-slate-200 sticky top-0 z-30 shadow-sm no-print">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+    <header className="bg-retro-cream border-b-2 border-retro-border sticky top-0 z-30 no-print shadow-[0_4px_0_0_#121814]">
+      <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 h-16 sm:h-20 flex items-center justify-between gap-2">
         {/* Brand & Madrasah Badge */}
-        <div className="flex items-center space-x-3">
-          <div className="w-11 h-11 rounded-xl bg-white p-1 border-2 border-[#00ab00] shadow-md flex items-center justify-center overflow-hidden flex-shrink-0">
+        <div className="flex items-center space-x-2.5 sm:space-x-3 min-w-0">
+          <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-white p-1 border-2 border-retro-border shadow-retro-sm flex items-center justify-center overflow-hidden flex-shrink-0">
             <img src="/logo.png" alt="Logo Rapor Digital" className="w-full h-full object-contain" />
           </div>
-          <div>
-            <div className="flex items-center space-x-2">
-              <span className="font-extrabold text-lg text-slate-900 tracking-tight">RAPOR NUSA</span>
-              <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-full uppercase tracking-wider bg-brand-100 text-brand-800 border border-brand-300">
+          <div className="min-w-0">
+            <div className="flex items-center space-x-1.5 sm:space-x-2">
+              <span className="font-black text-base sm:text-xl text-retro-black tracking-tight uppercase">
+                RAPOR NUSA
+              </span>
+              <span className="badge-retro bg-brand-500 text-white text-[9px] sm:text-[10px] px-1.5 sm:px-2 py-0.5">
                 {currentConfig.jenjang}
               </span>
             </div>
-            <p className="text-xs text-[#045e07] font-bold">{currentConfig.nama_madrasah}</p>
+            <p className="text-[10px] sm:text-xs text-retro-black font-extrabold truncate">
+              {currentConfig.nama_madrasah}
+            </p>
           </div>
         </div>
 
         {/* Right side controls */}
         {currentUser && (
-          <div className="flex items-center space-x-3">
-            {/* Tombol menu Wali Kelas */}
+          <div className="flex items-center space-x-1.5 sm:space-x-3 flex-shrink-0">
+            {/* Tombol menu Wali Kelas (Mobile & Desktop) */}
             {isWali && (
-              <div className="hidden sm:flex items-center space-x-2 mr-2">
+              <div className="hidden md:flex items-center space-x-2">
                 <button
                   type="button"
                   onClick={onOpenLegger}
-                  className="inline-flex items-center px-3 py-1.5 text-xs font-semibold rounded-lg bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100 transition shadow-sm"
+                  className="btn-retro bg-white text-retro-black hover:bg-slate-50 px-3 py-1.5 text-xs flex items-center gap-1.5"
                 >
-                  📊 Legger Kelas
+                  <BarChart3 className="w-3.5 h-3.5 text-brand-600" />
+                  <span>Legger</span>
                 </button>
                 <button
                   type="button"
                   onClick={onOpenCetakRapor}
-                  className="inline-flex items-center px-3 py-1.5 text-xs font-semibold rounded-lg bg-teal-50 text-teal-700 border border-teal-200 hover:bg-teal-100 transition shadow-sm"
+                  className="btn-retro bg-retro-yellow text-retro-black hover:bg-amber-400 px-3 py-1.5 text-xs flex items-center gap-1.5"
                 >
-                  📄 Cetak Rapor
+                  <Printer className="w-3.5 h-3.5" />
+                  <span>Cetak Rapor</span>
                 </button>
               </div>
             )}
 
             {/* Profile badge */}
-            <div className="flex items-center space-x-2 pl-3 border-l border-slate-200">
-              <div className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-600 border border-slate-200">
+            <div className="flex items-center space-x-2 pl-2 sm:pl-3 border-l-2 border-retro-border">
+              <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-lg bg-white flex items-center justify-center text-retro-black border-2 border-retro-border shadow-retro-sm flex-shrink-0">
                 <UserIcon className="w-4 h-4" />
               </div>
-              <div className="text-left hidden md:block">
-                <p className="text-xs font-semibold text-slate-800 leading-tight">
+              <div className="text-left hidden lg:block">
+                <p className="text-xs font-black text-retro-black leading-tight truncate max-w-[150px]">
                   {currentUser.nama_user}
                 </p>
                 <div className="flex items-center space-x-1">
-                  <ShieldCheck className="w-3 h-3 text-emerald-600 inline" />
-                  <span className="text-[10px] text-slate-500 capitalize">
+                  <span className="badge-retro bg-brand-100 text-brand-900 border-none text-[9px] py-0 px-1 font-bold">
                     {currentUser.role.replace(/_/g, " ")} {currentUser.kelas_diampu ? `(${currentUser.kelas_diampu})` : ""}
                   </span>
                 </div>
@@ -88,21 +93,21 @@ export default function Navbar({
             {/* Switch Madrasah Button */}
             <button
               onClick={onSwitchMadrasah}
-              className="inline-flex items-center px-2.5 py-1.5 text-xs font-medium rounded-lg text-slate-700 bg-slate-100 hover:bg-slate-200 transition border border-slate-300"
+              className="btn-retro bg-white hover:bg-slate-50 text-retro-black p-2 sm:px-3 sm:py-1.5 text-xs flex items-center gap-1"
               title="Ganti Lembaga Madrasah"
             >
-              <ArrowLeftRight className="w-3.5 h-3.5 mr-1 text-slate-600" />
-              <span className="hidden sm:inline">Ganti Madrasah</span>
+              <ArrowLeftRight className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline">Ganti</span>
             </button>
 
-            {/* Logout button */}
+            {/* Logout Button */}
             <button
               onClick={onLogout}
-              className="inline-flex items-center px-3 py-1.5 text-xs font-medium rounded-lg text-rose-700 bg-rose-50 hover:bg-rose-100 transition border border-rose-200"
-              title="Keluar dari akun"
+              className="btn-retro bg-retro-orange text-white hover:bg-red-600 p-2 sm:px-3 sm:py-1.5 text-xs flex items-center gap-1"
+              title="Keluar / Logout"
             >
-              <LogOut className="w-3.5 h-3.5 mr-1" />
-              <span>Keluar</span>
+              <LogOut className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline">Keluar</span>
             </button>
           </div>
         )}

@@ -33,7 +33,7 @@ import { supabase, isSupabaseConfigured } from "./supabase/client";
 
 function getStorageKeys(madrasahId: MadrasahId) {
   return {
-    USERS: `rapor_nusa_${madrasahId}_users_v2`,
+    USERS: `rapor_nusa_${madrasahId}_users_v3`,
     TEACHERS: `rapor_nusa_${madrasahId}_teachers_v2`,
     ASSIGNMENTS: `rapor_nusa_${madrasahId}_assignments_v2`,
     HOMEROOMS: `rapor_nusa_${madrasahId}_homerooms_v2`,
@@ -84,8 +84,9 @@ export function initializeLocalStorage(): void {
     // Config Madrasah
     setLocalData(keys.CONFIG, seedConfig);
 
-    // Users: Hanya Administrator & Kamad. Seluruh data guru kosong!
-    if (!localStorage.getItem(keys.USERS)) {
+    // Users: 87 Guru Nyata + Administrator + Kamad
+    const curUsers = getLocalData<User[]>(keys.USERS, []);
+    if (!localStorage.getItem(keys.USERS) || curUsers.length < seedUsers.length) {
       setLocalData(keys.USERS, seedUsers);
     }
 
