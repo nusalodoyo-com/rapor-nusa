@@ -76,17 +76,17 @@
 }
 
 /* =====================================================================
-   RELAXED-JS INSPIRED PAGED MEDIA CSS (PERFECT 1 PAGE A4 RAPOR)
+   RELAXED-JS INSPIRED PAGED MEDIA CSS (PORTRAIT A4 DENGAN MARGIN ELEGAN)
    ===================================================================== */
 @page {
   size: A4 portrait;
-  margin: 3.5mm 5mm;
+  margin: 8mm 10mm;
 }
 
 @media print {
   @page {
     size: 210mm 297mm;
-    margin: 3.5mm 5mm;
+    margin: 8mm 10mm;
   }
 
   .no-print,
@@ -102,25 +102,21 @@
 
   html, body {
     width: 210mm !important;
-    height: 297mm !important;
-    max-height: 297mm !important;
     background: #ffffff !important;
     color: #000000 !important;
     padding: 0 !important;
     margin: 0 !important;
-    font-size: 8pt !important;
+    font-size: 8.5pt !important;
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
-    overflow: hidden !important;
   }
 
-  /* Single-page A4 Layout Container */
+  /* Single-page A4 Layout Container dengan Breathing Space Elegan */
   .rapor-single-page {
-    width: 200mm !important;
-    height: 288mm !important;
-    max-height: 288mm !important;
+    width: 100% !important;
+    max-width: 190mm !important;
     margin: 0 auto !important;
-    padding: 2.5mm 3.5mm !important;
+    padding: 2mm 0 !important;
     box-sizing: border-box !important;
     display: flex !important;
     flex-direction: column !important;
@@ -128,7 +124,6 @@
     page-break-inside: avoid !important;
     page-break-before: avoid !important;
     page-break-after: avoid !important;
-    overflow: hidden !important;
   }
 
   table, tr, td, th {
@@ -141,16 +136,16 @@
 
   .rapor-print-container {
     width: 100% !important;
-    max-width: 210mm !important;
+    max-width: 190mm !important;
     margin: 0 auto !important;
-    padding: 3mm 5mm !important;
+    padding: 6mm 0 !important;
   }
 
   .legger-print-container {
     width: 100% !important;
     max-width: 297mm !important;
     margin: 0 auto !important;
-    padding: 6mm !important;
+    padding: 8mm !important;
   }
 }
 
