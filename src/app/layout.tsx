@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Rapor Nusa - Sistem Rapor Digital Madrasah (MTs & MA)",
-  description: "Aplikasi Rapor Digital Madrasah Terintegrasi KMA 1503 Tahun 2025 • MTs Ma'arif NU 2 Sutojayan & MA Ma'arif Nurus Salam",
+  title: "PORTAL RAPOR INTERNAL NUSALODOYO - MTs & MA",
+  description: "Portal Rapor Internal Nusa Lodoyo Terintegrasi KMA 1503 Tahun 2025 • MTs Ma'arif NU 2 Sutojayan & MA Ma'arif Nurus Salam",
   icons: {
     icon: "/logo.png",
     shortcut: "/logo.png",

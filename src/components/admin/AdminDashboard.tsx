@@ -824,14 +824,14 @@ export default function AdminDashboard({
         </div>
       </div>
 
-      {/* Nav Tabs Bold Retro (6 Tab Lengkap Sesuai Permintaan) */}
-      <div className="flex flex-wrap items-center gap-2 bg-retro-cream p-2 rounded-xl border-2 border-retro-border shadow-retro-sm overflow-x-auto">
+      {/* Nav Tabs Bold Retro (Responsive Horizontal Scroll on Mobile/Tablet) */}
+      <div className="flex flex-nowrap sm:flex-wrap items-center gap-2 bg-retro-cream p-2 rounded-xl border-2 border-retro-border shadow-retro-sm overflow-x-auto scrollbar-thin">
         <button
           onClick={() => setActiveTab("visualisasi")}
           className={
             activeTab === "visualisasi"
-              ? "btn-retro-primary px-3.5 py-2 text-xs flex items-center gap-1.5"
-              : "btn-retro-white px-3.5 py-2 text-xs flex items-center gap-1.5"
+              ? "btn-retro-primary px-3.5 py-2 text-xs flex items-center gap-1.5 flex-shrink-0 whitespace-nowrap"
+              : "btn-retro-white px-3.5 py-2 text-xs flex items-center gap-1.5 flex-shrink-0 whitespace-nowrap"
           }
         >
           <BarChart3 className="w-3.5 h-3.5" />
@@ -842,8 +842,8 @@ export default function AdminDashboard({
           onClick={() => setActiveTab("guru")}
           className={
             activeTab === "guru"
-              ? "btn-retro-primary px-3.5 py-2 text-xs flex items-center gap-1.5"
-              : "btn-retro-white px-3.5 py-2 text-xs flex items-center gap-1.5"
+              ? "btn-retro-primary px-3.5 py-2 text-xs flex items-center gap-1.5 flex-shrink-0 whitespace-nowrap"
+              : "btn-retro-white px-3.5 py-2 text-xs flex items-center gap-1.5 flex-shrink-0 whitespace-nowrap"
           }
         >
           <Users className="w-3.5 h-3.5" />
@@ -854,8 +854,8 @@ export default function AdminDashboard({
           onClick={() => setActiveTab("wali")}
           className={
             activeTab === "wali"
-              ? "btn-retro-primary px-3.5 py-2 text-xs flex items-center gap-1.5"
-              : "btn-retro-white px-3.5 py-2 text-xs flex items-center gap-1.5"
+              ? "btn-retro-primary px-3.5 py-2 text-xs flex items-center gap-1.5 flex-shrink-0 whitespace-nowrap"
+              : "btn-retro-white px-3.5 py-2 text-xs flex items-center gap-1.5 flex-shrink-0 whitespace-nowrap"
           }
         >
           <UserCheck className="w-3.5 h-3.5" />
@@ -866,8 +866,8 @@ export default function AdminDashboard({
           onClick={() => setActiveTab("siswa")}
           className={
             activeTab === "siswa"
-              ? "btn-retro-primary px-3.5 py-2 text-xs flex items-center gap-1.5"
-              : "btn-retro-white px-3.5 py-2 text-xs flex items-center gap-1.5"
+              ? "btn-retro-primary px-3.5 py-2 text-xs flex items-center gap-1.5 flex-shrink-0 whitespace-nowrap"
+              : "btn-retro-white px-3.5 py-2 text-xs flex items-center gap-1.5 flex-shrink-0 whitespace-nowrap"
           }
         >
           <GraduationCap className="w-3.5 h-3.5" />
@@ -878,8 +878,8 @@ export default function AdminDashboard({
           onClick={() => setActiveTab("logs")}
           className={
             activeTab === "logs"
-              ? "btn-retro-primary px-3.5 py-2 text-xs flex items-center gap-1.5"
-              : "btn-retro-white px-3.5 py-2 text-xs flex items-center gap-1.5"
+              ? "btn-retro-primary px-3.5 py-2 text-xs flex items-center gap-1.5 flex-shrink-0 whitespace-nowrap"
+              : "btn-retro-white px-3.5 py-2 text-xs flex items-center gap-1.5 flex-shrink-0 whitespace-nowrap"
           }
         >
           <Shield className="w-3.5 h-3.5" />
@@ -890,8 +890,8 @@ export default function AdminDashboard({
           onClick={() => setActiveTab("pengaturan")}
           className={
             activeTab === "pengaturan"
-              ? "btn-retro-primary px-3.5 py-2 text-xs flex items-center gap-1.5"
-              : "btn-retro-white px-3.5 py-2 text-xs flex items-center gap-1.5"
+              ? "btn-retro-primary px-3.5 py-2 text-xs flex items-center gap-1.5 flex-shrink-0 whitespace-nowrap"
+              : "btn-retro-white px-3.5 py-2 text-xs flex items-center gap-1.5 flex-shrink-0 whitespace-nowrap"
           }
         >
           <Settings className="w-3.5 h-3.5" />
@@ -902,8 +902,8 @@ export default function AdminDashboard({
           onClick={() => setActiveTab("integrasi")}
           className={
             activeTab === "integrasi"
-              ? "btn-retro-primary px-3.5 py-2 text-xs flex items-center gap-1.5"
-              : "btn-retro-white px-3.5 py-2 text-xs flex items-center gap-1.5"
+              ? "btn-retro-primary px-3.5 py-2 text-xs flex items-center gap-1.5 flex-shrink-0 whitespace-nowrap"
+              : "btn-retro-white px-3.5 py-2 text-xs flex items-center gap-1.5 flex-shrink-0 whitespace-nowrap"
           }
         >
           <CloudLightning className="w-3.5 h-3.5 text-amber-400" />

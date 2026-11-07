@@ -38,6 +38,10 @@ import {
   KeyRound,
   UserCheck,
   CheckCircle2,
+  Crown,
+  Lock,
+  X,
+  Loader2,
 } from "lucide-react";
 
 export default function HomePage() {
@@ -50,6 +54,14 @@ export default function HomePage() {
   const [passwordInput, setPasswordInput] = useState("");
   const [loginError, setLoginError] = useState("");
   const [isLoggingIn, setIsLoggingIn] = useState(false);
+
+  // Loading Screen & Super Admin Quick Login Modal State
+  const [isLoadingApp, setIsLoadingApp] = useState(true);
+  const [isSuperAdminModalOpen, setIsSuperAdminModalOpen] = useState(false);
+  const [superAdminUsername, setSuperAdminUsername] = useState("admin");
+  const [superAdminPassword, setSuperAdminPassword] = useState("");
+  const [superAdminError, setSuperAdminError] = useState("");
+  const [isSuperAdminLoggingIn, setIsSuperAdminLoggingIn] = useState(false);
 
   // 3. Dual-role toggle for guru_walikelas
   const [dualRoleMode, setDualRoleMode] = useState<"guru" | "wali">("guru");
@@ -82,6 +94,10 @@ export default function HomePage() {
       handleSelectMadrasah(savedMid);
     }
 
+    const timer = setTimeout(() => {
+      setIsLoadingApp(false);
+    }, 350);
+
     const handleKeyDown = (e: KeyboardEvent) => {
       if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "k") {
         e.preventDefault();
@@ -89,7 +105,10 @@ export default function HomePage() {
       }
     };
     window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
+    return () => {
+      clearTimeout(timer);
+      window.removeEventListener("keydown", handleKeyDown);
+    };
   }, []);
 
   const handleSelectMadrasah = (mid: MadrasahId) => {
@@ -170,15 +189,36 @@ export default function HomePage() {
     }
   };
 
+  // Super Admin direct login handler from front page
+  const handleSuperAdminLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSuperAdminError("");
+    setIsSuperAdminLoggingIn(true);
+
+    try {
+      const res = await loginUser("mts", superAdminUsername, superAdminPassword);
+      if (res.success && res.user && (res.user.role === "admin" || res.user.is_super_admin)) {
+        handleSelectMadrasah("mts");
+        setCurrentUser({
+          ...res.user,
+          is_super_admin: true,
+          role: "admin",
+        });
+        setIsSuperAdminModalOpen(false);
+      } else {
+        setSuperAdminError(res.message || "Gagal masuk. Username atau kata sandi admin utama salah!");
+      }
+    } catch (err: any) {
+      setSuperAdminError("Terjadi kesalahan: " + err.message);
+    } finally {
+      setIsSuperAdminLoggingIn(false);
+    }
+  };
+
   const handleLogout = () => {
     setCurrentUser(null);
     setUsernameInput("");
     setPasswordInput("");
-  };
-
-  const quickLoginAs = (userKey: string, pass: string = "123") => {
-    setUsernameInput(userKey);
-    setPasswordInput(pass);
   };
 
   // Buka Modal Legger
@@ -200,6 +240,38 @@ export default function HomePage() {
     setFilterKelas(k);
     setIsCetakRaporOpen(true);
   };
+
+  // ================= VIEW 0: RETRO LOADING SCREEN =================
+  if (isLoadingApp) {
+    return (
+      <main className="min-h-screen bg-[#07130a] retro-dark-grid flex flex-col items-center justify-center p-4">
+        <div className="card-retro bg-white p-6 sm:p-8 max-w-sm w-full text-center space-y-4 border-3 border-retro-border shadow-[8px_8px_0px_0px_#00ab00] animate-pulse">
+          <div className="w-16 h-16 mx-auto rounded-2xl bg-[#06330b] p-2.5 border-2 border-retro-border shadow-retro-sm flex items-center justify-center">
+            <img
+              src="/logo.png"
+              alt="Logo Nusa Lodoyo"
+              className="w-full h-full object-contain animate-spin"
+              style={{ animationDuration: "5s" }}
+            />
+          </div>
+          <div>
+            <span className="badge-retro bg-retro-yellow text-retro-black text-[10px] mb-2 font-black uppercase">
+              MEMUAT SISTEM...
+            </span>
+            <h2 className="text-sm sm:text-base font-black text-retro-black uppercase tracking-tight">
+              PORTAL RAPOR INTERNAL NUSALODOYO
+            </h2>
+            <p className="text-xs text-slate-500 font-bold mt-1">
+              Menyiapkan basis data MTs &amp; MA...
+            </p>
+          </div>
+          <div className="w-full bg-slate-100 h-2.5 rounded-full border-2 border-retro-border overflow-hidden">
+            <div className="bg-brand-500 h-full w-2/3 animate-pulse" />
+          </div>
+        </div>
+      </main>
+    );
+  }
 
   // ================= VIEW 1: PILIHAN MADRASAH (BOLD RETRO-MODERNISM) =================
   if (!selectedMadrasah) {
@@ -227,11 +299,31 @@ export default function HomePage() {
             </div>
 
             <h1 className="text-2xl sm:text-4xl md:text-5xl font-black tracking-tight uppercase text-white drop-shadow-[2px_2px_0px_#00ab00]">
-              PORTAL RAPOR DIGITAL MADRASAH
+              PORTAL RAPOR INTERNAL NUSALODOYO
             </h1>
             <p className="text-xs sm:text-sm text-slate-300 max-w-xl mx-auto leading-relaxed px-2 font-medium">
-              Sistem penilaian terintegrasi untuk Guru Mata Pelajaran, Wali Kelas, dan Operator. Pilih lembaga untuk memulai sesi kerja terisolasi.
+              Sistem Penilaian &amp; Rapor Internal Terpadu KMA 1503 Tahun 2025 • MTs Ma&apos;arif NU 2 Sutojayan &amp; MA Ma&apos;arif Nurus Salam.
             </p>
+
+            {/* Tombol Khusus Login Admin Utama (Super Admin) */}
+            <div className="pt-2 sm:pt-4 flex flex-col items-center justify-center">
+              <button
+                type="button"
+                onClick={() => {
+                  setSuperAdminError("");
+                  setSuperAdminPassword("");
+                  setIsSuperAdminModalOpen(true);
+                }}
+                className="btn-retro bg-gradient-to-r from-retro-yellow via-amber-300 to-retro-yellow hover:from-amber-400 hover:to-amber-300 text-retro-black font-black text-xs sm:text-sm px-6 sm:px-8 py-3.5 rounded-2xl border-3 border-retro-border shadow-[4px_4px_0px_0px_#ffffff] hover:shadow-[6px_6px_0px_0px_#00ab00] hover:-translate-y-0.5 active:translate-x-0.5 transition-all flex items-center justify-center gap-2.5 uppercase tracking-wider group"
+              >
+                <Crown className="w-5 h-5 text-retro-black group-hover:scale-110 transition-transform flex-shrink-0" />
+                <span>LOGIN ADMIN UTAMA (SUPER ADMIN)</span>
+                <ArrowRight className="w-4 h-4 text-retro-black group-hover:translate-x-1 transition-transform flex-shrink-0" />
+              </button>
+              <p className="text-[11px] text-emerald-200/90 font-bold mt-2 text-center">
+                Akses Terpadu Seluruh Data MTs Ma&apos;arif NU 2 &amp; MA Ma&apos;arif Nurus Salam
+              </p>
+            </div>
           </div>
 
           {/* Kartu Pilihan Dua Madrasah (Chunky Retro Brutalist Cards) */}
@@ -324,8 +416,109 @@ export default function HomePage() {
           </div>
         </div>
 
+        {/* Modal Khusus Login Admin Utama (Super Admin) */}
+        {isSuperAdminModalOpen && (
+          <div className="fixed inset-0 bg-black/75 backdrop-blur-xs flex items-center justify-center z-50 p-3 sm:p-4 overflow-y-auto">
+            <div className="bg-white rounded-2xl border-3 border-retro-border shadow-retro-xl max-w-md w-full overflow-hidden my-auto text-retro-black">
+              {/* Header Box */}
+              <div className="p-5 text-center text-white relative bg-[#06330b] border-b-3 border-retro-border">
+                <button
+                  type="button"
+                  onClick={() => setIsSuperAdminModalOpen(false)}
+                  className="absolute top-4 right-4 p-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-white transition border border-white/20"
+                  title="Tutup Modal"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+
+                <div className="w-14 h-14 rounded-2xl bg-retro-yellow text-retro-black p-2 mx-auto mb-3 border-2 border-retro-border shadow-retro-sm flex items-center justify-center">
+                  <Crown className="w-8 h-8 fill-retro-black" />
+                </div>
+
+                <span className="badge-retro bg-retro-yellow text-retro-black text-[10px] font-black uppercase mb-1">
+                  Kredensial Super Admin
+                </span>
+
+                <h3 className="text-base sm:text-lg font-black uppercase tracking-tight text-white mt-1">
+                  LOGIN ADMIN UTAMA
+                </h3>
+                <p className="text-[11px] text-emerald-200 font-bold">
+                  Akses Terpadu MTs Ma&apos;arif NU 2 &amp; MA Ma&apos;arif Nurus Salam
+                </p>
+              </div>
+
+              {/* Form Box */}
+              <div className="p-5 sm:p-6 space-y-4 bg-retro-cream">
+                {superAdminError && (
+                  <div className="p-3 rounded-xl bg-red-100 border-2 border-red-600 text-red-900 text-xs font-black shadow-retro-sm flex items-start gap-2">
+                    <span>⚠️</span>
+                    <span>{superAdminError}</span>
+                  </div>
+                )}
+
+                <form onSubmit={handleSuperAdminLogin} className="space-y-3.5">
+                  <div>
+                    <label className="text-xs font-black text-retro-black uppercase block mb-1">
+                      Username Admin Utama:
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      placeholder="Username admin"
+                      value={superAdminUsername}
+                      onChange={e => setSuperAdminUsername(e.target.value)}
+                      className="w-full px-3.5 py-2.5 rounded-lg border-2 border-retro-border bg-white text-xs font-mono font-bold text-retro-black shadow-retro-sm focus:outline-none focus:border-brand-500"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="text-xs font-black text-retro-black uppercase block mb-1">
+                      Kata Sandi:
+                    </label>
+                    <input
+                      type="password"
+                      required
+                      placeholder="Masukkan kata sandi admin"
+                      value={superAdminPassword}
+                      onChange={e => setSuperAdminPassword(e.target.value)}
+                      className="w-full px-3.5 py-2.5 rounded-lg border-2 border-retro-border bg-white text-xs font-bold text-retro-black shadow-retro-sm focus:outline-none focus:border-brand-500"
+                    />
+                  </div>
+
+                  <button
+                    type="submit"
+                    disabled={isSuperAdminLoggingIn}
+                    className="w-full py-3 btn-retro-primary text-xs font-black uppercase tracking-wider disabled:opacity-50 mt-3 flex items-center justify-center gap-2 shadow-retro-sm"
+                  >
+                    {isSuperAdminLoggingIn ? (
+                      <>
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                        <span>MEMVERIFIKASI...</span>
+                      </>
+                    ) : (
+                      <>
+                        <span>MASUK KE DASHBOARD ADMIN UTAMA →</span>
+                      </>
+                    )}
+                  </button>
+                </form>
+
+                <div className="pt-3 border-t-2 border-dashed border-slate-300 text-center">
+                  <button
+                    type="button"
+                    onClick={() => setIsSuperAdminModalOpen(false)}
+                    className="text-xs font-bold text-slate-500 hover:text-retro-black underline"
+                  >
+                    Batal dan kembali ke pilihan lembaga
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
         <footer className="text-center text-xs text-slate-400 pb-4 relative z-10 font-bold">
-          © {new Date().getFullYear()} Rapor Digital Madrasah • Bold Retro-Modernism Edition
+          © {new Date().getFullYear()} Portal Rapor Internal Nusa Lodoyo • Bold Retro-Modernism Edition
         </footer>
       </main>
     );
@@ -411,51 +604,32 @@ export default function HomePage() {
               <button
                 type="submit"
                 disabled={isLoggingIn}
-                className="w-full py-3 btn-retro-primary text-xs font-black uppercase tracking-wider disabled:opacity-50 mt-2"
+                className="w-full py-3 btn-retro-primary text-xs font-black uppercase tracking-wider disabled:opacity-50 mt-2 flex items-center justify-center gap-2 shadow-retro-sm"
               >
-                {isLoggingIn ? "MEMVERIFIKASI..." : "MASUK KE SISTEM →"}
+                {isLoggingIn ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    <span>MEMVERIFIKASI...</span>
+                  </>
+                ) : (
+                  <span>MASUK KE SISTEM →</span>
+                )}
               </button>
             </form>
 
-            {/* Quick Demo Access Badges (Retro Stamp Stickers) */}
-            <div className="pt-4 border-t-2 border-dashed border-slate-300 space-y-2">
-              <span className="text-[10px] uppercase font-black text-slate-500 block">
-                Akses Instan & Kredensial Pengguna:
-              </span>
-              {/* Super Admin Unified Button */}
+            {/* Security & Assistance Note */}
+            <div className="pt-3 border-t-2 border-dashed border-slate-300 text-center space-y-1.5">
+              <p className="text-[11px] text-slate-500 font-bold">
+                Akses khusus Pendidik &amp; Tenaga Kependidikan {activeCfg.nama_madrasah}.
+              </p>
               <button
                 type="button"
-                onClick={() => quickLoginAs("admin", "123")}
-                className="w-full p-2.5 rounded-lg bg-emerald-500 text-white border-2 border-retro-border shadow-retro-sm hover:bg-emerald-600 text-left text-xs font-black transition active:translate-x-0.5 flex items-center justify-between"
+                onClick={() => handleSwitchMadrasah()}
+                className="text-[11px] font-black text-brand-700 hover:text-brand-900 underline inline-flex items-center gap-1"
               >
-                <div>
-                  <span className="block text-[11px] font-black uppercase">👑 Login Admin Utama (MTs & MA)</span>
-                  <span className="block text-[9px] text-emerald-100 font-bold">Username: <strong>admin</strong> • Sandi: <strong>123</strong> (Akses Semua Data)</span>
-                </div>
-                <span className="badge-retro bg-retro-yellow text-retro-black text-[9px]">Super Admin</span>
+                <ChevronLeft className="w-3.5 h-3.5" />
+                <span>Pilih Lembaga Lain</span>
               </button>
-
-              <div className="grid grid-cols-2 gap-2">
-                <button
-                  type="button"
-                  onClick={() => quickLoginAs(isMts ? "admin_mts" : "admin_ma", "123")}
-                  className="p-2 rounded-lg bg-white border-2 border-retro-border shadow-retro-sm hover:bg-slate-50 text-left text-[11px] font-black transition active:translate-x-0.5"
-                >
-                  ⚡ <strong>{isMts ? "admin_mts" : "admin_ma"}</strong>
-                  <span className="block text-[9px] text-slate-600 font-semibold">Operator {isMts ? "MTs" : "MA"}</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => quickLoginAs("a_munawir", "Matsamuda22")}
-                  className="p-2 rounded-lg bg-retro-yellow border-2 border-retro-border shadow-retro-sm hover:bg-amber-300 text-left text-[11px] font-black transition active:translate-x-0.5"
-                >
-                  👨‍🏫 <strong>a_munawir</strong>
-                  <span className="block text-[9px] text-slate-800 font-semibold">Akun Guru (87 Guru)</span>
-                </button>
-              </div>
-              <div className="p-2 bg-emerald-50 border-2 border-brand-500 rounded-lg mt-3 text-[10px] text-brand-900 font-bold">
-                ✓ Seluruh 87 Guru MTs & MA telah aktif dengan password: <code className="bg-white px-1 py-0.5 border border-retro-border rounded font-black text-brand-700">Matsamuda22</code>
-              </div>
             </div>
           </div>
         </div>
