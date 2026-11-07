@@ -982,7 +982,10 @@ export function getLeggerDataByKelas(
 
     return {
       nis: siswa.nis,
+      nisn: siswa.nisn || "",
       nama: siswa.nama_siswa,
+      nama_ortu: siswa.nama_ortu || "",
+      no_absen: siswaList.findIndex(s => s.nis === siswa.nis) + 1,
       scores,
       mapelDetails,
       totalScore,

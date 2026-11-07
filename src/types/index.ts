@@ -166,7 +166,10 @@ export interface MapelDetail {
 
 export interface SiswaLegger {
   nis: string;
+  nisn?: string;
   nama: string;
+  nama_ortu?: string;
+  no_absen?: number;
   scores: Record<string, number>; // kode_mapel -> nilai_akhir
   mapelDetails: Record<string, MapelDetail>;
   totalScore: number;
