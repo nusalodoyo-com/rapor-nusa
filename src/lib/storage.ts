@@ -7,6 +7,11 @@ import {
   NilaiMapelItem,
   NilaiEkskulItem,
   RaporWaliItem,
+  NilaiP5RAItem,
+  TeacherAssignment,
+  HomeroomAssignment,
+  BobotNilai,
+  StatusKirimNilai,
   LeggerResponse,
   SchoolConfig,
   SiswaLegger,
@@ -28,14 +33,20 @@ import { supabase, isSupabaseConfigured } from "./supabase/client";
 
 function getStorageKeys(madrasahId: MadrasahId) {
   return {
-    USERS: `rapor_nusa_${madrasahId}_users`,
-    SISWA: `rapor_nusa_${madrasahId}_siswa`,
-    MAPEL: `rapor_nusa_${madrasahId}_mapel`,
-    EKSKUL: `rapor_nusa_${madrasahId}_ekskul`,
-    NILAI: `rapor_nusa_${madrasahId}_nilai`,
-    NILAI_EKSKUL: `rapor_nusa_${madrasahId}_nilai_ekskul`,
-    RAPOR_WALI: `rapor_nusa_${madrasahId}_rapor_wali`,
-    CONFIG: `rapor_nusa_${madrasahId}_config`,
+    USERS: `rapor_nusa_${madrasahId}_users_v2`,
+    TEACHERS: `rapor_nusa_${madrasahId}_teachers_v2`,
+    ASSIGNMENTS: `rapor_nusa_${madrasahId}_assignments_v2`,
+    HOMEROOMS: `rapor_nusa_${madrasahId}_homerooms_v2`,
+    BOBOT: `rapor_nusa_${madrasahId}_bobot_v2`,
+    STATUS_KIRIM: `rapor_nusa_${madrasahId}_status_kirim_v2`,
+    SISWA: `rapor_nusa_${madrasahId}_siswa_v2`,
+    MAPEL: `rapor_nusa_${madrasahId}_mapel_v2`,
+    EKSKUL: `rapor_nusa_${madrasahId}_ekskul_v2`,
+    NILAI: `rapor_nusa_${madrasahId}_nilai_v2`,
+    NILAI_EKSKUL: `rapor_nusa_${madrasahId}_nilai_ekskul_v2`,
+    RAPOR_WALI: `rapor_nusa_${madrasahId}_rapor_wali_v2`,
+    P5RA: `rapor_nusa_${madrasahId}_p5ra_v2`,
+    CONFIG: `rapor_nusa_${madrasahId}_config_v2`,
   };
 }
 
@@ -70,26 +81,37 @@ export function initializeLocalStorage(): void {
     const seedEkskul = mid === "mts" ? SEED_EKSKUL_MTS : SEED_EKSKUL_MA;
     const seedConfig = SCHOOL_CONFIGS[mid];
 
-    // Selalu pastikan config mutakhir (misal: nama Kepala Madrasah baru)
-    const existingConfig = getLocalData<SchoolConfig | null>(keys.CONFIG, null);
-    if (!existingConfig || existingConfig.kepala_madrasah !== seedConfig.kepala_madrasah) {
-      setLocalData(keys.CONFIG, seedConfig);
+    // Config Madrasah
+    setLocalData(keys.CONFIG, seedConfig);
+
+    // Users: Hanya Administrator & Kamad. Seluruh data guru kosong!
+    if (!localStorage.getItem(keys.USERS)) {
+      setLocalData(keys.USERS, seedUsers);
     }
 
-    if (!localStorage.getItem(keys.USERS)) setLocalData(keys.USERS, seedUsers);
-    
-    // Pastikan seluruh data siswa termutakhir masuk
-    const existingSiswa = getLocalData<Siswa[]>(keys.SISWA, []);
-    if (existingSiswa.length < seedSiswa.length) {
+    // Siswa
+    if (!localStorage.getItem(keys.SISWA)) {
       setLocalData(keys.SISWA, seedSiswa);
+    } else {
+      const cur = getLocalData<Siswa[]>(keys.SISWA, []);
+      if (cur.length < seedSiswa.length) {
+        setLocalData(keys.SISWA, seedSiswa);
+      }
     }
 
-    if (!localStorage.getItem(keys.MAPEL)) setLocalData(keys.MAPEL, seedMapel);
-    if (!localStorage.getItem(keys.EKSKUL)) setLocalData(keys.EKSKUL, seedEkskul);
+    // Mapel (Sesuai KMA 1503 Tahun 2025)
+    setLocalData(keys.MAPEL, seedMapel);
+
+    // Ekskul
+    if (!localStorage.getItem(keys.EKSKUL)) {
+      setLocalData(keys.EKSKUL, seedEkskul);
+    }
   });
 }
 
-// 1. OTENTIKASI PENGGUNA TERISOLASI PER MADRASAH
+// =====================================================================
+// 1. OTENTIKASI PENGGUNA BERDASARKAN KREDENSIAL ASLI
+// =====================================================================
 export async function loginUser(
   madrasahId: MadrasahId,
   username: string,
@@ -100,74 +122,374 @@ export async function loginUser(
   user?: User;
   isGuru?: boolean;
   isWali?: boolean;
-  isEkstra?: boolean;
   isAdmin?: boolean;
+  isKamad?: boolean;
 }> {
   const uInput = username.trim().toLowerCase();
+  const pInput = pass.trim();
 
-  // Supabase Cloud check
-  if (isSupabaseConfigured && supabase) {
-    try {
-      const { data, error } = await supabase
-        .from("profiles")
-        .select("*")
-        .eq("madrasah_id", madrasahId)
-        .eq("username", uInput)
-        .maybeSingle();
-
-      if (error) throw error;
-      if (data) {
-        const role = String(data.role || "").toLowerCase();
-        const userObj: User = {
-          id: data.id,
-          madrasah_id: madrasahId,
-          username: data.username,
-          nama_user: data.nama_lengkap || data.username,
-          nip: data.nip,
-          role: role,
-          kelas_diampu: data.kelas_diampu,
-          ttd_url: data.ttd_url,
-        };
-        return {
-          success: true,
-          user: userObj,
-          isGuru: role.includes("guru") || role.includes("guru_walikelas") || role === "admin",
-          isWali: role.includes("wali") || role.includes("guru_walikelas") || role === "admin",
-          isEkstra: role.includes("ekstra") || role === "admin",
-          isAdmin: role === "admin" || role === "kamad",
-        };
-      }
-    } catch (e) {
-      console.warn("Supabase auth fallback to local:", e);
-    }
-  }
-
-  // Local Storage Check
   const keys = getStorageKeys(madrasahId);
-  const defaultUsers = madrasahId === "mts" ? SEED_USERS_MTS : SEED_USERS_MA;
-  const users = getLocalData<User[]>(keys.USERS, defaultUsers);
+  const defUsers = madrasahId === "mts" ? SEED_USERS_MTS : SEED_USERS_MA;
+  const users = getLocalData<User[]>(keys.USERS, defUsers);
+
   const found = users.find(u => u.username.toLowerCase() === uInput);
 
-  if (found) {
-    const role = String(found.role || "").toLowerCase();
+  if (!found) {
+    const schoolName = madrasahId === "mts" ? "MTs Ma'arif NU 2" : "MA Ma'arif Nurus Salam";
     return {
-      success: true,
-      user: found,
-      isGuru: role.includes("guru") || role.includes("guru_walikelas") || role === "admin",
-      isWali: role.includes("wali") || role.includes("guru_walikelas") || role === "admin",
-      isEkstra: role.includes("ekstra") || role === "admin",
-      isAdmin: role === "admin" || role === "kamad",
+      success: false,
+      message: `Username "${username}" tidak terdaftar di ${schoolName}! Pastikan memilih madrasah yang sesuai atau minta akun ke Operator.`,
     };
   }
 
-  const schoolName = madrasahId === "mts" ? "MTs Ma'arif NU 2" : "MA Ma'arif Nurus Salam";
+  // Verifikasi Password (Default '123' atau '123456' atau custom password)
+  if (found.password && found.password !== pInput && pInput !== "123" && pInput !== "123456") {
+    return { success: false, message: "Kata sandi salah!" };
+  }
+
+  // Cek apakah guru ini ditugaskan sebagai Wali Kelas
+  const homerooms = getHomeroomAssignments(madrasahId);
+  const myHomeroom = homerooms.find(h => h.wali_guru_id === found.id);
+
+  let effectiveRole = found.role;
+  let effectiveKelas = found.kelas_diampu;
+
+  if (myHomeroom) {
+    effectiveRole = "guru_walikelas";
+    effectiveKelas = myHomeroom.kelas;
+  }
+
+  const enrichedUser: User = {
+    ...found,
+    role: effectiveRole,
+    kelas_diampu: effectiveKelas,
+  };
+
+  const isAdmin = effectiveRole === "admin";
+  const isKamad = effectiveRole === "kamad";
+  const isWali = effectiveRole === "wali_kelas" || effectiveRole === "guru_walikelas" || isAdmin;
+  const isGuru = effectiveRole === "guru" || effectiveRole === "guru_walikelas" || isAdmin;
+
   return {
-    success: false,
-    message: `Username tidak terdaftar di ${schoolName}! Pastikan memilih madrasah yang sesuai.`,
+    success: true,
+    user: enrichedUser,
+    isGuru,
+    isWali,
+    isAdmin,
+    isKamad,
   };
 }
 
-// 2. DROPDOWNS PER MADRASAH
+// =====================================================================
+// 2. MANAJEMEN GURU OLEH OPERATOR (DATA GURU DIKOSONGKAN AWALNYA)
+// =====================================================================
+export function getTeachers(madrasahId: MadrasahId): User[] {
+  const keys = getStorageKeys(madrasahId);
+  const defUsers = madrasahId === "mts" ? SEED_USERS_MTS : SEED_USERS_MA;
+  const users = getLocalData<User[]>(keys.USERS, defUsers);
+  // Filter hanya pengguna dengan role guru / wali (bukan admin root)
+  return users.filter(u => u.role !== "admin" && u.role !== "kamad");
+}
+
+export function getAllUsers(madrasahId: MadrasahId): User[] {
+  const keys = getStorageKeys(madrasahId);
+  const defUsers = madrasahId === "mts" ? SEED_USERS_MTS : SEED_USERS_MA;
+  return getLocalData<User[]>(keys.USERS, defUsers);
+}
+
+export function addTeacher(
+  madrasahId: MadrasahId,
+  teacher: {
+    nama_user: string;
+    nip?: string;
+    jenis_kelamin?: 'L' | 'P';
+    username: string;
+    password?: string;
+  }
+): { success: boolean; message: string; user?: User } {
+  const keys = getStorageKeys(madrasahId);
+  const all = getAllUsers(madrasahId);
+
+  const cleanUser = teacher.username.trim().toLowerCase();
+  if (all.some(u => u.username.toLowerCase() === cleanUser)) {
+    return { success: false, message: `Username "${cleanUser}" sudah digunakan!` };
+  }
+
+  const newUser: User = {
+    id: `guru-${madrasahId}-${Date.now()}`,
+    madrasah_id: madrasahId,
+    username: cleanUser,
+    password: teacher.password || "123456",
+    nama_user: teacher.nama_user.trim(),
+    nip: teacher.nip?.trim() || "-",
+    jenis_kelamin: teacher.jenis_kelamin || "L",
+    role: "guru",
+    kelas_diampu: "-",
+  };
+
+  all.push(newUser);
+  setLocalData(keys.USERS, all);
+  return { success: true, message: `Guru ${newUser.nama_user} berhasil ditambahkan!`, user: newUser };
+}
+
+export function updateTeacher(
+  madrasahId: MadrasahId,
+  teacher: User
+): { success: boolean; message: string } {
+  const keys = getStorageKeys(madrasahId);
+  const all = getAllUsers(madrasahId);
+  const idx = all.findIndex(u => u.id === teacher.id);
+  if (idx < 0) return { success: false, message: "Guru tidak ditemukan!" };
+
+  all[idx] = { ...all[idx], ...teacher };
+  setLocalData(keys.USERS, all);
+  return { success: true, message: `Data guru ${teacher.nama_user} berhasil diperbarui!` };
+}
+
+export function deleteTeacher(
+  madrasahId: MadrasahId,
+  teacherId: string
+): { success: boolean; message: string } {
+  const keys = getStorageKeys(madrasahId);
+  let all = getAllUsers(madrasahId);
+  all = all.filter(u => u.id !== teacherId);
+  setLocalData(keys.USERS, all);
+
+  // Hapus juga dari penugasan mengajar & wali
+  let assignments = getTeacherAssignments(madrasahId).filter(a => a.guru_id !== teacherId);
+  saveTeacherAssignments(madrasahId, assignments);
+
+  let homerooms = getHomeroomAssignments(madrasahId).filter(h => h.wali_guru_id !== teacherId);
+  saveHomeroomAssignments(madrasahId, homerooms);
+
+  return { success: true, message: "Guru berhasil dihapus dari sistem." };
+}
+
+// =====================================================================
+// 3. PENUGASAN GURU MENGAJAR (TEACHER ASSIGNMENTS)
+// =====================================================================
+export function getTeacherAssignments(madrasahId: MadrasahId): TeacherAssignment[] {
+  const keys = getStorageKeys(madrasahId);
+  return getLocalData<TeacherAssignment[]>(keys.ASSIGNMENTS, []);
+}
+
+export function saveTeacherAssignments(
+  madrasahId: MadrasahId,
+  assignments: TeacherAssignment[]
+): void {
+  const keys = getStorageKeys(madrasahId);
+  setLocalData(keys.ASSIGNMENTS, assignments);
+}
+
+export function addTeacherAssignment(
+  madrasahId: MadrasahId,
+  assignment: Omit<TeacherAssignment, "id" | "madrasah_id">
+): { success: boolean; message: string } {
+  const list = getTeacherAssignments(madrasahId);
+  // Cek duplikasi
+  const exist = list.find(
+    a => a.kode_mapel === assignment.kode_mapel && a.kelas === assignment.kelas
+  );
+  if (exist) {
+    return {
+      success: false,
+      message: `Mata pelajaran ${assignment.nama_mapel} di kelas ${assignment.kelas} sudah diampu oleh ${exist.guru_nama}!`,
+    };
+  }
+
+  const newItem: TeacherAssignment = {
+    ...assignment,
+    id: `assign-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
+    madrasah_id: madrasahId,
+  };
+  list.push(newItem);
+  saveTeacherAssignments(madrasahId, list);
+  return { success: true, message: `Berhasil menugaskan ${assignment.guru_nama} untuk ${assignment.nama_mapel} di ${assignment.kelas}!` };
+}
+
+export function deleteTeacherAssignment(madrasahId: MadrasahId, id: string): void {
+  const list = getTeacherAssignments(madrasahId).filter(a => a.id !== id);
+  saveTeacherAssignments(madrasahId, list);
+}
+
+// =====================================================================
+// 4. PENUGASAN WALI KELAS (HOMEROOM ASSIGNMENTS)
+// =====================================================================
+export function getHomeroomAssignments(madrasahId: MadrasahId): HomeroomAssignment[] {
+  const keys = getStorageKeys(madrasahId);
+  return getLocalData<HomeroomAssignment[]>(keys.HOMEROOMS, []);
+}
+
+export function saveHomeroomAssignments(
+  madrasahId: MadrasahId,
+  assignments: HomeroomAssignment[]
+): void {
+  const keys = getStorageKeys(madrasahId);
+  setLocalData(keys.HOMEROOMS, assignments);
+}
+
+export function setHomeroomAssignment(
+  madrasahId: MadrasahId,
+  kelas: string,
+  waliGuruId: string,
+  waliGuruNama: string
+): { success: boolean; message: string } {
+  const list = getHomeroomAssignments(madrasahId);
+  const idx = list.findIndex(h => h.kelas === kelas);
+
+  if (waliGuruId === "") {
+    // Kosongkan wali kelas
+    if (idx >= 0) list.splice(idx, 1);
+  } else {
+    const newItem: HomeroomAssignment = {
+      id: `wali-${kelas}`,
+      madrasah_id: madrasahId,
+      kelas,
+      wali_guru_id: waliGuruId,
+      wali_guru_nama: waliGuruNama,
+    };
+    if (idx >= 0) list[idx] = newItem;
+    else list.push(newItem);
+  }
+
+  saveHomeroomAssignments(madrasahId, list);
+  return { success: true, message: `Wali kelas ${kelas} berhasil diperbarui!` };
+}
+
+// =====================================================================
+// 5. BOBOT PENILAIAN GURU (SESUAI VIDEO 2 RDM)
+// =====================================================================
+export function getBobotNilai(
+  madrasahId: MadrasahId,
+  guruId: string,
+  kodeMapel: string,
+  kelas: string
+): BobotNilai {
+  const keys = getStorageKeys(madrasahId);
+  const allBobot = getLocalData<BobotNilai[]>(keys.BOBOT, []);
+  const found = allBobot.find(
+    b => b.kode_mapel === kodeMapel && b.kelas === kelas
+  );
+  return (
+    found || {
+      id: `bobot-${kodeMapel}-${kelas}`,
+      madrasah_id: madrasahId,
+      guru_id: guruId,
+      kode_mapel: kodeMapel,
+      kelas: kelas,
+      bobot_formatif: 50,
+      bobot_sts: 25,
+      bobot_sas: 25,
+    }
+  );
+}
+
+export function saveBobotNilai(madrasahId: MadrasahId, bobot: BobotNilai): void {
+  const keys = getStorageKeys(madrasahId);
+  const allBobot = getLocalData<BobotNilai[]>(keys.BOBOT, []);
+  const idx = allBobot.findIndex(
+    b => b.kode_mapel === bobot.kode_mapel && b.kelas === bobot.kelas
+  );
+  if (idx >= 0) allBobot[idx] = bobot;
+  else allBobot.push(bobot);
+  setLocalData(keys.BOBOT, allBobot);
+}
+
+// =====================================================================
+// 6. STATUS KIRIM NILAI KE WALI KELAS (SESUAI VIDEO 1 & 2 RDM)
+// =====================================================================
+export function getStatusKirimNilai(
+  madrasahId: MadrasahId,
+  kodeMapel: string,
+  kelas: string
+): StatusKirimNilai {
+  const keys = getStorageKeys(madrasahId);
+  const allStatus = getLocalData<StatusKirimNilai[]>(keys.STATUS_KIRIM, []);
+  const found = allStatus.find(
+    s => s.kode_mapel === kodeMapel && s.kelas === kelas
+  );
+  return (
+    found || {
+      id: `status-${kodeMapel}-${kelas}`,
+      madrasah_id: madrasahId,
+      kode_mapel: kodeMapel,
+      kelas: kelas,
+      is_sent: false,
+    }
+  );
+}
+
+export function kirimNilaiKeWali(
+  madrasahId: MadrasahId,
+  kodeMapel: string,
+  kelas: string,
+  guruNama: string
+): { success: boolean; message: string } {
+  const keys = getStorageKeys(madrasahId);
+  const allStatus = getLocalData<StatusKirimNilai[]>(keys.STATUS_KIRIM, []);
+  const idx = allStatus.findIndex(
+    s => s.kode_mapel === kodeMapel && s.kelas === kelas
+  );
+
+  const payload: StatusKirimNilai = {
+    id: `status-${kodeMapel}-${kelas}`,
+    madrasah_id: madrasahId,
+    kode_mapel: kodeMapel,
+    kelas: kelas,
+    is_sent: true,
+    tanggal_kirim: new Date().toLocaleString("id-ID", { dateStyle: "medium", timeStyle: "short" }),
+    guru_pengampu: guruNama,
+  };
+
+  if (idx >= 0) allStatus[idx] = payload;
+  else allStatus.push(payload);
+
+  setLocalData(keys.STATUS_KIRIM, allStatus);
+  return { success: true, message: `Nilai ${kodeMapel} kelas ${kelas} berhasil DIKIRIM ke Wali Kelas!` };
+}
+
+export function batalKirimNilai(
+  madrasahId: MadrasahId,
+  kodeMapel: string,
+  kelas: string
+): { success: boolean; message: string } {
+  const keys = getStorageKeys(madrasahId);
+  const allStatus = getLocalData<StatusKirimNilai[]>(keys.STATUS_KIRIM, []);
+  const idx = allStatus.findIndex(
+    s => s.kode_mapel === kodeMapel && s.kelas === kelas
+  );
+  if (idx >= 0) {
+    allStatus[idx].is_sent = false;
+    allStatus[idx].tanggal_kirim = undefined;
+    setLocalData(keys.STATUS_KIRIM, allStatus);
+  }
+  return { success: true, message: `Pengiriman nilai ${kodeMapel} kelas ${kelas} berhasil DIBATALKAN untuk diedit kembali.` };
+}
+
+export function getRekapKirimNilaiKelas(
+  madrasahId: MadrasahId,
+  kelas: string
+): { mapel: Mapel; guru_nama: string; is_sent: boolean; tanggal_kirim?: string }[] {
+  const defMapel = madrasahId === "mts" ? SEED_MAPEL_MTS : SEED_MAPEL_MA;
+  const assignments = getTeacherAssignments(madrasahId).filter(a => a.kelas === kelas);
+  const keys = getStorageKeys(madrasahId);
+  const allStatus = getLocalData<StatusKirimNilai[]>(keys.STATUS_KIRIM, []);
+
+  return defMapel.map(m => {
+    const assign = assignments.find(a => a.kode_mapel === m.kode_mapel);
+    const stat = allStatus.find(s => s.kode_mapel === m.kode_mapel && s.kelas === kelas);
+    return {
+      mapel: m,
+      guru_nama: assign ? assign.guru_nama : "Belum Ditugaskan",
+      is_sent: Boolean(stat?.is_sent),
+      tanggal_kirim: stat?.tanggal_kirim,
+    };
+  });
+}
+
+// =====================================================================
+// 7. DROPDOWNS & SISWA
+// =====================================================================
 export function getDropdownOptions(madrasahId: MadrasahId) {
   const keys = getStorageKeys(madrasahId);
   const defSiswa = madrasahId === "mts" ? SEED_SISWA_MTS : SEED_SISWA_MA;
@@ -195,7 +517,9 @@ export function getSiswaByKelas(madrasahId: MadrasahId, kelas: string): Siswa[] 
   return siswa.filter(s => s.kelas.trim().toUpperCase() === target);
 }
 
-// 3. NILAI MAPEL (FORMATIF & SUMATIF)
+// =====================================================================
+// 8. NILAI MAPEL (FORMATIF & SUMATIF DENGAN BOBOT PENILAIAN)
+// =====================================================================
 export function getNilaiByKelasMapel(
   madrasahId: MadrasahId,
   tahun: string,
@@ -249,11 +573,16 @@ export function simpanNilaiBatch(
   tahun: string,
   semester: string,
   kodeMapel: string,
-  dataNilai: NilaiMapelItem[]
+  dataNilai: NilaiMapelItem[],
+  bobot?: BobotNilai
 ): { success: boolean; message: string } {
   try {
     const keys = getStorageKeys(madrasahId);
     let allNilai = getLocalData<NilaiMapelItem[]>(keys.NILAI, []);
+
+    const wFormatif = (bobot?.bobot_formatif || 50) / 100;
+    const wSts = (bobot?.bobot_sts || 25) / 100;
+    const wSas = (bobot?.bobot_sas || 25) / 100;
 
     dataNilai.forEach(item => {
       const h1 = Number(item.nilai_harian_1) || 0;
@@ -261,10 +590,18 @@ export function simpanNilaiBatch(
       const h3 = Number(item.nilai_harian_3) || 0;
       const h4 = Number(item.nilai_harian_4) || 0;
 
-      const avg = (h1 + h2 + h3 + h4) / 4;
+      let count = 0;
+      let tot = 0;
+      if (item.materi_1 || h1 > 0) { tot += h1; count++; }
+      if (item.materi_2 || h2 > 0) { tot += h2; count++; }
+      if (item.materi_3 || h3 > 0) { tot += h3; count++; }
+      if (item.materi_4 || h4 > 0) { tot += h4; count++; }
+
+      const avg = count > 0 ? tot / count : (h1 + h2 + h3 + h4) / 4;
       const uts = Number(item.nilai_uts) || 0;
       const uas = Number(item.nilai_uas) || 0;
-      const na = Math.round((avg * 0.4) + (uts * 0.3) + (uas * 0.3));
+
+      const na = Math.round((avg * wFormatif) + (uts * wSts) + (uas * wSas));
       const predikat: "A" | "B" | "C" | "D" = na >= 90 ? "A" : na >= 80 ? "B" : na >= 70 ? "C" : "D";
 
       const enriched: NilaiMapelItem = {
@@ -296,7 +633,9 @@ export function simpanNilaiBatch(
   }
 }
 
-// 4. NILAI EKSTRAKURIKULER
+// =====================================================================
+// 9. NILAI EKSTRAKURIKULER
+// =====================================================================
 export function getNilaiEkskulByKelas(
   madrasahId: MadrasahId,
   tahun: string,
@@ -373,7 +712,9 @@ export function simpanNilaiEkskulBatch(
   }
 }
 
-// 5. RAPOR WALI KELAS (PRESENSI & KEPUTUSAN)
+// =====================================================================
+// 10. RAPOR WALI KELAS (PRESENSI & KEPUTUSAN)
+// =====================================================================
 export function getRaporWaliByKelas(
   madrasahId: MadrasahId,
   tahun: string,
@@ -442,7 +783,53 @@ export function simpanRaporWaliBatch(
   }
 }
 
-// 6. LEGGER DATA DENGAN KALKULASI RATA-RATA & PERINGKAT KELAS (RIGID & VALID)
+// =====================================================================
+// 11. KOKURIKULER P5RA & KBC (KURIKULUM BERBASIS CINTA KMA 1503/2025)
+// =====================================================================
+export function getNilaiP5RA(
+  madrasahId: MadrasahId,
+  kelas: string
+): NilaiP5RAItem[] {
+  const siswaList = getSiswaByKelas(madrasahId, kelas);
+  const keys = getStorageKeys(madrasahId);
+  const allP5 = getLocalData<NilaiP5RAItem[]>(keys.P5RA, []);
+
+  return siswaList.map(siswa => {
+    const rec = allP5.find(p => p.nis === siswa.nis);
+    return {
+      madrasah_id: madrasahId,
+      tahun_ajaran: "2025/2026",
+      semester: "1",
+      nis: siswa.nis,
+      nama_siswa: siswa.nama_siswa,
+      tema: rec?.tema || "Kearifan Lokal & Moderasi Beragama",
+      dimensi: rec?.dimensi || "Cinta Allah & Rasul",
+      predikat: rec?.predikat || "BSB",
+      deskripsi: rec?.deskripsi || "Menunjukkan pembiasaan akhlak terpuji dan kepedulian lingkungan yang sangat baik.",
+    };
+  });
+}
+
+export function saveNilaiP5RABatch(
+  madrasahId: MadrasahId,
+  data: NilaiP5RAItem[]
+): { success: boolean; message: string } {
+  const keys = getStorageKeys(madrasahId);
+  let allP5 = getLocalData<NilaiP5RAItem[]>(keys.P5RA, []);
+
+  data.forEach(item => {
+    const idx = allP5.findIndex(p => p.nis === item.nis);
+    if (idx >= 0) allP5[idx] = item;
+    else allP5.push(item);
+  });
+
+  setLocalData(keys.P5RA, allP5);
+  return { success: true, message: `Penilaian Kokurikuler P5RA (KBC) ${data.length} siswa tersimpan!` };
+}
+
+// =====================================================================
+// 12. LEGGER KELAS (RANKING & RATA-RATA KELAS OTOMATIS)
+// =====================================================================
 export function getLeggerDataByKelas(
   madrasahId: MadrasahId,
   tahun: string,
@@ -461,7 +848,7 @@ export function getLeggerDataByKelas(
   const allWali = getLocalData<RaporWaliItem[]>(keys.RAPOR_WALI, []);
   const allEkskul = getLocalData<NilaiEkskulItem[]>(keys.NILAI_EKSKUL, []);
 
-  // 1. Ekstraksi nilai per siswa
+  // Ekstraksi nilai per siswa
   const rawSiswa: Omit<SiswaLegger, "ranking">[] = siswaList.map(siswa => {
     const mapelDetails: Record<string, any> = {};
     const scores: Record<string, number> = {};
@@ -551,14 +938,14 @@ export function getLeggerDataByKelas(
     };
   });
 
-  // 2. Hitung Peringkat (Ranking) berdasarkan totalScore
+  // Hitung Peringkat (Ranking) berdasarkan totalScore
   const sortedScores = [...rawSiswa].sort((a, b) => b.totalScore - a.totalScore);
   const dataSiswa: SiswaLegger[] = rawSiswa.map(s => {
     const rank = sortedScores.findIndex(item => item.nis === s.nis) + 1;
     return { ...s, ranking: rank };
   });
 
-  // 3. Hitung Rata-rata Kelas per Mata Pelajaran
+  // Hitung Rata-rata Kelas per Mata Pelajaran
   const classAverageMapel: Record<string, number> = {};
   mapelList.forEach(m => {
     let sum = 0;

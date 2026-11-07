@@ -1,16 +1,61 @@
 export type MadrasahId = 'mts' | 'ma';
 
-export type UserRole = 'admin' | 'guru' | 'wali_kelas' | 'guru_walikelas' | 'guru_ekstra' | 'kamad';
+export type UserRole = 'admin' | 'guru' | 'wali_kelas' | 'guru_walikelas' | 'kamad';
 
 export interface User {
   id: string;
   madrasah_id: MadrasahId;
   username: string;
+  password?: string;
   nama_user: string;
   nip?: string;
-  role: string; // e.g. "guru", "wali_kelas", "guru_walikelas", "admin", "kamad"
-  kelas_diampu?: string;
+  jenis_kelamin?: 'L' | 'P';
+  role: UserRole;
+  kelas_diampu?: string; // Jika wali kelas
   ttd_url?: string;
+}
+
+// Penugasan Guru Mengajar (Admin Setting)
+export interface TeacherAssignment {
+  id: string;
+  madrasah_id: MadrasahId;
+  guru_id: string;
+  guru_nama: string;
+  kode_mapel: string;
+  nama_mapel: string;
+  kelas: string;
+}
+
+// Penugasan Wali Kelas (Admin Setting)
+export interface HomeroomAssignment {
+  id: string;
+  madrasah_id: MadrasahId;
+  kelas: string;
+  wali_guru_id: string;
+  wali_guru_nama: string;
+}
+
+// Pengaturan Bobot Penilaian Guru
+export interface BobotNilai {
+  id: string;
+  madrasah_id: MadrasahId;
+  guru_id: string;
+  kode_mapel: string;
+  kelas: string;
+  bobot_formatif: number; // default 50
+  bobot_sts: number;      // default 25
+  bobot_sas: number;      // default 25
+}
+
+// Status Kirim Nilai dari Guru Mapel ke Wali Kelas
+export interface StatusKirimNilai {
+  id: string;
+  madrasah_id: MadrasahId;
+  kode_mapel: string;
+  kelas: string;
+  is_sent: boolean;
+  tanggal_kirim?: string;
+  guru_pengampu?: string;
 }
 
 export interface Siswa {
@@ -26,13 +71,15 @@ export interface Siswa {
   alamat?: string;
 }
 
+// Struktur Mata Pelajaran KMA 1503 Tahun 2025
 export interface Mapel {
   id: string;
   madrasah_id: MadrasahId;
   kode_mapel: string;
   nama_mapel: string;
-  kelompok: 'A' | 'B' | 'C'; // A: PAI & Bahasa Arab, B: Umum, C: Mulok / Peminatan
+  kelompok: 'A' | 'B' | 'C'; // A: PAI & B. Arab, B: Umum, C: Pilihan / Mulok KMA 1503
   kkm: number;
+  fase: 'D' | 'E' | 'F'; // D: MTs, E: MA Kelas X, F: MA Kelas XI-XII
   urutan?: number;
 }
 
@@ -93,6 +140,20 @@ export interface RaporWaliItem {
   keputusan: '-' | 'Naik Kelas' | 'Tinggal Kelas' | 'Lulus' | 'Tidak Lulus';
 }
 
+// Kokurikuler P5RA & KBC (Kurikulum Berbasis Cinta - Panca Cinta) KMA 1503/2025
+export interface NilaiP5RAItem {
+  id?: string;
+  madrasah_id: MadrasahId;
+  tahun_ajaran: string;
+  semester: string;
+  nis: string;
+  nama_siswa: string;
+  tema: string;
+  dimensi: 'Cinta Allah & Rasul' | 'Cinta Ilmu' | 'Cinta Lingkungan' | 'Cinta Sesama' | 'Cinta Tanah Air';
+  predikat: 'MB' | 'BSh' | 'BSB' | 'SAB'; // Mulai Berkembang, Berkembang Sesuai Harapan, Berkembang Sangat Baik, Sangat Amat Berkembang
+  deskripsi: string;
+}
+
 export interface MapelDetail {
   lm: number; // rata-rata formatif (harian)
   sts: number;
@@ -144,6 +205,7 @@ export interface SchoolConfig {
   kepala_madrasah: string;
   nip_kepala: string;
   kota_tanggal: string;
+  tanggal_rapor: string;
   logo_url?: string;
   stempel_url?: string;
 }
