@@ -411,7 +411,7 @@ export default function HomePage() {
                 <div className="mt-4 pt-3 border-t border-slate-800 space-y-1 text-xs text-slate-300">
                   <p>• <strong>Tingkat:</strong> Kelas VII, VIII, IX</p>
                   <p>• <strong>NSM / NPSN:</strong> 121235050045 / 20582201</p>
-                  <p>• <strong>Kepala:</strong> Drs. H. Ahmad Masrukin, M.Pd.I.</p>
+                  <p>• <strong>Kepala:</strong> Ahmad Ulil Amin, Lc., M.S.I.</p>
                 </div>
               </div>
 

@@ -70,11 +70,22 @@ export function initializeLocalStorage(): void {
     const seedEkskul = mid === "mts" ? SEED_EKSKUL_MTS : SEED_EKSKUL_MA;
     const seedConfig = SCHOOL_CONFIGS[mid];
 
+    // Selalu pastikan config mutakhir (misal: nama Kepala Madrasah baru)
+    const existingConfig = getLocalData<SchoolConfig | null>(keys.CONFIG, null);
+    if (!existingConfig || existingConfig.kepala_madrasah !== seedConfig.kepala_madrasah) {
+      setLocalData(keys.CONFIG, seedConfig);
+    }
+
     if (!localStorage.getItem(keys.USERS)) setLocalData(keys.USERS, seedUsers);
-    if (!localStorage.getItem(keys.SISWA)) setLocalData(keys.SISWA, seedSiswa);
+    
+    // Pastikan seluruh data siswa termutakhir masuk
+    const existingSiswa = getLocalData<Siswa[]>(keys.SISWA, []);
+    if (existingSiswa.length < seedSiswa.length) {
+      setLocalData(keys.SISWA, seedSiswa);
+    }
+
     if (!localStorage.getItem(keys.MAPEL)) setLocalData(keys.MAPEL, seedMapel);
     if (!localStorage.getItem(keys.EKSKUL)) setLocalData(keys.EKSKUL, seedEkskul);
-    if (!localStorage.getItem(keys.CONFIG)) setLocalData(keys.CONFIG, seedConfig);
   });
 }
 

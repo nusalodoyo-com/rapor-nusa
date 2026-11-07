@@ -1,4 +1,7 @@
 import { Siswa, Mapel, Ekskul, User, SchoolConfig, MadrasahId } from "@/types";
+import { SEED_CLASSES_MTS, SEED_SISWA_MTS } from "./mtsStudents";
+
+export { SEED_CLASSES_MTS, SEED_SISWA_MTS };
 
 // =====================================================================
 // KONFIGURASI PROFIL DUA MADRASAH
@@ -19,8 +22,8 @@ export const SCHOOL_CONFIGS: Record<MadrasahId, SchoolConfig> = {
     kecamatan: "Sutojayan",
     kabupaten: "Blitar",
     provinsi: "Jawa Timur",
-    kepala_madrasah: "Drs. H. Ahmad Masrukin, M.Pd.I.",
-    nip_kepala: "196807151994031002",
+    kepala_madrasah: "Ahmad Ulil Amin, Lc., M.S.I.",
+    nip_kepala: "-",
     kota_tanggal: "Blitar",
   },
   ma: {
@@ -75,13 +78,21 @@ export const SEED_USERS_MTS: User[] = [
   {
     id: "usr-mts-4",
     madrasah_id: "mts",
-    username: "guru_mts1",
-    nama_user: "Hj. Siti Rohmah, S.Ag.",
-    role: "guru",
-    kelas_diampu: "VII-A, VII-B",
+    username: "wali9a",
+    nama_user: "M. Syaifullah, S.Pd.",
+    role: "guru_walikelas",
+    kelas_diampu: "IX-A",
   },
   {
     id: "usr-mts-5",
+    madrasah_id: "mts",
+    username: "guru_mts1",
+    nama_user: "Hj. Siti Rohmah, S.Ag.",
+    role: "guru",
+    kelas_diampu: "VII-A, VII-B, VIII-A, IX-A",
+  },
+  {
+    id: "usr-mts-6",
     madrasah_id: "mts",
     username: "ekstra_mts",
     nama_user: "Anang Ma'ruf, S.Or.",
@@ -89,10 +100,10 @@ export const SEED_USERS_MTS: User[] = [
     kelas_diampu: "-",
   },
   {
-    id: "usr-mts-6",
+    id: "usr-mts-7",
     madrasah_id: "mts",
     username: "kamad_mts",
-    nama_user: "Drs. H. Ahmad Masrukin, M.Pd.I.",
+    nama_user: "Ahmad Ulil Amin, Lc., M.S.I.",
     role: "kamad",
     kelas_diampu: "-",
   },
@@ -153,25 +164,11 @@ export const SEED_USERS_MA: User[] = [
 // KELAS PER MADRASAH
 // =====================================================================
 
-export const SEED_CLASSES_MTS = ["VII-A", "VII-B", "VIII-A", "VIII-B", "IX-A", "IX-B"];
 export const SEED_CLASSES_MA = ["X-A", "X-B", "XI-IPA", "XI-IPS", "XII-IPA", "XII-IPS"];
 
 // =====================================================================
-// DATA SISWA PER MADRASAH
+// DATA SISWA MA
 // =====================================================================
-
-export const SEED_SISWA_MTS: Siswa[] = [
-  { id: "mts-s-01", madrasah_id: "mts", nis: "247001", nisn: "0091234501", nama_siswa: "Abdul Wahid Hasyim", kelas: "VII-A", jenis_kelamin: "L", alamat: "Sutojayan" },
-  { id: "mts-s-02", madrasah_id: "mts", nis: "247002", nisn: "0091234502", nama_siswa: "Ainun Nadhiroh", kelas: "VII-A", jenis_kelamin: "P", alamat: "Kedungbunder" },
-  { id: "mts-s-03", madrasah_id: "mts", nis: "247003", nisn: "0091234503", nama_siswa: "Bima Arya Prasetya", kelas: "VII-A", jenis_kelamin: "L", alamat: "Kademangan" },
-  { id: "mts-s-04", madrasah_id: "mts", nis: "247004", nisn: "0091234504", nama_siswa: "Dina Mariana", kelas: "VII-A", jenis_kelamin: "P", alamat: "Sutojayan" },
-  { id: "mts-s-05", madrasah_id: "mts", nis: "247005", nisn: "0091234505", nama_siswa: "Eko Prasetyo", kelas: "VII-A", jenis_kelamin: "L", alamat: "Lodoyo" },
-  { id: "mts-s-06", madrasah_id: "mts", nis: "247006", nisn: "0091234506", nama_siswa: "Halimatus Sa'diyah", kelas: "VII-A", jenis_kelamin: "P", alamat: "Kedungbunder" },
-  { id: "mts-s-07", madrasah_id: "mts", nis: "247007", nisn: "0091234507", nama_siswa: "Irfan Maulana", kelas: "VII-A", jenis_kelamin: "L", alamat: "Sutojayan" },
-  { id: "mts-s-08", madrasah_id: "mts", nis: "247008", nisn: "0091234508", nama_siswa: "Khansa Nabila", kelas: "VII-A", jenis_kelamin: "P", alamat: "Lodoyo" },
-  { id: "mts-s-09", madrasah_id: "mts", nis: "247009", nisn: "0091234509", nama_siswa: "Luqman Hakim", kelas: "VII-A", jenis_kelamin: "L", alamat: "Sutojayan" },
-  { id: "mts-s-10", madrasah_id: "mts", nis: "247010", nisn: "0091234510", nama_siswa: "Nafisah Zahra", kelas: "VII-A", jenis_kelamin: "P", alamat: "Kedungbunder" },
-];
 
 export const SEED_SISWA_MA: Siswa[] = [
   { id: "ma-s-101", madrasah_id: "ma", nis: "240101", nisn: "0071234561", nama_siswa: "Achmad Dhani Saputra", kelas: "X-A", jenis_kelamin: "L", alamat: "Kedungbunder" },

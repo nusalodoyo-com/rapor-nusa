@@ -219,8 +219,8 @@ VALUES
     '20582201',
     'A (Unggul)',
     'Jl. Raya Barat No. 24 Kedungbunder, Sutojayan',
-    'Drs. H. Ahmad Masrukin, M.Pd.I.',
-    '196807151994031002'
+    'Ahmad Ulil Amin, Lc., M.S.I.',
+    '-'
 ),
 (
     'ma',
