@@ -32,6 +32,7 @@ export default function Navbar({
   isWali,
 }: Props) {
   const isMts = currentConfig.id === "mts";
+  const logoSrc = isMts ? "/logo-mts.png" : "/logo-ma.png";
 
   return (
     <header className="bg-retro-cream border-b-2 border-retro-border sticky top-0 z-30 no-print shadow-[0_4px_0_0_#121814]">
@@ -39,7 +40,7 @@ export default function Navbar({
         {/* Brand & Madrasah Badge */}
         <div className="flex items-center space-x-2.5 sm:space-x-3 min-w-0">
           <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-white p-1 border-2 border-retro-border shadow-retro-sm flex items-center justify-center overflow-hidden flex-shrink-0">
-            <img src="/logo.png" alt="Logo Rapor Digital" className="w-full h-full object-contain" />
+            <img src={logoSrc} alt={isMts ? "Logo MTs" : "Logo MA"} className="w-full h-full object-contain" />
           </div>
           <div className="min-w-0">
             <div className="flex items-center space-x-1.5 sm:space-x-2">

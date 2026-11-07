@@ -238,8 +238,8 @@ export default function HomePage() {
               </div>
 
               <div>
-                <div className="w-14 h-14 rounded-xl bg-white p-2 border-2 border-retro-border shadow-retro-sm mb-4 group-hover:rotate-3 transition duration-200">
-                  <img src="/logo.png" alt="Logo MTs" className="w-full h-full object-contain" />
+                <div className="w-14 h-14 rounded-xl bg-white p-1.5 border-2 border-retro-border shadow-retro-sm mb-4 group-hover:rotate-3 transition duration-200">
+                  <img src="/logo-mts.png" alt="Logo MTs Ma'arif NU 2 Sutojayan" className="w-full h-full object-contain" />
                 </div>
                 
                 <span className="badge-retro bg-retro-yellow text-retro-black mb-2">
@@ -250,12 +250,13 @@ export default function HomePage() {
                   MTs MA&apos;ARIF NU 2 SUTOJAYAN
                 </h3>
                 <p className="text-xs text-slate-600 font-bold mt-1">
-                  LP Ma&apos;arif NU Kabupaten Blitar
+                  LP Ma&apos;arif NU Kabupaten Blitar • nusalodoyo.com
                 </p>
 
                 <div className="mt-5 pt-4 border-t-2 border-dashed border-slate-300 space-y-1.5 text-xs text-slate-700 font-semibold">
-                  <p>• <strong>Peserta Didik:</strong> 1.280 Siswa Aktif</p>
-                  <p>• <strong>NSM / NPSN:</strong> 121235050045 / 20582201</p>
+                  <p>• <strong>Peserta Didik:</strong> 1.280 Siswa Aktif (35 Rombel)</p>
+                  <p>• <strong>NSM / NPSN:</strong> 121235050045 / 20584989</p>
+                  <p>• <strong>Akreditasi:</strong> A (Unggul)</p>
                   <p>• <strong>Kepala Madrasah:</strong> Ahmad Ulil Amin, Lc., M.S.I.</p>
                 </div>
               </div>
@@ -280,8 +281,8 @@ export default function HomePage() {
               </div>
 
               <div>
-                <div className="w-14 h-14 rounded-xl bg-white p-2 border-2 border-retro-border shadow-retro-sm mb-4 group-hover:rotate-3 transition duration-200">
-                  <img src="/logo.png" alt="Logo MA" className="w-full h-full object-contain" />
+                <div className="w-14 h-14 rounded-xl bg-white p-1.5 border-2 border-retro-border shadow-retro-sm mb-4 group-hover:rotate-3 transition duration-200">
+                  <img src="/logo-ma.png" alt="Logo MA Ma'arif Nurus Salam" className="w-full h-full object-contain" />
                 </div>
                 
                 <span className="badge-retro bg-retro-yellow text-retro-black mb-2">
@@ -292,12 +293,13 @@ export default function HomePage() {
                   MA MA&apos;ARIF NURUS SALAM
                 </h3>
                 <p className="text-xs text-slate-600 font-bold mt-1">
-                  Yayasan Nurul Ulum Blitar
+                  Pondok Pesantren Nurus Salam Lodoyo • nusalodoyo.com
                 </p>
 
                 <div className="mt-5 pt-4 border-t-2 border-dashed border-slate-300 space-y-1.5 text-xs text-slate-700 font-semibold">
                   <p>• <strong>Peminatan:</strong> IPA, IPS, Keagamaan</p>
-                  <p>• <strong>NSM / NPSN:</strong> 131235050062 / 69978521</p>
+                  <p>• <strong>NSM / NPSN:</strong> 131235050062 / 75727401</p>
+                  <p>• <strong>Status:</strong> Terdaftar Kemenag</p>
                   <p>• <strong>Kepala Madrasah:</strong> M. Zen Pamuji, S.Pd.</p>
                 </div>
               </div>
@@ -338,8 +340,12 @@ export default function HomePage() {
               <span>Ganti</span>
             </button>
 
-            <div className="w-16 h-16 rounded-xl bg-white p-2 flex items-center justify-center mx-auto mb-3 border-2 border-retro-border shadow-retro-sm">
-              <img src="/logo.png" alt="Logo Utama" className="w-full h-full object-contain" />
+            <div className="w-16 h-16 rounded-xl bg-white p-1.5 flex items-center justify-center mx-auto mb-3 border-2 border-retro-border shadow-retro-sm">
+              <img
+                src={isMts ? "/logo-mts.png" : "/logo-ma.png"}
+                alt={isMts ? "Logo MTs" : "Logo MA"}
+                className="w-full h-full object-contain"
+              />
             </div>
             
             <span className="badge-retro bg-retro-yellow text-retro-black mb-1.5">

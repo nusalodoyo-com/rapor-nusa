@@ -222,4 +222,7 @@ export interface SchoolConfig {
   semester_aktif?: "1" | "2";
   logo_url?: string;
   stempel_url?: string;
+  email?: string;
+  telp?: string;
+  website?: string;
 }

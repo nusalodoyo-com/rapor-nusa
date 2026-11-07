@@ -239,7 +239,11 @@ export default function CetakRaporModal({
 
               <div className="my-8 flex justify-center">
                 <div className="w-36 h-36 border-4 border-[#006e14] p-3 rounded-2xl bg-white shadow-md flex items-center justify-center">
-                  <img src="/logo.png" alt="Logo Madrasah" className="w-full h-full object-contain" />
+                  <img
+                    src={config.id === "mts" ? "/logo-mts.png" : "/logo-ma.png"}
+                    alt={config.id === "mts" ? "Logo MTs Ma'arif NU 2 Sutojayan" : "Logo MA Ma'arif Nurus Salam"}
+                    className="w-full h-full object-contain"
+                  />
                 </div>
               </div>
 

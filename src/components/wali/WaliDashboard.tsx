@@ -195,7 +195,11 @@ export default function WaliDashboard({
       <div className="card-retro-lg bg-retro-cream p-5 sm:p-6 border-3 border-retro-border flex flex-wrap items-center justify-between gap-4 shadow-retro-lg">
         <div className="flex items-center space-x-3.5">
           <div className="w-12 h-12 rounded-xl bg-white p-1 border-2 border-retro-border shadow-retro-sm flex items-center justify-center overflow-hidden flex-shrink-0">
-            <img src="/logo.png" alt="Logo" className="w-full h-full object-contain" />
+            <img
+              src={config.id === "mts" ? "/logo-mts.png" : "/logo-ma.png"}
+              alt={config.id === "mts" ? "Logo MTs" : "Logo MA"}
+              className="w-full h-full object-contain"
+            />
           </div>
           <div>
             <div className="flex items-center gap-2 flex-wrap">
