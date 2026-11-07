@@ -2,10 +2,12 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Rapor Nusa - MA Ma'arif Nurus Salam",
-  description: "Aplikasi Rapor Madrasah MA Ma'arif Nurus Salam Kedungbunder Sutojayan Blitar",
+  title: "Rapor Nusa - Sistem Rapor Digital Madrasah (MTs & MA)",
+  description: "Aplikasi Rapor Digital Madrasah Terintegrasi KMA 1503 Tahun 2025 • MTs Ma'arif NU 2 Sutojayan & MA Ma'arif Nurus Salam",
   icons: {
-    icon: "/favicon.ico",
+    icon: "/logo.png",
+    shortcut: "/logo.png",
+    apple: "/logo.png",
   },
 };
 
@@ -18,6 +20,7 @@ export default function RootLayout({
     <html lang="id">
       <head>
         <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+        <link rel="icon" href="/logo.png" type="image/png" />
       </head>
       <body>{children}</body>
     </html>

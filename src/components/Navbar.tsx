@@ -30,21 +30,17 @@ export default function Navbar({
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
         {/* Brand & Madrasah Badge */}
         <div className="flex items-center space-x-3">
-          <div className={`w-10 h-10 rounded-xl flex items-center justify-center text-white shadow-md ${
-            isMts ? "bg-gradient-to-br from-emerald-600 to-green-800" : "bg-gradient-to-br from-teal-600 to-emerald-700"
-          }`}>
-            <GraduationCap className="w-6 h-6" />
+          <div className="w-11 h-11 rounded-xl bg-white p-1 border-2 border-[#00ab00] shadow-md flex items-center justify-center overflow-hidden flex-shrink-0">
+            <img src="/logo.png" alt="Logo Rapor Digital" className="w-full h-full object-contain" />
           </div>
           <div>
             <div className="flex items-center space-x-2">
               <span className="font-extrabold text-lg text-slate-900 tracking-tight">RAPOR NUSA</span>
-              <span className={`text-[10px] font-extrabold px-2 py-0.5 rounded-full uppercase tracking-wider ${
-                isMts ? "bg-emerald-100 text-emerald-800" : "bg-teal-100 text-teal-800"
-              }`}>
+              <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-full uppercase tracking-wider bg-brand-100 text-brand-800 border border-brand-300">
                 {currentConfig.jenjang}
               </span>
             </div>
-            <p className="text-xs text-slate-600 font-semibold">{currentConfig.nama_madrasah}</p>
+            <p className="text-xs text-[#045e07] font-bold">{currentConfig.nama_madrasah}</p>
           </div>
         </div>
 

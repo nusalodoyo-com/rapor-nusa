@@ -170,8 +170,8 @@ export default function CetakRaporModal({
             /* ================= COVER RAPOR RESMI MADRASAH ================= */
             <div className="rapor-print-container bg-white shadow-xl border border-slate-300 p-12 w-full max-w-[210mm] min-h-[297mm] flex flex-col justify-between text-center text-slate-900 leading-normal">
               <div className="pt-8">
-                <div className="w-24 h-24 mx-auto mb-6 rounded-full border-4 border-emerald-800 flex items-center justify-center font-black text-xl text-emerald-900 bg-emerald-50">
-                  {config.jenjang}
+                <div className="w-28 h-28 mx-auto mb-6 p-2 rounded-2xl border-4 border-[#00ab00] bg-white shadow-lg flex items-center justify-center">
+                  <img src="/logo.png" alt="Logo Madrasah" className="w-full h-full object-contain" />
                 </div>
                 <h2 className="text-lg font-bold tracking-widest text-slate-700 uppercase">
                   REPUBLIK INDONESIA

@@ -159,17 +159,36 @@ export default function HomePage() {
   // ================= VIEW 1: PILIHAN MADRASAH (PRE-LOGIN) =================
   if (!selectedMadrasah) {
     return (
-      <main className="min-h-screen bg-gradient-to-br from-slate-950 via-emerald-950 to-slate-900 flex flex-col justify-between p-4 sm:p-8 text-white">
-        <div className="max-w-4xl w-full mx-auto my-auto py-8">
-          <div className="text-center space-y-3 mb-10">
-            <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-300 text-xs font-semibold backdrop-blur-md border border-emerald-500/30">
-              <Sparkles className="w-3.5 h-3.5" />
-              <span>Sistem Penilaian Rapor Madrasah KMA 1503 / 2025</span>
+      <main className="min-h-screen bg-gradient-to-br from-[#021306] via-[#05260f] to-[#010e05] flex flex-col justify-between p-4 sm:p-8 text-white relative overflow-hidden">
+        {/* Glow ambient effects matching logo green */}
+        <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-96 h-96 bg-[#00ab00]/15 rounded-full blur-3xl pointer-events-none"></div>
+
+        <div className="max-w-4xl w-full mx-auto my-auto py-8 relative z-10">
+          {/* Hero Header with Logo Utama */}
+          <div className="text-center space-y-4 mb-10">
+            {/* Logo Utama Tersemat */}
+            <div className="flex flex-col items-center justify-center">
+              <div className="relative mb-3 group cursor-pointer">
+                <div className="absolute -inset-1.5 rounded-3xl bg-gradient-to-r from-[#00ab00] via-[#35d13b] to-[#00ab00] opacity-80 blur-xl group-hover:opacity-100 transition duration-700 animate-pulse"></div>
+                <div className="relative w-28 h-28 sm:w-32 sm:h-32 bg-white rounded-3xl p-3 shadow-2xl border-2 border-[#00ab00] flex items-center justify-center transform group-hover:scale-105 transition duration-300">
+                  <img
+                    src="/logo.png"
+                    alt="Logo Utama Rapor Digital Madrasah"
+                    className="w-full h-full object-contain"
+                  />
+                </div>
+              </div>
+
+              <div className="inline-flex items-center space-x-2 px-4 py-1.5 rounded-full bg-[#00ab00]/20 text-[#a3efa5] text-xs font-bold backdrop-blur-md border border-[#00ab00]/40 shadow-inner">
+                <Sparkles className="w-3.5 h-3.5 text-[#35d13b]" />
+                <span>Sistem Penilaian Rapor Madrasah KMA 1503 / 2025</span>
+              </div>
             </div>
-            <h1 className="text-2xl sm:text-4xl font-black tracking-tight uppercase">
+
+            <h1 className="text-2xl sm:text-4xl font-black tracking-tight uppercase text-white drop-shadow-md">
               PORTAL RAPOR DIGITAL MADRASAH
             </h1>
-            <p className="text-sm text-slate-300 max-w-xl mx-auto">
+            <p className="text-xs sm:text-sm text-slate-300 max-w-xl mx-auto leading-relaxed">
               Silakan pilih lembaga madrasah Anda sebelum masuk ke sistem penilaian agar seluruh data, kurikulum, dan kredensial terisolasi sempurna.
             </p>
           </div>
@@ -179,18 +198,19 @@ export default function HomePage() {
             {/* KARTU 1: MTs Ma'arif NU 2 Sutojayan */}
             <div
               onClick={() => handleSelectMadrasah("mts")}
-              className="group bg-slate-900/80 hover:bg-emerald-950/40 border-2 border-emerald-800/40 hover:border-emerald-500 rounded-2xl p-6 cursor-pointer transition-all duration-300 shadow-xl hover:shadow-2xl hover:shadow-emerald-500/10 flex flex-col justify-between"
+              className="group bg-slate-900/80 hover:bg-[#00ab00]/10 border-2 border-[#00ab00]/30 hover:border-[#00ab00] rounded-2xl p-6 cursor-pointer transition-all duration-300 shadow-xl hover:shadow-2xl hover:shadow-[#00ab00]/20 flex flex-col justify-between relative overflow-hidden"
             >
+              <div className="absolute top-0 right-0 w-24 h-24 bg-[#00ab00]/10 rounded-full blur-2xl group-hover:bg-[#00ab00]/20 transition"></div>
               <div>
                 <div className="flex items-center justify-between mb-4">
-                  <div className="w-14 h-14 rounded-2xl bg-emerald-600/20 text-emerald-400 flex items-center justify-center font-bold text-lg border border-emerald-500/30">
-                    <School className="w-8 h-8" />
+                  <div className="w-14 h-14 rounded-2xl bg-white p-1.5 flex items-center justify-center border-2 border-[#00ab00] shadow-md group-hover:scale-105 transition">
+                    <img src="/logo.png" alt="Logo MTs" className="w-full h-full object-contain" />
                   </div>
-                  <span className="px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-300 font-extrabold text-xs tracking-wider uppercase">
+                  <span className="px-3 py-1 rounded-full bg-[#00ab00]/20 text-[#35d13b] font-extrabold text-xs tracking-wider uppercase border border-[#00ab00]/40">
                     Jenjang MTs
                   </span>
                 </div>
-                <h3 className="text-lg font-black text-white group-hover:text-emerald-300 transition uppercase leading-tight">
+                <h3 className="text-lg font-black text-white group-hover:text-[#35d13b] transition uppercase leading-tight">
                   MTs MA&apos;ARIF NU 2 SUTOJAYAN
                 </h3>
                 <p className="text-xs text-slate-400 mt-1 font-medium">
@@ -203,7 +223,7 @@ export default function HomePage() {
                 </div>
               </div>
 
-              <div className="mt-6 flex items-center justify-between text-xs font-bold text-emerald-400 group-hover:text-emerald-300">
+              <div className="mt-6 flex items-center justify-between text-xs font-bold text-[#35d13b] group-hover:text-[#6de271]">
                 <span>Masuk ke Rapor MTs</span>
                 <ArrowRight className="w-4 h-4 transform group-hover:translate-x-1.5 transition" />
               </div>
@@ -212,18 +232,19 @@ export default function HomePage() {
             {/* KARTU 2: MA Ma'arif Nurus Salam */}
             <div
               onClick={() => handleSelectMadrasah("ma")}
-              className="group bg-slate-900/80 hover:bg-teal-950/40 border-2 border-teal-800/40 hover:border-teal-500 rounded-2xl p-6 cursor-pointer transition-all duration-300 shadow-xl hover:shadow-2xl hover:shadow-teal-500/10 flex flex-col justify-between"
+              className="group bg-slate-900/80 hover:bg-[#00ab00]/10 border-2 border-[#00ab00]/30 hover:border-[#00ab00] rounded-2xl p-6 cursor-pointer transition-all duration-300 shadow-xl hover:shadow-2xl hover:shadow-[#00ab00]/20 flex flex-col justify-between relative overflow-hidden"
             >
+              <div className="absolute top-0 right-0 w-24 h-24 bg-[#00ab00]/10 rounded-full blur-2xl group-hover:bg-[#00ab00]/20 transition"></div>
               <div>
                 <div className="flex items-center justify-between mb-4">
-                  <div className="w-14 h-14 rounded-2xl bg-teal-600/20 text-teal-400 flex items-center justify-center font-bold text-lg border border-teal-500/30">
-                    <Building2 className="w-8 h-8" />
+                  <div className="w-14 h-14 rounded-2xl bg-white p-1.5 flex items-center justify-center border-2 border-[#00ab00] shadow-md group-hover:scale-105 transition">
+                    <img src="/logo.png" alt="Logo MA" className="w-full h-full object-contain" />
                   </div>
-                  <span className="px-3 py-1 rounded-full bg-teal-500/20 text-teal-300 font-extrabold text-xs tracking-wider uppercase">
+                  <span className="px-3 py-1 rounded-full bg-[#00ab00]/20 text-[#35d13b] font-extrabold text-xs tracking-wider uppercase border border-[#00ab00]/40">
                     Jenjang MA
                   </span>
                 </div>
-                <h3 className="text-lg font-black text-white group-hover:text-teal-300 transition uppercase leading-tight">
+                <h3 className="text-lg font-black text-white group-hover:text-[#35d13b] transition uppercase leading-tight">
                   MA MA&apos;ARIF NURUS SALAM
                 </h3>
                 <p className="text-xs text-slate-400 mt-1 font-medium">
@@ -236,7 +257,7 @@ export default function HomePage() {
                 </div>
               </div>
 
-              <div className="mt-6 flex items-center justify-between text-xs font-bold text-teal-400 group-hover:text-teal-300">
+              <div className="mt-6 flex items-center justify-between text-xs font-bold text-[#35d13b] group-hover:text-[#6de271]">
                 <span>Masuk ke Rapor MA</span>
                 <ArrowRight className="w-4 h-4 transform group-hover:translate-x-1.5 transition" />
               </div>
@@ -244,7 +265,7 @@ export default function HomePage() {
           </div>
         </div>
 
-        <footer className="text-center text-xs text-slate-500 pb-4">
+        <footer className="text-center text-xs text-slate-500 pb-4 relative z-10">
           © {new Date().getFullYear()} Rapor Digital Madrasah • Sesuai KMA Nomor 1503 Tahun 2025
         </footer>
       </main>
@@ -257,16 +278,10 @@ export default function HomePage() {
     const activeCfg = schoolConfig || getSchoolConfig(selectedMadrasah);
 
     return (
-      <main className="min-h-screen bg-gradient-to-br from-slate-900 via-emerald-950 to-slate-900 flex items-center justify-center p-4">
-        <div className="w-full max-w-md bg-white rounded-2xl shadow-2xl overflow-hidden border border-emerald-500/20">
-          {/* Header Box */}
-          <div
-            className={`p-6 text-center text-white relative ${
-              isMts
-                ? "bg-gradient-to-r from-emerald-800 via-green-800 to-emerald-900"
-                : "bg-gradient-to-r from-teal-700 via-emerald-700 to-teal-800"
-            }`}
-          >
+      <main className="min-h-screen bg-gradient-to-br from-[#021306] via-[#05260f] to-[#010e05] flex items-center justify-center p-4 relative">
+        <div className="w-full max-w-md bg-white rounded-2xl shadow-2xl overflow-hidden border-2 border-[#00ab00]/30">
+          {/* Header Box with Logo */}
+          <div className="p-6 text-center text-white relative bg-gradient-to-r from-[#045e07] via-[#009600] to-[#064e0a]">
             <button
               onClick={handleSwitchMadrasah}
               className="absolute top-4 left-4 p-1.5 rounded-lg bg-black/20 hover:bg-black/30 text-white text-xs flex items-center gap-1 transition"
@@ -276,16 +291,16 @@ export default function HomePage() {
               <span>Ganti</span>
             </button>
 
-            <div className="w-14 h-14 rounded-2xl bg-white/10 backdrop-blur-md flex items-center justify-center mx-auto mb-2 shadow-inner">
-              <GraduationCap className="w-8 h-8 text-emerald-200" />
+            <div className="w-16 h-16 rounded-2xl bg-white p-2 flex items-center justify-center mx-auto mb-3 shadow-xl border-2 border-[#00ab00]">
+              <img src="/logo.png" alt="Logo Utama" className="w-full h-full object-contain" />
             </div>
             <h2 className="text-base font-black tracking-tight uppercase">
               {activeCfg.nama_madrasah}
             </h2>
-            <p className="text-[11px] text-emerald-100 font-medium">
+            <p className="text-[11px] text-[#cef7cf] font-medium">
               {activeCfg.nama_yayasan}
             </p>
-            <span className="inline-block mt-1 px-2.5 py-0.5 rounded-full bg-white/20 text-[10px] font-bold uppercase tracking-wider">
+            <span className="inline-block mt-1 px-3 py-0.5 rounded-full bg-white/20 text-[10px] font-bold uppercase tracking-wider">
               Portal RDM {activeCfg.jenjang} • KMA 1503/2025
             </span>
           </div>
@@ -309,7 +324,7 @@ export default function HomePage() {
                   placeholder="Masukkan username"
                   value={usernameInput}
                   onChange={e => setUsernameInput(e.target.value)}
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-emerald-500 text-xs font-medium"
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-[#00ab00] text-xs font-medium"
                 />
               </div>
 
@@ -323,18 +338,14 @@ export default function HomePage() {
                   placeholder="Masukkan password"
                   value={passwordInput}
                   onChange={e => setPasswordInput(e.target.value)}
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-emerald-500 text-xs font-medium"
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-[#00ab00] text-xs font-medium"
                 />
               </div>
 
               <button
                 type="submit"
                 disabled={isLoggingIn}
-                className={`w-full py-2.5 rounded-xl text-white font-bold text-xs uppercase tracking-wider transition shadow-lg disabled:opacity-50 ${
-                  isMts
-                    ? "bg-emerald-600 hover:bg-emerald-700 shadow-emerald-600/30"
-                    : "bg-teal-600 hover:bg-teal-700 shadow-teal-600/30"
-                }`}
+                className="w-full py-2.5 rounded-xl text-white font-bold text-xs uppercase tracking-wider transition shadow-lg bg-[#00ab00] hover:bg-[#009600] shadow-[#00ab00]/30 disabled:opacity-50"
               >
                 {isLoggingIn ? "Memverifikasi..." : "Masuk ke Sistem"}
               </button>

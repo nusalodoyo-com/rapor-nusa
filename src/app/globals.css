@@ -8,6 +8,28 @@
   }
 }
 
+/* Brand Theme Enhancements matching Logo Green #00ab00 */
+:root {
+  --brand-primary: #00ab00;
+  --brand-primary-dark: #045e07;
+  --brand-primary-light: #eafbea;
+}
+
+@keyframes pulseSlow {
+  0%, 100% {
+    transform: scale(1);
+    filter: drop-shadow(0 10px 20px rgba(0, 171, 0, 0.3));
+  }
+  50% {
+    transform: scale(1.02);
+    filter: drop-shadow(0 15px 28px rgba(0, 171, 0, 0.5));
+  }
+}
+
+.animate-pulse-slow {
+  animation: pulseSlow 4s ease-in-out infinite;
+}
+
 /* Print styling specifically for A4 Rapor & Legger */
 @media print {
   /* Hilangkan elemen non-print */

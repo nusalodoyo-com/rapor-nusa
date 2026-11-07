@@ -220,19 +220,19 @@ export default function AdminDashboard({
       )}
 
       {/* Header Operator */}
-      <div className="bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 p-5 rounded-2xl text-white shadow-lg flex flex-wrap items-center justify-between gap-4">
+      <div className="bg-gradient-to-r from-[#045e07] via-[#009600] to-[#064e0a] p-5 rounded-2xl text-white shadow-lg flex flex-wrap items-center justify-between gap-4">
         <div className="flex items-center space-x-3">
-          <div className="w-12 h-12 rounded-xl bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center text-emerald-400">
-            <Shield className="w-6 h-6" />
+          <div className="w-12 h-12 rounded-xl bg-white p-1 border-2 border-[#00ab00] flex items-center justify-center shadow-md overflow-hidden flex-shrink-0">
+            <img src="/logo.png" alt="Logo" className="w-full h-full object-contain" />
           </div>
           <div>
             <div className="flex items-center gap-2">
               <span className="font-extrabold text-base">Dashboard Operator Madrasah</span>
-              <span className="bg-emerald-500/30 text-emerald-300 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase">
+              <span className="bg-white/20 text-[#cef7cf] text-[10px] font-bold px-2 py-0.5 rounded-full uppercase">
                 {config.jenjang}
               </span>
             </div>
-            <p className="text-xs text-slate-300">{config.nama_madrasah} • KMA Nomor 1503 Tahun 2025</p>
+            <p className="text-xs text-[#eafbea]">{config.nama_madrasah} • KMA Nomor 1503 Tahun 2025</p>
           </div>
         </div>
 

@@ -346,24 +346,24 @@ export default function GuruDashboard({
   return (
     <div className="space-y-6">
       {/* Top Banner Info Guru */}
-      <div className="bg-gradient-to-r from-emerald-800 via-teal-800 to-emerald-900 rounded-2xl p-5 text-white shadow-lg flex flex-wrap items-center justify-between gap-4">
+      <div className="bg-gradient-to-r from-[#045e07] via-[#009600] to-[#064e0a] rounded-2xl p-5 text-white shadow-lg flex flex-wrap items-center justify-between gap-4">
         <div className="flex items-center space-x-4">
-          <div className="w-12 h-12 rounded-2xl bg-white/10 backdrop-blur border border-white/20 flex items-center justify-center font-bold text-xl shadow-inner">
-            <GraduationCap className="w-7 h-7 text-emerald-200" />
+          <div className="w-12 h-12 rounded-2xl bg-white p-1 border-2 border-[#00ab00] flex items-center justify-center shadow-md overflow-hidden flex-shrink-0">
+            <img src="/logo.png" alt="Logo" className="w-full h-full object-contain" />
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <span className="px-2 py-0.5 rounded-full bg-emerald-500/30 text-emerald-200 text-[10px] font-bold uppercase tracking-wider">
+              <span className="px-2 py-0.5 rounded-full bg-white/20 text-[#cef7cf] text-[10px] font-bold uppercase tracking-wider">
                 Portal Guru Mapel • {config.jenjang}
               </span>
-              <span className="text-xs text-emerald-200 font-mono">
+              <span className="text-xs text-[#cef7cf] font-mono">
                 NIP: {currentUser.nip || "-"}
               </span>
             </div>
             <h2 className="text-lg font-black tracking-tight uppercase">
               {currentUser.nama_user}
             </h2>
-            <p className="text-xs text-emerald-100/90 font-medium">
+            <p className="text-xs text-[#eafbea] font-medium">
               {config.nama_madrasah} • Memegang {assignments.length} Rombel / Penugasan
             </p>
           </div>
