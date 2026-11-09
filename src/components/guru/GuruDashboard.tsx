@@ -57,8 +57,10 @@ import {
   Trophy,
   Layers,
   UserCog,
+  HelpCircle,
 } from "lucide-react";
 import ProfilGuruModal from "./ProfilGuruModal";
+import WelcomeGuruModal from "./WelcomeGuruModal";
 
 interface Props {
   madrasahId: MadrasahId;
@@ -90,6 +92,17 @@ export default function GuruDashboard({
   onLogout,
 }: Props) {
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
+  const [isWelcomeOpen, setIsWelcomeOpen] = useState(false);
+
+  // Buka Welcome Screen otomatis saat guru login (kecuali sudah dimatikan via checkbox)
+  useEffect(() => {
+    if (typeof window !== "undefined" && currentUser?.id) {
+      const dismissed = localStorage.getItem(`rapor_nusa_welcome_dismissed_${currentUser.id}`);
+      if (dismissed !== "true") {
+        setIsWelcomeOpen(true);
+      }
+    }
+  }, [currentUser?.id]);
   const tahun = propTahun || "2026/2027";
   const semester = propSemester || "1";
 
@@ -508,8 +521,18 @@ export default function GuruDashboard({
           </div>
         </div>
 
-        {/* Action: Switch to Wali if dual role & Profile button */}
+        {/* Action: Panduan, Profil & Switch to Wali */}
         <div className="flex items-center gap-2 flex-wrap">
+          <button
+            type="button"
+            onClick={() => setIsWelcomeOpen(true)}
+            className="btn-retro bg-amber-100 hover:bg-amber-200 text-amber-950 px-3 py-2 text-xs flex items-center gap-1.5 border-2 border-retro-border shadow-retro-sm font-black"
+            title="Panduan Petunjuk Penggunaan Aplikasi Step-by-Step"
+          >
+            <HelpCircle className="w-4 h-4 text-amber-800" />
+            <span>📘 Panduan Aplikasi</span>
+          </button>
+
           <button
             type="button"
             onClick={() => setIsProfileModalOpen(true)}
@@ -1096,6 +1119,14 @@ export default function GuruDashboard({
         onUserUpdated={u => {
           if (onUserUpdated) onUserUpdated(u);
         }}
+      />
+
+      {/* MODAL WELCOME SCREEN & PANDUAN PENGGUNAAN APLIKASI STEP BY STEP */}
+      <WelcomeGuruModal
+        isOpen={isWelcomeOpen}
+        onClose={() => setIsWelcomeOpen(false)}
+        currentUser={currentUser}
+        config={config}
       />
     </div>
   );
