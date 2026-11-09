@@ -101,6 +101,13 @@ export interface Ekskul {
   pembina?: string;
 }
 
+export interface SubSkillsLanguage {
+  reading?: number;
+  speaking?: number;
+  listening?: number;
+  writing?: number;
+}
+
 export interface NilaiMapelItem {
   id?: string;
   madrasah_id: MadrasahId;
@@ -123,6 +130,7 @@ export interface NilaiMapelItem {
   nilai_akhir?: number; // NA
   predikat?: 'A' | 'B' | 'C' | 'D';
   catatan_mapel?: string;
+  sub_skills?: SubSkillsLanguage;
 }
 
 export interface NilaiEkskulItem {
@@ -173,6 +181,7 @@ export interface MapelDetail {
   lingkup_materi: string;
   nilai_akhir: number;
   predikat: string;
+  sub_skills?: SubSkillsLanguage;
 }
 
 export interface SiswaLegger {
@@ -202,6 +211,57 @@ export interface LeggerResponse {
   siswa: SiswaLegger[];
   classAverageMapel?: Record<string, number>;
   totalClassAverage?: number;
+}
+
+// =====================================================================
+// KKTP (KRITERIA KETERCAPAIAN TUJUAN PEMBELAJARAN) KURIKULUM MERDEKA
+// =====================================================================
+export type KKTPPendekatan = 'deskripsi_kriteria' | 'rubrik' | 'interval';
+
+export interface KKTPKriteriaItem {
+  id: string;
+  deskripsi: string;
+}
+
+export interface KKTPRubrikItem {
+  id: string;
+  aspek: string;
+  baru_berkembang: string;
+  layak: string;
+  cakap: string;
+  mahir: string;
+}
+
+export interface KKTPIntervalItem {
+  min: number;
+  max: number;
+  kategori: 'Remedial Total' | 'Remedial Sebagian' | 'Tuntas' | 'Pengayaan';
+  keterangan: string;
+  tindak_lanjut: string;
+}
+
+export interface KKTPConfig {
+  id: string;
+  madrasah_id: MadrasahId;
+  kode_mapel: string;
+  nama_mapel?: string;
+  kelas: string;
+  tahun: string;
+  semester: string;
+  tujuan_pembelajaran: string;
+  pendekatan: KKTPPendekatan;
+  // Pendekatan 1: Deskripsi Kriteria
+  kriteria_list: KKTPKriteriaItem[];
+  min_kriteria_tuntas: number; // e.g. 3 dari 4
+  // Pendekatan 2: Rubrik Penilaian
+  rubrik_level_min: 'Baru Berkembang' | 'Layak' | 'Cakap' | 'Mahir'; // Default: 'Cakap'
+  rubrik_items: KKTPRubrikItem[];
+  // Pendekatan 3: Interval Nilai
+  interval_items: KKTPIntervalItem[];
+  // Nilai ambang tuntas numerik (KKTP / KKM ekuivalen)
+  nilai_tuntas_minimal: number; // default 75
+  catatan_refleksi?: string;
+  updated_at?: string;
 }
 
 export interface AcademicPeriod {

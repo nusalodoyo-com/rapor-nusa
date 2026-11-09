@@ -24,6 +24,12 @@ import {
   SiNusaGradeItem,
   SiNusaStudentPayload,
   SyncLogItem,
+  KKTPConfig,
+  KKTPPendekatan,
+  KKTPKriteriaItem,
+  KKTPRubrikItem,
+  KKTPIntervalItem,
+  SubSkillsLanguage,
 } from "@/types";
 import {
   SCHOOL_CONFIGS,
@@ -61,6 +67,7 @@ function getStorageKeys(madrasahId: MadrasahId) {
     LOGIN_LOGS: `rapor_nusa_${madrasahId}_login_logs_v1`,
     SYNC_LOGS: `rapor_nusa_${madrasahId}_sync_logs_v1`,
     INTEGRATION: `rapor_nusa_api_integration_config_v1`,
+    KKTP: `rapor_nusa_${madrasahId}_kktp_v1`,
   };
 }
 
@@ -1268,6 +1275,7 @@ export function getLeggerDataByKelas(
         lingkup_materi: mat.join("; ") || "-",
         nilai_akhir: na,
         predikat: predikat,
+        sub_skills: rec?.sub_skills || undefined,
       };
 
       scores[m.kode_mapel] = na;
@@ -1867,5 +1875,259 @@ export function buildSiNusaPayloads(
       grades,
     };
   });
+}
+
+// =====================================================================
+// PENGELOLAAN KKTP (KRITERIA KETERCAPAIAN TUJUAN PEMBELAJARAN) KURIKULUM MERDEKA
+// =====================================================================
+
+export function getDefaultKKTPConfig(
+  madrasahId: MadrasahId,
+  kode_mapel: string,
+  kelas: string,
+  tahun: string,
+  semester: string,
+  nama_mapel?: string
+): KKTPConfig {
+  const mapelTitle = nama_mapel || kode_mapel;
+  return {
+    id: `kktp-${madrasahId}-${kode_mapel}-${kelas}-${tahun.replace('/', '-')}-${semester}`,
+    madrasah_id: madrasahId,
+    kode_mapel,
+    nama_mapel: mapelTitle,
+    kelas,
+    tahun,
+    semester,
+    tujuan_pembelajaran: `Peserta didik mampu memahami konsep esensial, menganalisis struktur materi, serta mengaplikasikan pemahaman capaian pembelajaran ${mapelTitle} dalam konteks nyata dan pemecahan masalah.`,
+    pendekatan: "interval",
+    // 1. Deskripsi Kriteria
+    kriteria_list: [
+      { id: "k-1", deskripsi: "Mampu menjelaskan konsep dasar dan fakta penting materi." },
+      { id: "k-2", deskripsi: "Mampu mengidentifikasi hubungan sebab-akibat atau kaidah pembelajaran." },
+      { id: "k-3", deskripsi: "Mampu menyelesaikan persoalan/studi kasus kontekstual secara mandiri." },
+      { id: "k-4", deskripsi: "Mampu mengomunikasikan dan menyimpulkan hasil telaah materi dengan runtut." },
+    ],
+    min_kriteria_tuntas: 3, // minimal 3 dari 4 kriteria tercapai
+    // 2. Rubrik Penilaian
+    rubrik_level_min: "Cakap",
+    rubrik_items: [
+      {
+        id: "r-1",
+        aspek: "Pemahaman Konsep & Teori",
+        baru_berkembang: "Belum mampu menjelaskan konsep esensial materi.",
+        layak: "Mampu menjelaskan konsep dasar dengan arahan dan bimbingan guru.",
+        cakap: "Mampu menjelaskan konsep esensial secara mandiri dengan tepat.",
+        mahir: "Mampu menguraikan konsep secara mendalam dan mengaitkan dengan materi lain.",
+      },
+      {
+        id: "r-2",
+        aspek: "Penerapan & Pemecahan Masalah",
+        baru_berkembang: "Kesulitan menerapkan kaidah/rumus pada latihan soal.",
+        layak: "Mampu menyelesaikan soal terstruktur standar.",
+        cakap: "Mampu menganalisis dan menyelesaikan masalah studi kasus mandiri.",
+        mahir: "Mampu menciptakan solusi inovatif dan berpikir kritis tingkat tinggi (HOTS).",
+      },
+      {
+        id: "r-3",
+        aspek: "Komunikasi & Sikap Ilmiah",
+        baru_berkembang: "Kurang percaya diri dalam menyampaikan pendapat atau karya.",
+        layak: "Cukup aktif menyampaikan hasil kerja kelompok.",
+        cakap: "Aktif, santun, dan sistematis dalam mempresentasikan hasil pemikiran.",
+        mahir: "Mampu memimpin diskusi, memberi sanggahan ilmiah, dan solutif.",
+      },
+    ],
+    // 3. Interval Nilai (Skala 0% - 100%)
+    interval_items: [
+      {
+        min: 0,
+        max: 40,
+        kategori: "Remedial Total",
+        keterangan: "0% – 40%: Belum mencapai ketuntasan",
+        tindak_lanjut: "Perlu bimbingan intensif dan remedial di seluruh bagian materi.",
+      },
+      {
+        min: 41,
+        max: 65,
+        kategori: "Remedial Sebagian",
+        keterangan: "41% – 65%: Belum mencapai ketuntasan sebagian",
+        tindak_lanjut: "Perlu bimbingan remedial khusus pada bagian/indikator materi tertentu.",
+      },
+      {
+        min: 66,
+        max: 85,
+        kategori: "Tuntas",
+        keterangan: "66% – 85%: Telah mencapai KKTP",
+        tindak_lanjut: "Tuntas, tidak perlu remedial; dipersiapkan untuk asesmen lanjutan.",
+      },
+      {
+        min: 86,
+        max: 100,
+        kategori: "Pengayaan",
+        keterangan: "86% – 100%: Melampaui KKTP",
+        tindak_lanjut: "Diberikan program pengayaan, penugasan eksplorasi mandiri, atau tutor sebaya.",
+      },
+    ],
+    nilai_tuntas_minimal: 75,
+    catatan_refleksi: "Sebagian besar siswa telah mencapai ketuntasan KKTP. Kegiatan remedial dipusatkan pada penguatan literasi konsep.",
+    updated_at: new Date().toISOString(),
+  };
+}
+
+export function getAllKKTPConfigs(madrasahId: MadrasahId): KKTPConfig[] {
+  const keys = getStorageKeys(madrasahId);
+  return getLocalData<KKTPConfig[]>(keys.KKTP, []);
+}
+
+export function getKKTPConfig(
+  madrasahId: MadrasahId,
+  kode_mapel: string,
+  kelas: string,
+  tahun: string,
+  semester: string,
+  nama_mapel?: string
+): KKTPConfig {
+  const all = getAllKKTPConfigs(madrasahId);
+  const found = all.find(
+    c =>
+      c.kode_mapel.toLowerCase() === kode_mapel.toLowerCase() &&
+      c.kelas === kelas &&
+      c.tahun === tahun &&
+      c.semester === semester
+  );
+  if (found) return found;
+  return getDefaultKKTPConfig(madrasahId, kode_mapel, kelas, tahun, semester, nama_mapel);
+}
+
+export function saveKKTPConfig(madrasahId: MadrasahId, config: KKTPConfig): void {
+  const keys = getStorageKeys(madrasahId);
+  const all = getAllKKTPConfigs(madrasahId);
+  const idx = all.findIndex(
+    c =>
+      c.kode_mapel.toLowerCase() === config.kode_mapel.toLowerCase() &&
+      c.kelas === config.kelas &&
+      c.tahun === config.tahun &&
+      c.semester === config.semester
+  );
+
+  const updatedConfig: KKTPConfig = {
+    ...config,
+    updated_at: new Date().toISOString(),
+  };
+
+  if (idx >= 0) {
+    all[idx] = updatedConfig;
+  } else {
+    all.push(updatedConfig);
+  }
+
+  setLocalData(keys.KKTP, all);
+}
+
+export interface StudentKKTPEvaluation {
+  status: "Tuntas" | "Pengayaan" | "Remedial Sebagian" | "Remedial Total";
+  tindakLanjut: string;
+  badgeClass: string;
+  isTuntas: boolean;
+  score: number;
+}
+
+export function evaluateStudentKKTP(
+  score: number,
+  config?: KKTPConfig
+): StudentKKTPEvaluation {
+  const numScore = Number(score) || 0;
+  
+  if (!config || config.pendekatan === "interval") {
+    if (numScore >= 86) {
+      return {
+        status: "Pengayaan",
+        tindakLanjut: "Pengayaan (86-100%): Diberikan tantangan materi eksploratif & tutor sebaya.",
+        badgeClass: "bg-purple-100 text-purple-900 border-purple-300",
+        isTuntas: true,
+        score: numScore,
+      };
+    } else if (numScore >= 66) {
+      return {
+        status: "Tuntas",
+        tindakLanjut: "Tuntas (66-85%): Capaian KKTP tercapai tanpa perlu remedial.",
+        badgeClass: "bg-emerald-100 text-emerald-900 border-emerald-300",
+        isTuntas: true,
+        score: numScore,
+      };
+    } else if (numScore >= 41) {
+      return {
+        status: "Remedial Sebagian",
+        tindakLanjut: "Remedial (41-65%): Perlu bimbingan perbaikan pada indikator tertentu.",
+        badgeClass: "bg-amber-100 text-amber-900 border-amber-300",
+        isTuntas: false,
+        score: numScore,
+      };
+    } else {
+      return {
+        status: "Remedial Total",
+        tindakLanjut: "Remedial Total (0-40%): Perlu pendampingan khusus di seluruh materi.",
+        badgeClass: "bg-red-100 text-red-900 border-red-300",
+        isTuntas: false,
+        score: numScore,
+      };
+    }
+  }
+
+  // Jika pendekatan Rubrik
+  if (config.pendekatan === "rubrik") {
+    if (numScore >= 85) {
+      return {
+        status: "Pengayaan",
+        tindakLanjut: "Level Mahir: Melampaui standar minimal level 'Cakap'. Berhak pengayaan.",
+        badgeClass: "bg-purple-100 text-purple-900 border-purple-300",
+        isTuntas: true,
+        score: numScore,
+      };
+    } else if (numScore >= 75) {
+      return {
+        status: "Tuntas",
+        tindakLanjut: "Level Cakap: Memenuhi kriteria standar minimal Kurikulum Merdeka.",
+        badgeClass: "bg-emerald-100 text-emerald-900 border-emerald-300",
+        isTuntas: true,
+        score: numScore,
+      };
+    } else if (numScore >= 60) {
+      return {
+        status: "Remedial Sebagian",
+        tindakLanjut: "Level Layak: Di bawah kriteria minimal 'Cakap'. Bimbingan latihan terbimbing.",
+        badgeClass: "bg-amber-100 text-amber-900 border-amber-300",
+        isTuntas: false,
+        score: numScore,
+      };
+    } else {
+      return {
+        status: "Remedial Total",
+        tindakLanjut: "Level Baru Berkembang: Perlu bimbingan dasar pemahaman materi.",
+        badgeClass: "bg-red-100 text-red-900 border-red-300",
+        isTuntas: false,
+        score: numScore,
+      };
+    }
+  }
+
+  // Pendekatan Deskripsi Kriteria
+  const minScore = config.nilai_tuntas_minimal || 75;
+  if (numScore >= minScore) {
+    return {
+      status: "Tuntas",
+      tindakLanjut: `Tuntas: Memenuhi minimal ${config.min_kriteria_tuntas || 3} dari ${config.kriteria_list?.length || 4} kriteria konkret.`,
+      badgeClass: "bg-emerald-100 text-emerald-900 border-emerald-300",
+      isTuntas: true,
+      score: numScore,
+    };
+  } else {
+    return {
+      status: "Remedial Sebagian",
+      tindakLanjut: `Belum Tuntas: Belum mencapai syarat minimal ${config.min_kriteria_tuntas || 3} kriteria ketercapaian.`,
+      badgeClass: "bg-amber-100 text-amber-900 border-amber-300",
+      isTuntas: false,
+      score: numScore,
+    };
+  }
 }
 

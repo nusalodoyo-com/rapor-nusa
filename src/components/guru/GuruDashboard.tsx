@@ -802,6 +802,12 @@ export default function GuruDashboard({
             isSaving={isSaving}
             bobot={bobot}
             readOnly={statusKirim.is_sent}
+            madrasahId={madrasahId}
+            kodeMapel={selectedKodeMapel}
+            namaMapel={activeMapelObj?.nama || selectedKodeMapel}
+            kelas={selectedKelas}
+            tahun={tahun}
+            semester={semester}
           />
         </>
       )}

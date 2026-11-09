@@ -71,6 +71,18 @@ export default function RaporMaTemplate({
     return true;
   });
 
+  // Deteksi Language Development Program (EDP & ADP)
+  const isLanguageDev = (m: Mapel) => {
+    const k = (m.kode_mapel || "").toUpperCase();
+    const n = m.nama_mapel.toLowerCase();
+    return (
+      k === "EDP" ||
+      k === "ADP" ||
+      n.includes("english development") ||
+      n.includes("arabic development")
+    );
+  };
+
   return (
     <div className="rapor-single-page bg-white text-slate-900 mx-auto select-text font-sans p-0 leading-tight">
       {/* ================= 1. KOP RESMI MA MA'ARIF NURUS SALAM ================= */}
@@ -282,16 +294,39 @@ export default function RaporMaTemplate({
               const lmVal = det?.lm ? det.lm : (siswa.scores[m.kode_mapel] || "-");
               const stsVal = det?.sts ? det.sts : (siswa.scores[m.kode_mapel] || "-");
               const sasVal = det?.sas ? det.sas : "-";
+              const isDevLang = isLanguageDev(m);
+              const sub = det?.sub_skills || {};
+              const hasSub = isDevLang || !!(sub.reading || sub.speaking || sub.listening || sub.writing);
+
               return (
                 <tr key={m.kode_mapel} className="border-b border-slate-900">
-                  <td className="border border-slate-900 py-0.5 text-center font-mono font-bold">{idx + 1}</td>
-                  <td className="border border-slate-900 py-0.5 px-2 text-slate-900 font-medium truncate">{m.nama_mapel}</td>
-                  <td className="border border-slate-900 py-0.5 text-center font-mono font-bold">{lmVal}</td>
-                  <td className="border border-slate-900 py-0.5 text-center font-mono font-bold">{stsVal}</td>
-                  <td className="border border-slate-900 py-0.5 text-center font-mono text-slate-400">{sasVal}</td>
-                  <td className="border border-slate-900 py-0.5 px-2 text-[8pt] leading-tight text-slate-700">
+                  <td className="border border-slate-900 py-0.5 text-center font-mono font-bold align-top">{idx + 1}</td>
+                  <td className="border border-slate-900 py-0.5 px-2 text-slate-900 font-medium">
+                    <div className="font-bold">{m.nama_mapel}</div>
+                    {hasSub && (
+                      <div className="mt-0.5 pt-0.5 border-t border-slate-300 text-[6.5pt] font-mono leading-tight">
+                        <div className="text-[6pt] font-black text-[#006e14] uppercase tracking-wide">
+                          Sub-Penilaian 4 Aspek Kemampuan:
+                        </div>
+                        <div className="grid grid-cols-2 gap-x-1.5 text-slate-700 mt-0.5">
+                          <span>&bull; Reading: <strong>{sub.reading ?? lmVal}</strong></span>
+                          <span>&bull; Speaking: <strong>{sub.speaking ?? stsVal}</strong></span>
+                          <span>&bull; Listening: <strong>{sub.listening ?? lmVal}</strong></span>
+                          <span>&bull; Writing: <strong>{sub.writing ?? (sasVal !== "-" ? sasVal : lmVal)}</strong></span>
+                        </div>
+                      </div>
+                    )}
+                  </td>
+                  <td className="border border-slate-900 py-0.5 text-center font-mono font-bold align-top">{lmVal}</td>
+                  <td className="border border-slate-900 py-0.5 text-center font-mono font-bold align-top">{stsVal}</td>
+                  <td className="border border-slate-900 py-0.5 text-center font-mono text-slate-400 align-top">{sasVal}</td>
+                  <td className="border border-slate-900 py-0.5 px-2 text-[8pt] leading-tight text-slate-700 align-top">
                     <span className="line-clamp-2">
-                      {det?.lingkup_materi && det.lingkup_materi !== "-" ? det.lingkup_materi : `Kompetensi materi pembelajaran ${m.nama_mapel}`}
+                      {det?.lingkup_materi && det.lingkup_materi !== "-"
+                        ? det.lingkup_materi
+                        : (hasSub
+                            ? `Penguasaan 4 keterampilan berbahasa (${m.nama_mapel}): Reading, Speaking, Listening, & Writing.`
+                            : `Kompetensi materi pembelajaran ${m.nama_mapel}`)}
                     </span>
                   </td>
                 </tr>

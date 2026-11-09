@@ -183,6 +183,8 @@ export const SEED_MAPEL_MA: Mapel[] = [
   { id: "ma-m-20", madrasah_id: "ma", kode_mapel: "AI", nama_mapel: "Koding dan Kecerdasan Artifisial", kelompok: "C", kkm: 75, fase: "E", urutan: 20 },
   { id: "ma-m-21", madrasah_id: "ma", kode_mapel: "ASWAJA", nama_mapel: "Aswaja / Ke-NU-an", kelompok: "C", kkm: 75, fase: "E", urutan: 21 },
   { id: "ma-m-22", madrasah_id: "ma", kode_mapel: "BJAWA", nama_mapel: "Bahasa Jawa", kelompok: "C", kkm: 75, fase: "E", urutan: 22 },
+  { id: "ma-m-23", madrasah_id: "ma", kode_mapel: "EDP", nama_mapel: "English Development Program", kelompok: "C", kkm: 75, fase: "E", urutan: 23 },
+  { id: "ma-m-24", madrasah_id: "ma", kode_mapel: "ADP", nama_mapel: "Arabic Development Program", kelompok: "C", kkm: 75, fase: "E", urutan: 24 },
 ];
 
 // =====================================================================
