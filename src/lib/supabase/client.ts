@@ -11,5 +11,16 @@ export const isSupabaseConfigured = Boolean(
 );
 
 export const supabase = isSupabaseConfigured
-  ? createClient(supabaseUrl, supabaseAnonKey)
+  ? createClient(supabaseUrl, supabaseAnonKey, {
+      auth: {
+        persistSession: typeof window !== "undefined",
+        autoRefreshToken: true,
+        detectSessionInUrl: false,
+      },
+      global: {
+        headers: {
+          "x-application-name": "rapor-nusa-production",
+        },
+      },
+    })
   : null;

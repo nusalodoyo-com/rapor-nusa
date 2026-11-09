@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, memo } from "react";
+import dynamic from "next/dynamic";
 import { NilaiMapelItem, BobotNilai, MadrasahId, KKTPConfig } from "@/types";
 import {
   Sparkles,
@@ -15,7 +16,99 @@ import {
   BookOpen
 } from "lucide-react";
 import { getKKTPConfig, saveKKTPConfig, evaluateStudentKKTP, getDefaultKKTPConfig } from "@/lib/storage";
-import KelolaKKTPModal from "./guru/KelolaKKTPModal";
+
+// Lazy loading modal KKTP untuk meringankan bundle utama
+const KelolaKKTPModal = dynamic(() => import("./guru/KelolaKKTPModal"), {
+  ssr: false,
+});
+
+// Debounced score input cell untuk mencegah re-render berat
+interface ScoreInputProps {
+  value: number;
+  disabled?: boolean;
+  onChange: (val: number) => void;
+  className?: string;
+}
+
+const DebouncedScoreInput = memo(function DebouncedScoreInput({
+  value,
+  disabled,
+  onChange,
+  className = "",
+}: ScoreInputProps) {
+  const [val, setVal] = useState<string>(value ? String(value) : "");
+
+  useEffect(() => {
+    setVal(value ? String(value) : "");
+  }, [value]);
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const next = e.target.value;
+    setVal(next);
+  };
+
+  const handleBlur = () => {
+    const num = Number(val) || 0;
+    const clamped = Math.min(100, Math.max(0, num));
+    if (clamped !== value) {
+      onChange(clamped);
+    }
+  };
+
+  return (
+    <input
+      type="number"
+      min={0}
+      max={100}
+      disabled={disabled}
+      value={val}
+      onChange={handleChange}
+      onBlur={handleBlur}
+      className={`w-14 text-center font-black py-1 rounded-lg border-2 border-retro-border bg-white shadow-retro-sm disabled:bg-slate-100 disabled:text-slate-400 ${className}`}
+    />
+  );
+});
+
+// Debounced text input cell untuk catatan capaian kompetensi
+interface TextInputProps {
+  value: string;
+  disabled?: boolean;
+  onChange: (val: string) => void;
+  placeholder?: string;
+  className?: string;
+}
+
+const DebouncedTextInput = memo(function DebouncedTextInput({
+  value,
+  disabled,
+  onChange,
+  placeholder = "",
+  className = "",
+}: TextInputProps) {
+  const [val, setVal] = useState(value || "");
+
+  useEffect(() => {
+    setVal(value || "");
+  }, [value]);
+
+  const handleBlur = () => {
+    if (val !== value) {
+      onChange(val);
+    }
+  };
+
+  return (
+    <input
+      type="text"
+      disabled={disabled}
+      value={val}
+      onChange={e => setVal(e.target.value)}
+      onBlur={handleBlur}
+      placeholder={placeholder}
+      className={`w-full text-xs px-2.5 py-1.5 rounded-lg border-2 border-retro-border bg-white shadow-retro-sm font-semibold disabled:bg-slate-100 disabled:text-slate-400 ${className}`}
+    />
+  );
+});
 
 interface Props {
   initialData: NilaiMapelItem[];
@@ -445,79 +538,57 @@ export default function NilaiMapelTable({
                   
                   {/* Reading / H1 */}
                   <td className="p-1 text-center bg-brand-50/30">
-                    <input
-                      type="number"
-                      min={0}
-                      max={100}
+                    <DebouncedScoreInput
                       disabled={readOnly}
-                      value={item.nilai_harian_1 || ""}
-                      onChange={e => handleRowChange(item.nis, "nilai_harian_1", Number(e.target.value))}
-                      className="w-14 text-center font-black py-1 rounded-lg border-2 border-retro-border bg-white shadow-retro-sm disabled:bg-slate-100 disabled:text-slate-400"
+                      value={item.nilai_harian_1 || 0}
+                      onChange={val => handleRowChange(item.nis, "nilai_harian_1", val)}
                     />
                   </td>
 
                   {/* Speaking / H2 */}
                   <td className="p-1 text-center bg-brand-50/30">
-                    <input
-                      type="number"
-                      min={0}
-                      max={100}
+                    <DebouncedScoreInput
                       disabled={readOnly}
-                      value={item.nilai_harian_2 || ""}
-                      onChange={e => handleRowChange(item.nis, "nilai_harian_2", Number(e.target.value))}
-                      className="w-14 text-center font-black py-1 rounded-lg border-2 border-retro-border bg-white shadow-retro-sm disabled:bg-slate-100 disabled:text-slate-400"
+                      value={item.nilai_harian_2 || 0}
+                      onChange={val => handleRowChange(item.nis, "nilai_harian_2", val)}
                     />
                   </td>
 
                   {/* Listening / H3 */}
                   <td className="p-1 text-center bg-brand-50/30">
-                    <input
-                      type="number"
-                      min={0}
-                      max={100}
+                    <DebouncedScoreInput
                       disabled={readOnly}
-                      value={item.nilai_harian_3 || ""}
-                      onChange={e => handleRowChange(item.nis, "nilai_harian_3", Number(e.target.value))}
-                      className="w-14 text-center font-black py-1 rounded-lg border-2 border-retro-border bg-white shadow-retro-sm disabled:bg-slate-100 disabled:text-slate-400"
+                      value={item.nilai_harian_3 || 0}
+                      onChange={val => handleRowChange(item.nis, "nilai_harian_3", val)}
                     />
                   </td>
 
                   {/* Writing / H4 */}
                   <td className="p-1 text-center bg-brand-50/30">
-                    <input
-                      type="number"
-                      min={0}
-                      max={100}
+                    <DebouncedScoreInput
                       disabled={readOnly}
-                      value={item.nilai_harian_4 || ""}
-                      onChange={e => handleRowChange(item.nis, "nilai_harian_4", Number(e.target.value))}
-                      className="w-14 text-center font-black py-1 rounded-lg border-2 border-retro-border bg-white shadow-retro-sm disabled:bg-slate-100 disabled:text-slate-400"
+                      value={item.nilai_harian_4 || 0}
+                      onChange={val => handleRowChange(item.nis, "nilai_harian_4", val)}
                     />
                   </td>
 
                   {/* STS */}
                   <td className="p-1 text-center bg-amber-50/40">
-                    <input
-                      type="number"
-                      min={0}
-                      max={100}
+                    <DebouncedScoreInput
                       disabled={readOnly}
-                      value={item.nilai_uts || ""}
-                      onChange={e => handleRowChange(item.nis, "nilai_uts", Number(e.target.value))}
-                      className="w-14 text-center font-black py-1 rounded-lg border-2 border-retro-border bg-white text-amber-900 shadow-retro-sm disabled:bg-slate-100 disabled:text-slate-400"
+                      value={item.nilai_uts || 0}
+                      onChange={val => handleRowChange(item.nis, "nilai_uts", val)}
+                      className="text-amber-900"
                     />
                   </td>
 
                   {/* SAS */}
                   <td className="p-1 text-center bg-blue-50/40">
-                    <input
-                      type="number"
-                      min={0}
-                      max={100}
+                    <DebouncedScoreInput
                       disabled={readOnly}
-                      value={item.nilai_uas || ""}
-                      onChange={e => handleRowChange(item.nis, "nilai_uas", Number(e.target.value))}
-                      className="w-14 text-center font-black py-1 rounded-lg border-2 border-retro-border bg-white text-blue-900 shadow-retro-sm disabled:bg-slate-100 disabled:text-slate-400"
+                      value={item.nilai_uas || 0}
+                      onChange={val => handleRowChange(item.nis, "nilai_uas", val)}
+                      className="text-blue-900"
                     />
                   </td>
 
@@ -561,13 +632,11 @@ export default function NilaiMapelTable({
 
                   {/* Catatan / Lingkup Kompetensi RDM */}
                   <td className="p-1">
-                    <input
-                      type="text"
+                    <DebouncedTextInput
                       disabled={readOnly}
                       value={item.catatan_mapel || ""}
-                      onChange={e => handleRowChange(item.nis, "catatan_mapel", e.target.value)}
+                      onChange={val => handleRowChange(item.nis, "catatan_mapel", val)}
                       placeholder="Catatan capaian kompetensi..."
-                      className="w-full text-xs px-2.5 py-1.5 rounded-lg border-2 border-retro-border bg-white shadow-retro-sm font-semibold disabled:bg-slate-100 disabled:text-slate-400"
                     />
                   </td>
                 </tr>

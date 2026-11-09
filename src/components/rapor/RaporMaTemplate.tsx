@@ -93,6 +93,10 @@ export default function RaporMaTemplate({
             <img
               src="/logo.png"
               alt="Logo LP Ma'arif NU"
+              width={68}
+              height={68}
+              loading="lazy"
+              decoding="async"
               className="w-full h-full object-contain"
             />
           </div>
@@ -121,6 +125,10 @@ export default function RaporMaTemplate({
             <img
               src="/logo-ma.png"
               alt="Logo MA Ma'arif Nurus Salam"
+              width={68}
+              height={68}
+              loading="lazy"
+              decoding="async"
               className="w-full h-full object-contain"
             />
           </div>

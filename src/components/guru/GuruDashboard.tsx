@@ -59,8 +59,14 @@ import {
   UserCog,
   HelpCircle,
 } from "lucide-react";
-import ProfilGuruModal from "./ProfilGuruModal";
-import WelcomeGuruModal from "./WelcomeGuruModal";
+import dynamic from "next/dynamic";
+
+const ProfilGuruModal = dynamic(() => import("./ProfilGuruModal"), {
+  ssr: false,
+});
+const WelcomeGuruModal = dynamic(() => import("./WelcomeGuruModal"), {
+  ssr: false,
+});
 
 interface Props {
   madrasahId: MadrasahId;

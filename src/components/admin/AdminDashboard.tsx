@@ -44,7 +44,10 @@ import {
   resetTeacherPassword,
   resetAllTeachersPassword,
 } from "@/lib/storage";
-import CetakDataGuruModal from "./CetakDataGuruModal";
+import dynamic from "next/dynamic";
+const CetakDataGuruModal = dynamic(() => import("./CetakDataGuruModal"), {
+  ssr: false,
+});
 import { downloadBulkLeggerExcel } from "@/lib/excel/excelHandler";
 import {
   Users,
@@ -135,9 +138,13 @@ export default function AdminDashboard({
   const [logSearchQuery, setLogSearchQuery] = useState("");
   const [logFilterRole, setLogFilterRole] = useState("all");
   const [logFilterStatus, setLogFilterStatus] = useState("all");
+  const [logsPage, setLogsPage] = useState(1);
+  const LOGS_PER_PAGE = 15;
 
   // Search filter for teacher table
   const [searchTeacher, setSearchTeacher] = useState("");
+  const [teacherPage, setTeacherPage] = useState(1);
+  const TEACHERS_PER_PAGE = 15;
 
   // Search filter for siswa table
   const [searchSiswaQuery, setSearchSiswaQuery] = useState("");
@@ -603,6 +610,12 @@ export default function AdminDashboard({
     );
   }, [teachers, searchTeacher]);
 
+  const totalTeacherPages = Math.ceil(filteredTeachers.length / TEACHERS_PER_PAGE) || 1;
+  const paginatedTeachers = useMemo(() => {
+    const start = (teacherPage - 1) * TEACHERS_PER_PAGE;
+    return filteredTeachers.slice(start, start + TEACHERS_PER_PAGE);
+  }, [filteredTeachers, teacherPage]);
+
   // Data Filtering: Siswa
   const filteredSiswaList = useMemo(() => {
     let list = allSiswa;
@@ -676,6 +689,12 @@ export default function AdminDashboard({
     }
     return list;
   }, [loginLogs, logFilterRole, logFilterStatus, logSearchQuery]);
+
+  const totalLogPages = Math.ceil(filteredLogs.length / LOGS_PER_PAGE) || 1;
+  const paginatedLogs = useMemo(() => {
+    const start = (logsPage - 1) * LOGS_PER_PAGE;
+    return filteredLogs.slice(start, start + LOGS_PER_PAGE);
+  }, [filteredLogs, logsPage]);
 
   // Monitoring Kirim (Tab Monitoring)
   const rekapKirim = useMemo(() => {
@@ -1467,9 +1486,11 @@ export default function AdminDashboard({
                   </tr>
                 </thead>
                 <tbody className="divide-y-2 divide-slate-100 font-bold">
-                  {filteredTeachers.map((t, idx) => (
+                  {paginatedTeachers.map((t, idx) => (
                     <tr key={t.id} className="hover:bg-brand-50/40">
-                      <td className="py-2 px-3 text-center text-slate-500 font-mono">{idx + 1}</td>
+                      <td className="py-2 px-3 text-center text-slate-500 font-mono">
+                        {((teacherPage - 1) * TEACHERS_PER_PAGE) + idx + 1}
+                      </td>
                       <td className="py-2 px-3 text-retro-black">
                         <div>{t.nama_user}</div>
                         <div className="text-[10px] text-slate-500 font-mono">NIK: {t.nip || "-"} • ({t.jenis_kelamin || "-"})</div>
@@ -1509,6 +1530,36 @@ export default function AdminDashboard({
                 </tbody>
               </table>
             </div>
+
+            {/* Pagination Controls Tabel Guru */}
+            {totalTeacherPages > 1 && (
+              <div className="flex flex-wrap items-center justify-between p-3 bg-slate-50 rounded-xl border-2 border-retro-border text-xs font-bold gap-2">
+                <span className="text-slate-600">
+                  Menampilkan {((teacherPage - 1) * TEACHERS_PER_PAGE) + 1} - {Math.min(teacherPage * TEACHERS_PER_PAGE, filteredTeachers.length)} dari {filteredTeachers.length} Guru
+                </span>
+                <div className="flex items-center gap-1.5">
+                  <button
+                    type="button"
+                    disabled={teacherPage === 1}
+                    onClick={() => setTeacherPage(prev => Math.max(1, prev - 1))}
+                    className="btn-retro bg-white px-2.5 py-1 text-xs disabled:opacity-40"
+                  >
+                    « Prev
+                  </button>
+                  <span className="px-2 font-mono font-black text-slate-800">
+                    {teacherPage} / {totalTeacherPages}
+                  </span>
+                  <button
+                    type="button"
+                    disabled={teacherPage >= totalTeacherPages}
+                    onClick={() => setTeacherPage(prev => Math.min(totalTeacherPages, prev + 1))}
+                    className="btn-retro bg-white px-2.5 py-1 text-xs disabled:opacity-40"
+                  >
+                    Next »
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       )}
@@ -1884,16 +1935,18 @@ export default function AdminDashboard({
                 </tr>
               </thead>
               <tbody className="divide-y-2 divide-slate-100 font-bold">
-                {filteredLogs.length === 0 ? (
+                {paginatedLogs.length === 0 ? (
                   <tr>
                     <td colSpan={7} className="py-8 text-center text-slate-500 italic">
                       Belum ada rekaman riwayat login yang cocok dengan kriteria.
                     </td>
                   </tr>
                 ) : (
-                  filteredLogs.map((log, idx) => (
+                  paginatedLogs.map((log, idx) => (
                     <tr key={log.id} className="hover:bg-brand-50/40">
-                      <td className="py-2 px-3 text-center text-slate-500 font-mono">{idx + 1}</td>
+                      <td className="py-2 px-3 text-center text-slate-500 font-mono">
+                        {((logsPage - 1) * LOGS_PER_PAGE) + idx + 1}
+                      </td>
                       <td className="py-2 px-3 font-mono text-slate-700">{log.timestamp}</td>
                       <td className="py-2 px-3 text-retro-black">{log.nama_user}</td>
                       <td className="py-2 px-3 font-mono text-brand-800">@{log.username}</td>
@@ -1939,6 +1992,36 @@ export default function AdminDashboard({
               </tbody>
             </table>
           </div>
+
+          {/* Pagination Controls Tabel Riwayat Login */}
+          {totalLogPages > 1 && (
+            <div className="flex flex-wrap items-center justify-between p-3 bg-slate-50 rounded-xl border-2 border-retro-border text-xs font-bold gap-2">
+              <span className="text-slate-600">
+                Menampilkan {((logsPage - 1) * LOGS_PER_PAGE) + 1} - {Math.min(logsPage * LOGS_PER_PAGE, filteredLogs.length)} dari {filteredLogs.length} Riwayat Sesi
+              </span>
+              <div className="flex items-center gap-1.5">
+                <button
+                  type="button"
+                  disabled={logsPage === 1}
+                  onClick={() => setLogsPage(prev => Math.max(1, prev - 1))}
+                  className="btn-retro bg-white px-2.5 py-1 text-xs disabled:opacity-40"
+                >
+                  « Prev
+                </button>
+                <span className="px-2 font-mono font-black text-slate-800">
+                  {logsPage} / {totalLogPages}
+                </span>
+                <button
+                  type="button"
+                  disabled={logsPage >= totalLogPages}
+                  onClick={() => setLogsPage(prev => Math.min(totalLogPages, prev + 1))}
+                  className="btn-retro bg-white px-2.5 py-1 text-xs disabled:opacity-40"
+                >
+                  Next »
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       )}
 

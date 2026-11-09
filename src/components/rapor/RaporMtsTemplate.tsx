@@ -79,6 +79,10 @@ export default function RaporMtsTemplate({
             <img
               src="/logo.png"
               alt="Logo LP Ma'arif NU"
+              width={68}
+              height={68}
+              loading="lazy"
+              decoding="async"
               className="w-full h-full object-contain"
             />
           </div>
@@ -107,6 +111,10 @@ export default function RaporMtsTemplate({
             <img
               src="/logo-mts.png"
               alt="Logo MTs Ma'arif NU 2 Sutojayan"
+              width={68}
+              height={68}
+              loading="lazy"
+              decoding="async"
               className="w-full h-full object-contain"
             />
           </div>

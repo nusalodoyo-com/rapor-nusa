@@ -25,14 +25,22 @@ export async function GET(req: NextRequest) {
       SYNC_LOGS: `rapor_nusa_${madrasahId}_sync_logs_v1`,
     };
 
-    return NextResponse.json({
-      success: true,
-      config: {
-        ...config,
-        // Sensor token di response GET publik jika diperlukan
-        secret_token_preview: config.secret_token ? `${config.secret_token.slice(0, 6)}••••••••` : "",
+    return NextResponse.json(
+      {
+        success: true,
+        config: {
+          ...config,
+          // Sensor token di response GET publik jika diperlukan
+          secret_token_preview: config.secret_token ? `${config.secret_token.slice(0, 6)}••••••••` : "",
+        },
       },
-    });
+      {
+        headers: {
+          "Cache-Control": "public, s-maxage=30, stale-while-revalidate=60",
+          "X-Content-Type-Options": "nosniff",
+        },
+      }
+    );
   } catch (err: any) {
     return NextResponse.json(
       { success: false, message: "Gagal memuat status integrasi: " + err.message },

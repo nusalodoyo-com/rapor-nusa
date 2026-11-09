@@ -90,6 +90,39 @@ function setLocalData<T>(key: string, val: T): void {
   }
 }
 
+// =====================================================================
+// IN-MEMORY QUERY CACHE (EXPENSIVE COMPUTATIONS CACHING)
+// =====================================================================
+interface CacheEntry<T> {
+  data: T;
+  timestamp: number;
+}
+const memoryCache = new Map<string, CacheEntry<any>>();
+const CACHE_TTL_MS = 60 * 1000; // 60 detik
+
+export function getCachedQuery<T>(key: string, computeFn: () => T, ttlMs: number = CACHE_TTL_MS): T {
+  const cached = memoryCache.get(key);
+  const now = Date.now();
+  if (cached && now - cached.timestamp < ttlMs) {
+    return cached.data;
+  }
+  const result = computeFn();
+  memoryCache.set(key, { data: result, timestamp: now });
+  return result;
+}
+
+export function invalidateQueryCache(prefixPattern?: string): void {
+  if (!prefixPattern) {
+    memoryCache.clear();
+    return;
+  }
+  for (const key of memoryCache.keys()) {
+    if (key.includes(prefixPattern)) {
+      memoryCache.delete(key);
+    }
+  }
+}
+
 // Inisialisasi awal untuk kedua madrasah
 export function initializeLocalStorage(): void {
   if (typeof window === "undefined") return;
@@ -1010,6 +1043,7 @@ export function simpanNilaiBatch(
     });
 
     setLocalData(keys.NILAI, allNilai);
+    invalidateQueryCache(madrasahId);
     return { success: true, message: `Berhasil menyimpan nilai ${dataNilai.length} siswa!` };
   } catch (err: any) {
     return { success: false, message: "Gagal menyimpan: " + err.toString() };
@@ -1089,6 +1123,7 @@ export function simpanNilaiEkskulBatch(
     });
 
     setLocalData(keys.NILAI_EKSKUL, allEkskul);
+    invalidateQueryCache(madrasahId);
     return { success: true, message: `Nilai ekskul ${dataNilai.length} siswa berhasil disimpan!` };
   } catch (err: any) {
     return { success: false, message: "Gagal: " + err.toString() };
@@ -1160,6 +1195,7 @@ export function simpanRaporWaliBatch(
     });
 
     setLocalData(keys.RAPOR_WALI, allWali);
+    invalidateQueryCache(madrasahId);
     return { success: true, message: `Data Rapor Wali Kelas disimpan untuk ${dataWali.length} siswa!` };
   } catch (err: any) {
     return { success: false, message: "Gagal: " + err.toString() };
@@ -1219,151 +1255,154 @@ export function getLeggerDataByKelas(
   semester: string,
   kelas: string
 ): LeggerResponse {
-  const siswaList = getSiswaByKelas(madrasahId, kelas);
-  if (!siswaList.length) {
-    return { success: false, message: "Data siswa di kelas ini tidak ditemukan.", mapel: [], siswa: [] };
-  }
+  const cacheKey = `legger:${madrasahId}:${kelas}:${tahun}:${semester}`;
+  return getCachedQuery(cacheKey, () => {
+    const siswaList = getSiswaByKelas(madrasahId, kelas);
+    if (!siswaList.length) {
+      return { success: false, message: "Data siswa di kelas ini tidak ditemukan.", mapel: [], siswa: [] };
+    }
 
-  const keys = getStorageKeys(madrasahId);
-  const defMapel = madrasahId === "mts" ? SEED_MAPEL_MTS : SEED_MAPEL_MA;
-  const mapelList = getLocalData<Mapel[]>(keys.MAPEL, defMapel);
-  const allNilai = getLocalData<NilaiMapelItem[]>(keys.NILAI, []);
-  const allWali = getLocalData<RaporWaliItem[]>(keys.RAPOR_WALI, []);
-  const allEkskul = getLocalData<NilaiEkskulItem[]>(keys.NILAI_EKSKUL, []);
+    const keys = getStorageKeys(madrasahId);
+    const defMapel = madrasahId === "mts" ? SEED_MAPEL_MTS : SEED_MAPEL_MA;
+    const mapelList = getLocalData<Mapel[]>(keys.MAPEL, defMapel);
+    const allNilai = getLocalData<NilaiMapelItem[]>(keys.NILAI, []);
+    const allWali = getLocalData<RaporWaliItem[]>(keys.RAPOR_WALI, []);
+    const allEkskul = getLocalData<NilaiEkskulItem[]>(keys.NILAI_EKSKUL, []);
 
-  // Ekstraksi nilai per siswa
-  const rawSiswa: Omit<SiswaLegger, "ranking">[] = siswaList.map(siswa => {
-    const mapelDetails: Record<string, any> = {};
-    const scores: Record<string, number> = {};
-    let totalScore = 0;
-    let mapelCount = 0;
+    // Ekstraksi nilai per siswa
+    const rawSiswa: Omit<SiswaLegger, "ranking">[] = siswaList.map(siswa => {
+      const mapelDetails: Record<string, any> = {};
+      const scores: Record<string, number> = {};
+      let totalScore = 0;
+      let mapelCount = 0;
 
-    mapelList.forEach(m => {
-      const rec = allNilai.find(
-        n =>
-          n.tahun_ajaran === tahun &&
-          n.semester === semester &&
-          n.nis === siswa.nis &&
-          n.kode_mapel.toLowerCase() === m.kode_mapel.toLowerCase()
+      mapelList.forEach(m => {
+        const rec = allNilai.find(
+          n =>
+            n.tahun_ajaran === tahun &&
+            n.semester === semester &&
+            n.nis === siswa.nis &&
+            n.kode_mapel.toLowerCase() === m.kode_mapel.toLowerCase()
+        );
+
+        const h1 = Number(rec?.nilai_harian_1) || 0;
+        const h2 = Number(rec?.nilai_harian_2) || 0;
+        const h3 = Number(rec?.nilai_harian_3) || 0;
+        const h4 = Number(rec?.nilai_harian_4) || 0;
+
+        let count = 0;
+        let tot = 0;
+        if (rec?.materi_1 || h1 > 0) { tot += h1; count++; }
+        if (rec?.materi_2 || h2 > 0) { tot += h2; count++; }
+        if (rec?.materi_3 || h3 > 0) { tot += h3; count++; }
+        if (rec?.materi_4 || h4 > 0) { tot += h4; count++; }
+
+        const mat: string[] = [];
+        if (rec?.materi_1) mat.push(rec.materi_1);
+        if (rec?.materi_2) mat.push(rec.materi_2);
+        if (rec?.materi_3) mat.push(rec.materi_3);
+        if (rec?.materi_4) mat.push(rec.materi_4);
+
+        const na = Number(rec?.nilai_akhir) || 0;
+        const predikat = rec?.predikat || (na >= 90 ? "A" : na >= 80 ? "B" : na >= 70 ? "C" : "D");
+
+        mapelDetails[m.kode_mapel] = {
+          lm: count > 0 ? Math.round(tot / count) : 0,
+          sts: Number(rec?.nilai_uts) || 0,
+          sas: Number(rec?.nilai_uas) || 0,
+          lingkup_materi: mat.join("; ") || "-",
+          nilai_akhir: na,
+          predikat: predikat,
+          sub_skills: rec?.sub_skills || undefined,
+        };
+
+        scores[m.kode_mapel] = na;
+        if (na > 0) {
+          totalScore += na;
+          mapelCount++;
+        }
+      });
+
+      const averageScore = mapelCount > 0 ? Math.round(totalScore / mapelCount) : 0;
+
+      const rw = allWali.find(
+        w => w.tahun_ajaran === tahun && w.semester === semester && w.nis === siswa.nis
       );
 
-      const h1 = Number(rec?.nilai_harian_1) || 0;
-      const h2 = Number(rec?.nilai_harian_2) || 0;
-      const h3 = Number(rec?.nilai_harian_3) || 0;
-      const h4 = Number(rec?.nilai_harian_4) || 0;
+      const eks = allEkskul
+        .filter(
+          e =>
+            e.tahun_ajaran === tahun &&
+            e.semester === semester &&
+            e.nis === siswa.nis &&
+            e.nama_ekskul &&
+            e.predikat
+        )
+        .map(e => ({
+          nama: e.nama_ekskul,
+          nilai: e.predikat,
+          materi: e.keterangan || "-",
+        }));
 
-      let count = 0;
-      let tot = 0;
-      if (rec?.materi_1 || h1 > 0) { tot += h1; count++; }
-      if (rec?.materi_2 || h2 > 0) { tot += h2; count++; }
-      if (rec?.materi_3 || h3 > 0) { tot += h3; count++; }
-      if (rec?.materi_4 || h4 > 0) { tot += h4; count++; }
-
-      const mat: string[] = [];
-      if (rec?.materi_1) mat.push(rec.materi_1);
-      if (rec?.materi_2) mat.push(rec.materi_2);
-      if (rec?.materi_3) mat.push(rec.materi_3);
-      if (rec?.materi_4) mat.push(rec.materi_4);
-
-      const na = Number(rec?.nilai_akhir) || 0;
-      const predikat = rec?.predikat || (na >= 90 ? "A" : na >= 80 ? "B" : na >= 70 ? "C" : "D");
-
-      mapelDetails[m.kode_mapel] = {
-        lm: count > 0 ? Math.round(tot / count) : 0,
-        sts: Number(rec?.nilai_uts) || 0,
-        sas: Number(rec?.nilai_uas) || 0,
-        lingkup_materi: mat.join("; ") || "-",
-        nilai_akhir: na,
-        predikat: predikat,
-        sub_skills: rec?.sub_skills || undefined,
+      return {
+        nis: siswa.nis,
+        nisn: siswa.nisn || "",
+        nama: siswa.nama_siswa,
+        nama_ortu: siswa.nama_ortu || "",
+        no_absen: siswaList.findIndex(s => s.nis === siswa.nis) + 1,
+        scores,
+        mapelDetails,
+        totalScore,
+        averageScore,
+        ekskul: eks,
+        sakit: rw?.sakit || 0,
+        izin: rw?.izin || 0,
+        alpha: rw?.tanpa_keterangan || 0,
+        catatan: rw?.catatan_wali || "",
+        keputusan: rw?.keputusan || "-",
       };
-
-      scores[m.kode_mapel] = na;
-      if (na > 0) {
-        totalScore += na;
-        mapelCount++;
-      }
     });
 
-    const averageScore = mapelCount > 0 ? Math.round(totalScore / mapelCount) : 0;
+    // Hitung Peringkat (Ranking) berdasarkan totalScore
+    const sortedScores = [...rawSiswa].sort((a, b) => b.totalScore - a.totalScore);
+    const dataSiswa: SiswaLegger[] = rawSiswa.map(s => {
+      const rank = sortedScores.findIndex(item => item.nis === s.nis) + 1;
+      return { ...s, ranking: rank };
+    });
 
-    const rw = allWali.find(
-      w => w.tahun_ajaran === tahun && w.semester === semester && w.nis === siswa.nis
-    );
+    // Hitung Rata-rata Kelas per Mata Pelajaran
+    const classAverageMapel: Record<string, number> = {};
+    mapelList.forEach(m => {
+      let sum = 0;
+      let count = 0;
+      dataSiswa.forEach(s => {
+        const val = s.scores[m.kode_mapel];
+        if (val > 0) {
+          sum += val;
+          count++;
+        }
+      });
+      classAverageMapel[m.kode_mapel] = count > 0 ? Math.round(sum / count) : 0;
+    });
 
-    const eks = allEkskul
-      .filter(
-        e =>
-          e.tahun_ajaran === tahun &&
-          e.semester === semester &&
-          e.nis === siswa.nis &&
-          e.nama_ekskul &&
-          e.predikat
-      )
-      .map(e => ({
-        nama: e.nama_ekskul,
-        nilai: e.predikat,
-        materi: e.keterangan || "-",
-      }));
+    let totalAvgSum = 0;
+    let totalAvgCount = 0;
+    Object.values(classAverageMapel).forEach(v => {
+      if (v > 0) {
+        totalAvgSum += v;
+        totalAvgCount++;
+      }
+    });
+    const totalClassAverage = totalAvgCount > 0 ? Math.round(totalAvgSum / totalAvgCount) : 0;
 
     return {
-      nis: siswa.nis,
-      nisn: siswa.nisn || "",
-      nama: siswa.nama_siswa,
-      nama_ortu: siswa.nama_ortu || "",
-      no_absen: siswaList.findIndex(s => s.nis === siswa.nis) + 1,
-      scores,
-      mapelDetails,
-      totalScore,
-      averageScore,
-      ekskul: eks,
-      sakit: rw?.sakit || 0,
-      izin: rw?.izin || 0,
-      alpha: rw?.tanpa_keterangan || 0,
-      catatan: rw?.catatan_wali || "",
-      keputusan: rw?.keputusan || "-",
+      success: true,
+      mapel: mapelList,
+      siswa: dataSiswa,
+      classAverageMapel,
+      totalClassAverage,
     };
   });
-
-  // Hitung Peringkat (Ranking) berdasarkan totalScore
-  const sortedScores = [...rawSiswa].sort((a, b) => b.totalScore - a.totalScore);
-  const dataSiswa: SiswaLegger[] = rawSiswa.map(s => {
-    const rank = sortedScores.findIndex(item => item.nis === s.nis) + 1;
-    return { ...s, ranking: rank };
-  });
-
-  // Hitung Rata-rata Kelas per Mata Pelajaran
-  const classAverageMapel: Record<string, number> = {};
-  mapelList.forEach(m => {
-    let sum = 0;
-    let count = 0;
-    dataSiswa.forEach(s => {
-      const val = s.scores[m.kode_mapel];
-      if (val > 0) {
-        sum += val;
-        count++;
-      }
-    });
-    classAverageMapel[m.kode_mapel] = count > 0 ? Math.round(sum / count) : 0;
-  });
-
-  let totalAvgSum = 0;
-  let totalAvgCount = 0;
-  Object.values(classAverageMapel).forEach(v => {
-    if (v > 0) {
-      totalAvgSum += v;
-      totalAvgCount++;
-    }
-  });
-  const totalClassAverage = totalAvgCount > 0 ? Math.round(totalAvgSum / totalAvgCount) : 0;
-
-  return {
-    success: true,
-    mapel: mapelList,
-    siswa: dataSiswa,
-    classAverageMapel,
-    totalClassAverage,
-  };
 }
 
 export function getSchoolConfig(madrasahId: MadrasahId): SchoolConfig {
@@ -1531,8 +1570,10 @@ export function getMatriksNilaiMadrasah(
   const curPeriod = getActivePeriod(madrasahId);
   const activeTahun = tahun || curPeriod.tahun;
   const activeSem = semester || curPeriod.semester;
+  const cacheKey = `matriks:${madrasahId}:${activeTahun}:${activeSem}`;
 
-  const keys = getStorageKeys(madrasahId);
+  return getCachedQuery(cacheKey, () => {
+    const keys = getStorageKeys(madrasahId);
   const defSiswa = madrasahId === "mts" ? SEED_SISWA_MTS : SEED_SISWA_MA;
   const defMapel = madrasahId === "mts" ? SEED_MAPEL_MTS : SEED_MAPEL_MA;
   const defClasses = madrasahId === "mts" ? SEED_CLASSES_MTS : SEED_CLASSES_MA;
@@ -1650,6 +1691,7 @@ export function getMatriksNilaiMadrasah(
     kelas_kosong: kelasKosongCount,
     list_kelas: listKelas,
   };
+  });
 }
 
 // =====================================================================
