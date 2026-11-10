@@ -1,0 +1,180 @@
+No,Kategori,Lembaga,Nama Pengguna,NIP / NIK,Jenis Kelamin,Username,Password Default
+1,Super Administrator,MTs & MA,Administrator Utama (MTs & MA),-,L,admin,123
+2,Operator MTs,MTs,Operator MTs Ma'arif NU 2,-,L,admin_mts,123
+3,Kepala Madrasah MTs,MTs,"Ahmad Ulil Amin, Lc., M.S.I.",-,L,kamad_mts,123
+4,Operator MA,MA,Operator MA Ma'arif Nurus Salam,-,L,admin_ma,123
+5,Kepala Madrasah MA,MA,"M. Zen Pamuji, S.Pd.",-,L,kamad_ma,123
+6,Guru MTs,MTs Ma'arif NU 2 Sutojayan,"A. Munawir Fajri, S.Pd.",3505101103950001,L,nusa101,Lodoyo2026
+7,Guru MTs,MTs Ma'arif NU 2 Sutojayan,"Aan Aulia",3505040909820002,L,nusa102,Lodoyo2026
+8,Guru MTs,MTs Ma'arif NU 2 Sutojayan,"Achmad Budi Susetyo, S.Si., M.E.",3572030603920005,L,nusa103,Lodoyo2026
+9,Guru MTs,MTs Ma'arif NU 2 Sutojayan,"Adhar Mutaqin, S.Pd.",3505091003910002,L,nusa104,Lodoyo2026
+10,Guru MTs,MTs Ma'arif NU 2 Sutojayan,"Ahmad Kharis Alfarizi S. Pd.",3505101608010001,L,nusa105,Lodoyo2026
+11,Guru MTs,MTs Ma'arif NU 2 Sutojayan,"Ahmad Musyaffa`, S.Pd.",3505102707840004,L,nusa106,Lodoyo2026
+12,Guru MTs,MTs Ma'arif NU 2 Sutojayan,"Ahmad Ulil Amin, Lc., M.S.I",3053755656200003,L,nusa107,Lodoyo2026
+13,Guru MTs,MTs Ma'arif NU 2 Sutojayan,"Ahmad Zaka Al Abror, M.Pd.I.",3505120811950001,L,nusa108,Lodoyo2026
+14,Guru MTs,MTs Ma'arif NU 2 Sutojayan,"Ahmad Zaki Mubarok, M.Pd.I",20588063191003,L,nusa109,Lodoyo2026
+15,Guru MTs,MTs Ma'arif NU 2 Sutojayan,"Al Bashita Nurkharima",3505115108990001,P,nusa110,Lodoyo2026
+16,Guru MTs,MTs Ma'arif NU 2 Sutojayan,"Ali Mas`ud, SH., MM",305041408610001,L,nusa111,Lodoyo2026
+17,Guru MTs,MTs Ma'arif NU 2 Sutojayan,"Amiddana Rizqi Tamim",3506055611970001,P,nusa112,Lodoyo2026
+18,Guru MTs,MTs Ma'arif NU 2 Sutojayan,"Amris Ulfi Nuriyah, S.Pd.",3505115510850003,P,nusa113,Lodoyo2026
+19,Guru MTs,MTs Ma'arif NU 2 Sutojayan,"Anisa Seratina, S.Pd.",3572035303900005,P,nusa114,Lodoyo2026
+20,Guru MTs,MTs Ma'arif NU 2 Sutojayan,"Arif Junaidi,S.Pd",3506112409870002,L,nusa115,Lodoyo2026
+21,Guru MTs,MTs Ma'arif NU 2 Sutojayan,"Asti Susanti, S. Pd.",3505156212920005,P,nusa116,Lodoyo2026
+22,Guru MTs,MTs Ma'arif NU 2 Sutojayan,"Ayudya Zianita, S.Pd.",3505115408940003,P,nusa117,Lodoyo2026
+23,Guru MTs,MTs Ma'arif NU 2 Sutojayan,"Budi Santoso, S.Pd",6650747649200022,L,nusa118,Lodoyo2026
+24,Guru MTs,MTs Ma'arif NU 2 Sutojayan,"ChusnuL Hadi, S.Th.I., M. Pd.",6037760662200053,L,nusa119,Lodoyo2026
+25,Guru MTs,MTs Ma'arif NU 2 Sutojayan,"Dinda Sherlyndra Hapsari, S.Si.",3505224911960002,P,nusa120,Lodoyo2026
+26,Guru MTs,MTs Ma'arif NU 2 Sutojayan,"Drs. Hj. Durin Nafisatin, M.A",3505125702660001,P,nusa121,Lodoyo2026
+27,Guru MTs,MTs Ma'arif NU 2 Sutojayan,"Eva Maulida Rahma, S.Pd.",3505101102190001,P,nusa122,Lodoyo2026
+28,Guru MTs,MTs Ma'arif NU 2 Sutojayan,"Ferdinan Bagaskoro S.Pd",3505171210960002,L,nusa123,Lodoyo2026
+29,Guru MTs,MTs Ma'arif NU 2 Sutojayan,"Fitria Umi Khasanah, S. Pd",3505124307850001,P,nusa124,Lodoyo2026
+30,Guru MTs,MTs Ma'arif NU 2 Sutojayan,"Ghulam Akhrori, S.Pd.I",3505112506890003,L,nusa125,Lodoyo2026
+31,Guru MTs,MTs Ma'arif NU 2 Sutojayan,"H. M. Ali Sodik Efendi, S.Pd.",1440745648200004,L,nusa126,Lodoyo2026
+32,Guru MTs,MTs Ma'arif NU 2 Sutojayan,"Helmi Riya Nurohim, S.Pd",3505120304920002,L,nusa127,Lodoyo2026
+33,Guru MTs,MTs Ma'arif NU 2 Sutojayan,"Ika Deppy Ana, S. Pd., M.Pd.",3505076102940001,P,nusa128,Lodoyo2026
+34,Guru MTs,MTs Ma'arif NU 2 Sutojayan,"Imam Mahbub",3505070712870001,L,nusa129,Lodoyo2026
+35,Guru MTs,MTs Ma'arif NU 2 Sutojayan,"Imam Muhtar, M.A.",3505120705760001,L,nusa130,Lodoyo2026
+36,Guru MTs,MTs Ma'arif NU 2 Sutojayan,"Imam Sabarudin",1212350500450082,L,nusa131,Lodoyo2026
+37,Guru MTs,MTs Ma'arif NU 2 Sutojayan,"Intan Chosi` Nur Amelia, S. Pd",3505044905940005,P,nusa132,Lodoyo2026
+38,Guru MTs,MTs Ma'arif NU 2 Sutojayan,"Irfan Mubarok, M.Pd.",3505120206930002,L,nusa133,Lodoyo2026
+39,Guru MTs,MTs Ma'arif NU 2 Sutojayan,"Irfatul Fu`adah, S.Pd",3505096705960001,P,nusa134,Lodoyo2026
+40,Guru MTs,MTs Ma'arif NU 2 Sutojayan,"Jazuli Abdulloh",3505123112600001,L,nusa135,Lodoyo2026
+41,Guru MTs,MTs Ma'arif NU 2 Sutojayan,"Khusnuddin, S.Sos.l, S.Pd.l, MA.",3505101805780004,L,nusa136,Lodoyo2026
+42,Guru MTs,MTs Ma'arif NU 2 Sutojayan,"Lailatul Hasanah, S.Pd.",3505147007930001,P,nusa137,Lodoyo2026
+43,Guru MTs,MTs Ma'arif NU 2 Sutojayan,"Lailin Luthfiana, S.Pd",3505146007950002,P,nusa138,Lodoyo2026
+44,Guru MTs,MTs Ma'arif NU 2 Sutojayan,"Lutfi Bagus Subagio, S.Pd.",3572022008950003,L,nusa139,Lodoyo2026
+45,Guru MTs,MTs Ma'arif NU 2 Sutojayan,"M. Muhlis Fuadi, S.Pd.I",3505123008860001,L,nusa140,Lodoyo2026
+46,Guru MTs,MTs Ma'arif NU 2 Sutojayan,"M. Zainuri",01033,L,nusa141,Lodoyo2026
+47,Guru MTs,MTs Ma'arif NU 2 Sutojayan,"M. Zen Pamuji Eko, S.Pd.",7433761663200013,L,nusa142,Lodoyo2026
+48,Guru MTs,MTs Ma'arif NU 2 Sutojayan,"Maila Azka, M.Pd.I",3518104312900002,P,nusa143,Lodoyo2026
+49,Guru MTs,MTs Ma'arif NU 2 Sutojayan,"Miftachul Huda Ari Sanjaya, M.Pd",3505122704870001,L,nusa144,Lodoyo2026
+50,Guru MTs,MTs Ma'arif NU 2 Sutojayan,"Miftachul Rizal, S.Pd.I",3505072808920001,L,nusa145,Lodoyo2026
+51,Guru MTs,MTs Ma'arif NU 2 Sutojayan,"Miftahiatul Choiroh, S.Pd.",3505094304890001,P,nusa146,Lodoyo2026
+52,Guru MTs,MTs Ma'arif NU 2 Sutojayan,"Miftakhul Huda,  S. Pd",3505110208890003,L,nusa147,Lodoyo2026
+53,Guru MTs,MTs Ma'arif NU 2 Sutojayan,"Mistri Riadianto, S.Pd.",3505130105910002,L,nusa148,Lodoyo2026
+54,Guru MTs,MTs Ma'arif NU 2 Sutojayan,"Moch Agus Wantoro, S.Pd.",3506061908960002,L,nusa149,Lodoyo2026
+55,Guru MTs,MTs Ma'arif NU 2 Sutojayan,"Moch Nur Chafidz",3505110310960001,L,nusa150,Lodoyo2026
+56,Guru MTs,MTs Ma'arif NU 2 Sutojayan,"Moch. Miftachur Rozaq, S.Pd.",3505110904960002,L,nusa151,Lodoyo2026
+57,Guru MTs,MTs Ma'arif NU 2 Sutojayan,"Moh. Asmi` Fadloly, S.Pd.",3505102502930002,L,nusa152,Lodoyo2026
+58,Guru MTs,MTs Ma'arif NU 2 Sutojayan,"Moh. Bagus Sholikhul Adib S.Kom",3505042105940001,L,nusa153,Lodoyo2026
+59,Guru MTs,MTs Ma'arif NU 2 Sutojayan,"Moh. Ngumar Nawawi, Lc",20588063190003,L,nusa154,Lodoyo2026
+60,Guru MTs,MTs Ma'arif NU 2 Sutojayan,"Mohammad Mundzir",3505130411540001,L,nusa155,Lodoyo2026
+61,Guru MTs,MTs Ma'arif NU 2 Sutojayan,"Mufidatul Chasanah, S. Pd.",3505105607920001,P,nusa156,Lodoyo2026
+62,Guru MTs,MTs Ma'arif NU 2 Sutojayan,"Muhamad Mahfuddin, S.Pd.I.",3505142706850004,L,nusa157,Lodoyo2026
+63,Guru MTs,MTs Ma'arif NU 2 Sutojayan,"Muhamad Ridwan Nawawi, S.Kom.",3505131406990004,L,nusa158,Lodoyo2026
+64,Guru MTs,MTs Ma'arif NU 2 Sutojayan,"Muhammad Aziz Afrianto, S.Si",3505092204860001,L,nusa159,Lodoyo2026
+65,Guru MTs,MTs Ma'arif NU 2 Sutojayan,"Muhammad Taufiq Asyhari",3505141202010002,L,nusa160,Lodoyo2026
+66,Guru MTs,MTs Ma'arif NU 2 Sutojayan,"Muslikhatur Rodaniyah, S.Pd.I",3505124107880056,P,nusa161,Lodoyo2026
+67,Guru MTs,MTs Ma'arif NU 2 Sutojayan,"Nanang Syaifulloh Darojat",3505120107810074,L,nusa162,Lodoyo2026
+68,Guru MTs,MTs Ma'arif NU 2 Sutojayan,"Nova Auliyatul Fitriana, S.Pd.",3505224901010002,P,nusa163,Lodoyo2026
+69,Guru MTs,MTs Ma'arif NU 2 Sutojayan,"Nur Rohmah, S. Pd",3505076211910001,P,nusa164,Lodoyo2026
+70,Guru MTs,MTs Ma'arif NU 2 Sutojayan,"Nur Saifuddin, S.Pd.",3505120802890002,L,nusa165,Lodoyo2026
+71,Guru MTs,MTs Ma'arif NU 2 Sutojayan,"Nurcholis Ahmada, M.Pd.",3505222302910002,L,nusa166,Lodoyo2026
+72,Guru MTs,MTs Ma'arif NU 2 Sutojayan,"Nurfi Fuadin, S.Pd",3505152610910002,L,nusa167,Lodoyo2026
+73,Guru MTs,MTs Ma'arif NU 2 Sutojayan,"Nurikah Choirunnisah, S.Pd.",3505125812970004,P,nusa168,Lodoyo2026
+74,Guru MTs,MTs Ma'arif NU 2 Sutojayan,"Nurul Izza Afkarina",3505115208970002,P,nusa169,Lodoyo2026
+75,Guru MTs,MTs Ma'arif NU 2 Sutojayan,"Qurotul Hasanah, S.Pd",3505105710940003,P,nusa170,Lodoyo2026
+76,Guru MTs,MTs Ma'arif NU 2 Sutojayan,"Ratna Yuliastanti, S.Pd.",20588063190005,P,nusa171,Lodoyo2026
+77,Guru MTs,MTs Ma'arif NU 2 Sutojayan,"Retno Vidharti, S. Pd.",3505106802840003,P,nusa172,Lodoyo2026
+78,Guru MTs,MTs Ma'arif NU 2 Sutojayan,"Rudi Asrori, S. Pd",20588063188004,L,nusa173,Lodoyo2026
+79,Guru MTs,MTs Ma'arif NU 2 Sutojayan,"Saffira Noor Chotimah, S.T.",3505124710970001,P,nusa174,Lodoyo2026
+80,Guru MTs,MTs Ma'arif NU 2 Sutojayan,"Sefi Miftahul Aflih, S.Pd",3505125309870001,P,nusa175,Lodoyo2026
+81,Guru MTs,MTs Ma'arif NU 2 Sutojayan,"Siti Durotun Nasikah, M.Pd.",3505126012980001,P,nusa176,Lodoyo2026
+82,Guru MTs,MTs Ma'arif NU 2 Sutojayan,"Siti Hanidah, S.Pd",3505095803850001,P,nusa177,Lodoyo2026
+83,Guru MTs,MTs Ma'arif NU 2 Sutojayan,"Soim",0122,L,nusa178,Lodoyo2026
+84,Guru MTs,MTs Ma'arif NU 2 Sutojayan,"Sonhaji",3505121603710004,L,nusa179,Lodoyo2026
+85,Guru MTs,MTs Ma'arif NU 2 Sutojayan,"Suyanto",3505122407710001,L,nusa180,Lodoyo2026
+86,Guru MTs,MTs Ma'arif NU 2 Sutojayan,"Toha Mahsun, M.Pd.",3505112009710001,L,nusa181,Lodoyo2026
+87,Guru MTs,MTs Ma'arif NU 2 Sutojayan,"Tri Lailatin Mubarokah, S.Pd.I.",3505145201920001,P,nusa182,Lodoyo2026
+88,Guru MTs,MTs Ma'arif NU 2 Sutojayan,"Tri Rahayu, S.Pd.I",3505117001830001,P,nusa183,Lodoyo2026
+89,Guru MTs,MTs Ma'arif NU 2 Sutojayan,"Wildan Su`aidi Kohardiansyah, S.Pd.",3508152106960001,L,nusa184,Lodoyo2026
+90,Guru MTs,MTs Ma'arif NU 2 Sutojayan,"Yessy Kusuma Wardhani, S.Pd",3572014301930003,P,nusa185,Lodoyo2026
+91,Guru MTs,MTs Ma'arif NU 2 Sutojayan,"Zeni Nurdiana",3505117006000002,P,nusa186,Lodoyo2026
+92,Guru MTs,MTs Ma'arif NU 2 Sutojayan,"Zulfa Silmi Jaziroh",3505106010830002,P,nusa187,Lodoyo2026
+93,Guru MA,MA Ma'arif Nurus Salam,"A. Munawir Fajri, S.Pd.",3505101103950001,L,nusa201,Lodoyo2026
+94,Guru MA,MA Ma'arif Nurus Salam,"Aan Aulia",3505040909820002,L,nusa202,Lodoyo2026
+95,Guru MA,MA Ma'arif Nurus Salam,"Achmad Budi Susetyo, S.Si., M.E.",3572030603920005,L,nusa203,Lodoyo2026
+96,Guru MA,MA Ma'arif Nurus Salam,"Adhar Mutaqin, S.Pd.",3505091003910002,L,nusa204,Lodoyo2026
+97,Guru MA,MA Ma'arif Nurus Salam,"Ahmad Kharis Alfarizi S. Pd.",3505101608010001,L,nusa205,Lodoyo2026
+98,Guru MA,MA Ma'arif Nurus Salam,"Ahmad Musyaffa`, S.Pd.",3505102707840004,L,nusa206,Lodoyo2026
+99,Guru MA,MA Ma'arif Nurus Salam,"Ahmad Ulil Amin, Lc., M.S.I",3053755656200003,L,nusa207,Lodoyo2026
+100,Guru MA,MA Ma'arif Nurus Salam,"Ahmad Zaka Al Abror, M.Pd.I.",3505120811950001,L,nusa208,Lodoyo2026
+101,Guru MA,MA Ma'arif Nurus Salam,"Ahmad Zaki Mubarok, M.Pd.I",20588063191003,L,nusa209,Lodoyo2026
+102,Guru MA,MA Ma'arif Nurus Salam,"Al Bashita Nurkharima",3505115108990001,P,nusa210,Lodoyo2026
+103,Guru MA,MA Ma'arif Nurus Salam,"Ali Mas`ud, SH., MM",305041408610001,L,nusa211,Lodoyo2026
+104,Guru MA,MA Ma'arif Nurus Salam,"Amiddana Rizqi Tamim",3506055611970001,P,nusa212,Lodoyo2026
+105,Guru MA,MA Ma'arif Nurus Salam,"Amris Ulfi Nuriyah, S.Pd.",3505115510850003,P,nusa213,Lodoyo2026
+106,Guru MA,MA Ma'arif Nurus Salam,"Anisa Seratina, S.Pd.",3572035303900005,P,nusa214,Lodoyo2026
+107,Guru MA,MA Ma'arif Nurus Salam,"Arif Junaidi,S.Pd",3506112409870002,L,nusa215,Lodoyo2026
+108,Guru MA,MA Ma'arif Nurus Salam,"Asti Susanti, S. Pd.",3505156212920005,P,nusa216,Lodoyo2026
+109,Guru MA,MA Ma'arif Nurus Salam,"Ayudya Zianita, S.Pd.",3505115408940003,P,nusa217,Lodoyo2026
+110,Guru MA,MA Ma'arif Nurus Salam,"Budi Santoso, S.Pd",6650747649200022,L,nusa218,Lodoyo2026
+111,Guru MA,MA Ma'arif Nurus Salam,"ChusnuL Hadi, S.Th.I., M. Pd.",6037760662200053,L,nusa219,Lodoyo2026
+112,Guru MA,MA Ma'arif Nurus Salam,"Dinda Sherlyndra Hapsari, S.Si.",3505224911960002,P,nusa220,Lodoyo2026
+113,Guru MA,MA Ma'arif Nurus Salam,"Drs. Hj. Durin Nafisatin, M.A",3505125702660001,P,nusa221,Lodoyo2026
+114,Guru MA,MA Ma'arif Nurus Salam,"Eva Maulida Rahma, S.Pd.",3505101102190001,P,nusa222,Lodoyo2026
+115,Guru MA,MA Ma'arif Nurus Salam,"Ferdinan Bagaskoro S.Pd",3505171210960002,L,nusa223,Lodoyo2026
+116,Guru MA,MA Ma'arif Nurus Salam,"Fitria Umi Khasanah, S. Pd",3505124307850001,P,nusa224,Lodoyo2026
+117,Guru MA,MA Ma'arif Nurus Salam,"Ghulam Akhrori, S.Pd.I",3505112506890003,L,nusa225,Lodoyo2026
+118,Guru MA,MA Ma'arif Nurus Salam,"H. M. Ali Sodik Efendi, S.Pd.",1440745648200004,L,nusa226,Lodoyo2026
+119,Guru MA,MA Ma'arif Nurus Salam,"Helmi Riya Nurohim, S.Pd",3505120304920002,L,nusa227,Lodoyo2026
+120,Guru MA,MA Ma'arif Nurus Salam,"Ika Deppy Ana, S. Pd., M.Pd.",3505076102940001,P,nusa228,Lodoyo2026
+121,Guru MA,MA Ma'arif Nurus Salam,"Imam Mahbub",3505070712870001,L,nusa229,Lodoyo2026
+122,Guru MA,MA Ma'arif Nurus Salam,"Imam Muhtar, M.A.",3505120705760001,L,nusa230,Lodoyo2026
+123,Guru MA,MA Ma'arif Nurus Salam,"Imam Sabarudin",1212350500450082,L,nusa231,Lodoyo2026
+124,Guru MA,MA Ma'arif Nurus Salam,"Intan Chosi` Nur Amelia, S. Pd",3505044905940005,P,nusa232,Lodoyo2026
+125,Guru MA,MA Ma'arif Nurus Salam,"Irfan Mubarok, M.Pd.",3505120206930002,L,nusa233,Lodoyo2026
+126,Guru MA,MA Ma'arif Nurus Salam,"Irfatul Fu`adah, S.Pd",3505096705960001,P,nusa234,Lodoyo2026
+127,Guru MA,MA Ma'arif Nurus Salam,"Jazuli Abdulloh",3505123112600001,L,nusa235,Lodoyo2026
+128,Guru MA,MA Ma'arif Nurus Salam,"Khusnuddin, S.Sos.l, S.Pd.l, MA.",3505101805780004,L,nusa236,Lodoyo2026
+129,Guru MA,MA Ma'arif Nurus Salam,"Lailatul Hasanah, S.Pd.",3505147007930001,P,nusa237,Lodoyo2026
+130,Guru MA,MA Ma'arif Nurus Salam,"Lailin Luthfiana, S.Pd",3505146007950002,P,nusa238,Lodoyo2026
+131,Guru MA,MA Ma'arif Nurus Salam,"Lutfi Bagus Subagio, S.Pd.",3572022008950003,L,nusa239,Lodoyo2026
+132,Guru MA,MA Ma'arif Nurus Salam,"M. Muhlis Fuadi, S.Pd.I",3505123008860001,L,nusa240,Lodoyo2026
+133,Guru MA,MA Ma'arif Nurus Salam,"M. Zainuri",01033,L,nusa241,Lodoyo2026
+134,Guru MA,MA Ma'arif Nurus Salam,"M. Zen Pamuji Eko, S.Pd.",7433761663200013,L,nusa242,Lodoyo2026
+135,Guru MA,MA Ma'arif Nurus Salam,"Maila Azka, M.Pd.I",3518104312900002,P,nusa243,Lodoyo2026
+136,Guru MA,MA Ma'arif Nurus Salam,"Miftachul Huda Ari Sanjaya, M.Pd",3505122704870001,L,nusa244,Lodoyo2026
+137,Guru MA,MA Ma'arif Nurus Salam,"Miftachul Rizal, S.Pd.I",3505072808920001,L,nusa245,Lodoyo2026
+138,Guru MA,MA Ma'arif Nurus Salam,"Miftahiatul Choiroh, S.Pd.",3505094304890001,P,nusa246,Lodoyo2026
+139,Guru MA,MA Ma'arif Nurus Salam,"Miftakhul Huda,  S. Pd",3505110208890003,L,nusa247,Lodoyo2026
+140,Guru MA,MA Ma'arif Nurus Salam,"Mistri Riadianto, S.Pd.",3505130105910002,L,nusa248,Lodoyo2026
+141,Guru MA,MA Ma'arif Nurus Salam,"Moch Agus Wantoro, S.Pd.",3506061908960002,L,nusa249,Lodoyo2026
+142,Guru MA,MA Ma'arif Nurus Salam,"Moch Nur Chafidz",3505110310960001,L,nusa250,Lodoyo2026
+143,Guru MA,MA Ma'arif Nurus Salam,"Moch. Miftachur Rozaq, S.Pd.",3505110904960002,L,nusa251,Lodoyo2026
+144,Guru MA,MA Ma'arif Nurus Salam,"Moh. Asmi` Fadloly, S.Pd.",3505102502930002,L,nusa252,Lodoyo2026
+145,Guru MA,MA Ma'arif Nurus Salam,"Moh. Bagus Sholikhul Adib S.Kom",3505042105940001,L,nusa253,Lodoyo2026
+146,Guru MA,MA Ma'arif Nurus Salam,"Moh. Ngumar Nawawi, Lc",20588063190003,L,nusa254,Lodoyo2026
+147,Guru MA,MA Ma'arif Nurus Salam,"Mohammad Mundzir",3505130411540001,L,nusa255,Lodoyo2026
+148,Guru MA,MA Ma'arif Nurus Salam,"Mufidatul Chasanah, S. Pd.",3505105607920001,P,nusa256,Lodoyo2026
+149,Guru MA,MA Ma'arif Nurus Salam,"Muhamad Mahfuddin, S.Pd.I.",3505142706850004,L,nusa257,Lodoyo2026
+150,Guru MA,MA Ma'arif Nurus Salam,"Muhamad Ridwan Nawawi, S.Kom.",3505131406990004,L,nusa258,Lodoyo2026
+151,Guru MA,MA Ma'arif Nurus Salam,"Muhammad Aziz Afrianto, S.Si",3505092204860001,L,nusa259,Lodoyo2026
+152,Guru MA,MA Ma'arif Nurus Salam,"Muhammad Taufiq Asyhari",3505141202010002,L,nusa260,Lodoyo2026
+153,Guru MA,MA Ma'arif Nurus Salam,"Muslikhatur Rodaniyah, S.Pd.I",3505124107880056,P,nusa261,Lodoyo2026
+154,Guru MA,MA Ma'arif Nurus Salam,"Nanang Syaifulloh Darojat",3505120107810074,L,nusa262,Lodoyo2026
+155,Guru MA,MA Ma'arif Nurus Salam,"Nova Auliyatul Fitriana, S.Pd.",3505224901010002,P,nusa263,Lodoyo2026
+156,Guru MA,MA Ma'arif Nurus Salam,"Nur Rohmah, S. Pd",3505076211910001,P,nusa264,Lodoyo2026
+157,Guru MA,MA Ma'arif Nurus Salam,"Nur Saifuddin, S.Pd.",3505120802890002,L,nusa265,Lodoyo2026
+158,Guru MA,MA Ma'arif Nurus Salam,"Nurcholis Ahmada, M.Pd.",3505222302910002,L,nusa266,Lodoyo2026
+159,Guru MA,MA Ma'arif Nurus Salam,"Nurfi Fuadin, S.Pd",3505152610910002,L,nusa267,Lodoyo2026
+160,Guru MA,MA Ma'arif Nurus Salam,"Nurikah Choirunnisah, S.Pd.",3505125812970004,P,nusa268,Lodoyo2026
+161,Guru MA,MA Ma'arif Nurus Salam,"Nurul Izza Afkarina",3505115208970002,P,nusa269,Lodoyo2026
+162,Guru MA,MA Ma'arif Nurus Salam,"Qurotul Hasanah, S.Pd",3505105710940003,P,nusa270,Lodoyo2026
+163,Guru MA,MA Ma'arif Nurus Salam,"Ratna Yuliastanti, S.Pd.",20588063190005,P,nusa271,Lodoyo2026
+164,Guru MA,MA Ma'arif Nurus Salam,"Retno Vidharti, S. Pd.",3505106802840003,P,nusa272,Lodoyo2026
+165,Guru MA,MA Ma'arif Nurus Salam,"Rudi Asrori, S. Pd",20588063188004,L,nusa273,Lodoyo2026
+166,Guru MA,MA Ma'arif Nurus Salam,"Saffira Noor Chotimah, S.T.",3505124710970001,P,nusa274,Lodoyo2026
+167,Guru MA,MA Ma'arif Nurus Salam,"Sefi Miftahul Aflih, S.Pd",3505125309870001,P,nusa275,Lodoyo2026
+168,Guru MA,MA Ma'arif Nurus Salam,"Siti Durotun Nasikah, M.Pd.",3505126012980001,P,nusa276,Lodoyo2026
+169,Guru MA,MA Ma'arif Nurus Salam,"Siti Hanidah, S.Pd",3505095803850001,P,nusa277,Lodoyo2026
+170,Guru MA,MA Ma'arif Nurus Salam,"Soim",0122,L,nusa278,Lodoyo2026
+171,Guru MA,MA Ma'arif Nurus Salam,"Sonhaji",3505121603710004,L,nusa279,Lodoyo2026
+172,Guru MA,MA Ma'arif Nurus Salam,"Suyanto",3505122407710001,L,nusa280,Lodoyo2026
+173,Guru MA,MA Ma'arif Nurus Salam,"Toha Mahsun, M.Pd.",3505112009710001,L,nusa281,Lodoyo2026
+174,Guru MA,MA Ma'arif Nurus Salam,"Tri Lailatin Mubarokah, S.Pd.I.",3505145201920001,P,nusa282,Lodoyo2026
+175,Guru MA,MA Ma'arif Nurus Salam,"Tri Rahayu, S.Pd.I",3505117001830001,P,nusa283,Lodoyo2026
+176,Guru MA,MA Ma'arif Nurus Salam,"Wildan Su`aidi Kohardiansyah, S.Pd.",3508152106960001,L,nusa284,Lodoyo2026
+177,Guru MA,MA Ma'arif Nurus Salam,"Yessy Kusuma Wardhani, S.Pd",3572014301930003,P,nusa285,Lodoyo2026
+178,Guru MA,MA Ma'arif Nurus Salam,"Zeni Nurdiana",3505117006000002,P,nusa286,Lodoyo2026
+179,Guru MA,MA Ma'arif Nurus Salam,"Zulfa Silmi Jaziroh",3505106010830002,P,nusa287,Lodoyo2026
