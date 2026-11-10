@@ -1,5 +1,5 @@
 import ExcelJS from "exceljs";
-import { NilaiMapelItem, NilaiEkskulItem, RaporWaliItem, MadrasahId, SchoolConfig } from "@/types";
+import { NilaiMapelItem, NilaiEkskulItem, RaporWaliItem, MadrasahId, SchoolConfig, LeggerResponse } from "@/types";
 import { getLeggerDataByKelas } from "@/lib/storage";
 
 const LOCKED_FILL: ExcelJS.Fill = {
@@ -1277,6 +1277,286 @@ export async function downloadBulkLeggerExcel(
   const a = document.createElement("a");
   a.href = url;
   a.download = `BACKUP_LEGER_${config.jenjang.toUpperCase()}_${cleanTahun}_Sem${semester}.xlsx`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+// =====================================================================
+// 8. UNDUH LEGER NILAI PER KELAS (.XLSX) DARI MODAL CETAK LEGGER
+// =====================================================================
+export async function downloadLeggerExcel(
+  leggerData: LeggerResponse,
+  tahun: string,
+  semester: string,
+  kelas: string,
+  config: SchoolConfig
+): Promise<void> {
+  const wb = new ExcelJS.Workbook();
+  wb.creator = "Portal Rapor Internal Nusalodoyo";
+  wb.created = new Date();
+
+  const semLabel = semester === "1" ? "Gasal (1)" : "Genap (2)";
+  const cleanTahun = tahun.replace("/", "-");
+
+  // ---------------------------------------------------------------------
+  // SHEET 1: LEGER NILAI AKHIR & PERINGKAT KELAS
+  // ---------------------------------------------------------------------
+  const ws = wb.addWorksheet("Legger Nilai Akhir", {
+    views: [{ state: "frozen", xSplit: 4, ySplit: 7, showGridLines: true }],
+  });
+
+  // Kop / Judul Formal
+  ws.addRow([config.nama_yayasan || "LEMBAGA PENDIDIKAN MA'ARIF NU"]);
+  ws.addRow([`LEGER NILAI HASIL BELAJAR PESERTA DIDIK - ${config.nama_madrasah}`]);
+  ws.addRow([`NSM: ${config.nsm} | NPSN: ${config.npsn} | Akreditasi: ${config.akreditasi}`]);
+  ws.addRow([`Kelas: ${kelas} | Semester: ${semLabel} | Tahun Pelajaran: ${tahun}`]);
+  ws.addRow([]); // Baris kosong pemisah
+
+  ws.getRow(1).font = { bold: true, size: 11, color: { argb: "FF374151" } };
+  ws.getRow(2).font = { bold: true, size: 14, color: { argb: "FF064E3B" } };
+  ws.getRow(3).font = { size: 9, color: { argb: "FF4B5563" } };
+  ws.getRow(4).font = { bold: true, size: 10, color: { argb: "FF1F2937" } };
+
+  const mapels = leggerData.mapel || [];
+  const totalMapel = mapels.length;
+
+  // Header Tabel (Baris 6 & 7)
+  const h1Values: any[] = ["No", "NIS", "NISN", "Nama Siswa", "Nilai Capaian Hasil Belajar (Nilai Akhir)"];
+  for (let i = 1; i < totalMapel; i++) h1Values.push("");
+  h1Values.push("Jml", "Rata", "Pkr", "Presensi", "", "", "Keputusan / Catatan Wali Kelas");
+
+  const h2Values: any[] = ["", "", "", ""];
+  mapels.forEach(m => h2Values.push(m.kode_mapel));
+  h2Values.push("", "", "", "S", "I", "A", "");
+
+  const headerRow1 = ws.addRow(h1Values);
+  const headerRow2 = ws.addRow(h2Values);
+
+  headerRow1.height = 24;
+  headerRow2.height = 22;
+
+  headerRow1.eachCell(cell => {
+    cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FF006E14" } };
+    cell.font = { bold: true, color: { argb: "FFFFFFFF" }, size: 10 };
+    cell.border = BORDER_THIN;
+    cell.alignment = { vertical: "middle", horizontal: "center", wrapText: true };
+  });
+
+  headerRow2.eachCell(cell => {
+    cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FF15803D" } };
+    cell.font = { bold: true, color: { argb: "FFFFFFFF" }, size: 9 };
+    cell.border = BORDER_THIN;
+    cell.alignment = { vertical: "middle", horizontal: "center", wrapText: true };
+  });
+
+  // Merge header cells
+  ws.mergeCells(6, 1, 7, 1); // No
+  ws.mergeCells(6, 2, 7, 2); // NIS
+  ws.mergeCells(6, 3, 7, 3); // NISN
+  ws.mergeCells(6, 4, 7, 4); // Nama
+  if (totalMapel > 0) {
+    ws.mergeCells(6, 5, 6, 4 + totalMapel); // Nilai Mapel
+  }
+  const jmlCol = 5 + totalMapel;
+  ws.mergeCells(6, jmlCol, 7, jmlCol);         // Jml
+  ws.mergeCells(6, jmlCol + 1, 7, jmlCol + 1); // Rata
+  ws.mergeCells(6, jmlCol + 2, 7, jmlCol + 2); // Pkr (Ranking)
+  ws.mergeCells(6, jmlCol + 3, 6, jmlCol + 5); // Presensi (S, I, A)
+  ws.mergeCells(6, jmlCol + 6, 7, jmlCol + 6); // Keputusan / Catatan
+
+  // Data Siswa
+  leggerData.siswa.forEach((s, idx) => {
+    const rowVals: any[] = [
+      idx + 1,
+      s.nis,
+      s.nisn || "-",
+      s.nama,
+    ];
+
+    mapels.forEach(m => {
+      const score = s.scores[m.kode_mapel] || 0;
+      rowVals.push(score > 0 ? score : "-");
+    });
+
+    rowVals.push(
+      s.totalScore || 0,
+      s.averageScore || 0,
+      s.ranking || "-",
+      s.sakit || 0,
+      s.izin || 0,
+      s.alpha || 0,
+      s.keputusan !== "-" ? s.keputusan : (s.catatan || "-")
+    );
+
+    const row = ws.addRow(rowVals);
+    row.height = 20;
+    const isEven = idx % 2 === 0;
+
+    row.eachCell((cell, colNum) => {
+      cell.border = BORDER_THIN;
+      cell.font = { size: 9.5 };
+      cell.alignment = {
+        vertical: "middle",
+        horizontal: colNum === 4 || colNum === jmlCol + 6 ? "left" : "center",
+      };
+
+      if (!isEven) {
+        cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFF8FAFC" } };
+      }
+
+      // Highlight nilai di bawah KKM
+      if (colNum >= 5 && colNum < 5 + totalMapel) {
+        const m = mapels[colNum - 5];
+        const val = Number(cell.value);
+        if (!isNaN(val) && val > 0 && val < (m.kkm || 75)) {
+          cell.font = { size: 9.5, bold: true, color: { argb: "FFDC2626" } };
+          cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFFEF2F2" } };
+        }
+      }
+
+      // Highlight Ranking & Total
+      if (colNum === jmlCol || colNum === jmlCol + 1) {
+        cell.font = { size: 9.5, bold: true, color: { argb: "FF581C87" } };
+      } else if (colNum === jmlCol + 2) {
+        cell.font = { size: 10, bold: true, color: { argb: "FF065F46" } };
+        cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFFEF3C7" } };
+      }
+    });
+  });
+
+  // Baris Rata-Rata Kelas
+  const avgRowVals: any[] = ["", "", "", "RATA-RATA KELAS"];
+  mapels.forEach(m => {
+    const avg = leggerData.classAverageMapel?.[m.kode_mapel];
+    avgRowVals.push(avg || "-");
+  });
+  avgRowVals.push(
+    "-",
+    leggerData.totalClassAverage || "-",
+    "-",
+    "-",
+    "-",
+    "-",
+    ""
+  );
+  const avgRow = ws.addRow(avgRowVals);
+  avgRow.height = 22;
+  avgRow.eachCell((cell, colNum) => {
+    cell.border = BORDER_THIN;
+    cell.font = { bold: true, size: 9.5, color: { argb: "FF064E3B" } };
+    cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFD1FAE5" } };
+    cell.alignment = {
+      vertical: "middle",
+      horizontal: colNum === 4 ? "right" : "center",
+    };
+  });
+  ws.mergeCells(avgRow.number, 1, avgRow.number, 4);
+
+  // Keterangan & Tanda Tangan di bawah tabel
+  ws.addRow([]);
+  const sigRow1 = ws.addRow(["", "", "", "Mengetahui,", "", "", "", "", "", `${config.kota_tanggal || "Blitar"}, ${config.tanggal_rapor || "24 Oktober 2026"}`]);
+  const sigRow2 = ws.addRow(["", "", "", `Kepala ${config.nama_madrasah}`, "", "", "", "", "", `Wali Kelas ${kelas}`]);
+  ws.addRow([]);
+  ws.addRow([]);
+  ws.addRow([]);
+  const sigRow3 = ws.addRow(["", "", "", config.kepala_madrasah || "Kepala Madrasah", "", "", "", "", "", "____________________________"]);
+  const sigRow4 = ws.addRow(["", "", "", `NIP. ${config.nip_kepala || "-"}`, "", "", "", "", "", "NIP. -"]);
+
+  [sigRow1, sigRow2, sigRow3, sigRow4].forEach((r, i) => {
+    r.font = { size: 9.5, bold: i >= 1 && i <= 2 };
+  });
+
+  // Pengaturan Lebar Kolom Proporsional
+  ws.columns.forEach((col, i) => {
+    if (i === 0) col.width = 5;
+    else if (i === 1) col.width = 12;
+    else if (i === 2) col.width = 14;
+    else if (i === 3) col.width = 30;
+    else if (i >= 4 && i < 4 + totalMapel) col.width = 7.5;
+    else if (i === jmlCol - 1 || i === jmlCol || i === jmlCol + 1) col.width = 8;
+    else if (i >= jmlCol + 2 && i <= jmlCol + 4) col.width = 5.5;
+    else if (i === jmlCol + 5) col.width = 32;
+    else col.width = 10;
+  });
+
+  // ---------------------------------------------------------------------
+  // SHEET 2: RINCIAN KOMPONEN NILAI (LM, STS, SAS, NA)
+  // ---------------------------------------------------------------------
+  const ws2 = wb.addWorksheet("Rincian LM-STS-SAS", {
+    views: [{ state: "frozen", xSplit: 3, ySplit: 6, showGridLines: true }],
+  });
+
+  ws2.addRow([`RINCIAN KOMPONEN NILAI (LM, STS, SAS, NA) - KELAS ${kelas}`]);
+  ws2.addRow([`${config.nama_madrasah} | Semester ${semLabel} | Tahun Pelajaran ${tahun}`]);
+  ws2.addRow([]);
+  ws2.getRow(1).font = { bold: true, size: 12, color: { argb: "FF064E3B" } };
+  ws2.getRow(2).font = { size: 9.5, color: { argb: "FF4B5563" } };
+
+  const r5Vals: any[] = ["No", "NIS", "Nama Siswa"];
+  const r6Vals: any[] = ["", "", ""];
+  mapels.forEach(m => {
+    r5Vals.push(m.nama_mapel, "", "", "");
+    r6Vals.push("LM", "STS", "SAS", "NA");
+  });
+
+  const h2Row1 = ws2.addRow(r5Vals);
+  const h2Row2 = ws2.addRow(r6Vals);
+
+  h2Row1.eachCell(cell => {
+    cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FF006E14" } };
+    cell.font = { bold: true, color: { argb: "FFFFFFFF" }, size: 9 };
+    cell.border = BORDER_THIN;
+    cell.alignment = { vertical: "middle", horizontal: "center", wrapText: true };
+  });
+  h2Row2.eachCell(cell => {
+    cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FF15803D" } };
+    cell.font = { bold: true, color: { argb: "FFFFFFFF" }, size: 8.5 };
+    cell.border = BORDER_THIN;
+    cell.alignment = { vertical: "middle", horizontal: "center" };
+  });
+
+  ws2.mergeCells(4, 1, 5, 1);
+  ws2.mergeCells(4, 2, 5, 2);
+  ws2.mergeCells(4, 3, 5, 3);
+  let cIdx = 4;
+  mapels.forEach(() => {
+    ws2.mergeCells(4, cIdx, 4, cIdx + 3);
+    cIdx += 4;
+  });
+
+  leggerData.siswa.forEach((s, idx) => {
+    const vals: any[] = [idx + 1, s.nis, s.nama];
+    mapels.forEach(m => {
+      const det = s.mapelDetails[m.kode_mapel];
+      const na = s.scores[m.kode_mapel] || 0;
+      vals.push(det?.lm || "-", det?.sts || "-", det?.sas || "-", na || "-");
+    });
+    const r = ws2.addRow(vals);
+    r.eachCell((cell, colNum) => {
+      cell.border = BORDER_THIN;
+      cell.font = { size: 9 };
+      cell.alignment = { vertical: "middle", horizontal: colNum === 3 ? "left" : "center" };
+    });
+  });
+
+  ws2.columns.forEach((col, i) => {
+    if (i === 0) col.width = 5;
+    else if (i === 1) col.width = 12;
+    else if (i === 2) col.width = 28;
+    else col.width = 6;
+  });
+
+  // Generate & Trigger Download
+  const buffer = await wb.xlsx.writeBuffer();
+  const blob = new Blob([buffer], {
+    type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+  });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `Legger_${config.jenjang}_Kelas_${kelas}_${cleanTahun}_Sem${semester}.xlsx`;
   document.body.appendChild(a);
   a.click();
   document.body.removeChild(a);

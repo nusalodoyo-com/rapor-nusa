@@ -1,8 +1,9 @@
 "use client";
 
-import React, { useRef } from "react";
+import React, { useRef, useState } from "react";
 import { LeggerResponse, SchoolConfig } from "@/types";
-import { Printer, X } from "lucide-react";
+import { downloadLeggerExcel } from "@/lib/excel/excelHandler";
+import { FileSpreadsheet, Loader2, X } from "lucide-react";
 
 interface Props {
   isOpen: boolean;
@@ -24,11 +25,20 @@ export default function LeggerModal({
   config,
 }: Props) {
   const printAreaRef = useRef<HTMLDivElement>(null);
+  const [isDownloading, setIsDownloading] = useState(false);
 
   if (!isOpen || !leggerData || !leggerData.success) return null;
 
-  const handlePrint = () => {
-    window.print();
+  const handleDownloadExcel = async () => {
+    setIsDownloading(true);
+    try {
+      await downloadLeggerExcel(leggerData, tahun, semester, kelas, config);
+    } catch (err) {
+      console.error("Gagal mengunduh file Excel Legger:", err);
+      alert("Terjadi kesalahan saat membuat file Excel Legger.");
+    } finally {
+      setIsDownloading(false);
+    }
   };
 
   return (
@@ -49,11 +59,17 @@ export default function LeggerModal({
           </div>
           <div className="flex items-center gap-2">
             <button
-              onClick={handlePrint}
-              className="btn-retro-primary px-4 py-2 text-xs flex items-center gap-1.5"
+              onClick={handleDownloadExcel}
+              disabled={isDownloading}
+              className="btn-retro-primary px-4 py-2 text-xs flex items-center gap-1.5 disabled:opacity-50"
+              title="Unduh file Legger dalam format Microsoft Excel (.xlsx)"
             >
-              <Printer className="w-3.5 h-3.5" />
-              <span>Cetak Legger (A4)</span>
+              {isDownloading ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                <FileSpreadsheet className="w-4 h-4" />
+              )}
+              <span>{isDownloading ? "Menyiapkan Excel..." : "Download Excel (.xlsx)"}</span>
             </button>
             <button
               onClick={onClose}
