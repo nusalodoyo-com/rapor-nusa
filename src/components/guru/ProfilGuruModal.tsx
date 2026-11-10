@@ -20,6 +20,8 @@ import {
   Sparkles,
   ShieldCheck,
   GraduationCap,
+  Eye,
+  EyeOff,
 } from "lucide-react";
 
 interface Props {
@@ -55,6 +57,9 @@ export default function ProfilGuruModal({
   const [oldPassword, setOldPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [showOldPass, setShowOldPass] = useState(false);
+  const [showNewPass, setShowNewPass] = useState(false);
+  const [showConfirmPass, setShowConfirmPass] = useState(false);
 
   // Feedback State
   const [feedback, setFeedback] = useState<{ type: "success" | "error"; message: string } | null>(null);
@@ -420,14 +425,24 @@ export default function ProfilGuruModal({
               <label className="text-[11px] font-black text-retro-black uppercase block mb-1">
                 Kata Sandi Lama / Saat Ini: <span className="text-red-500">*</span>
               </label>
-              <input
-                type="password"
-                required
-                value={oldPassword}
-                onChange={e => setOldPassword(e.target.value)}
-                placeholder="Masukkan kata sandi lama (atau default: Lodoyo2026)"
-                className="w-full text-xs p-2.5 rounded-lg border-2 border-retro-border bg-white font-bold"
-              />
+              <div className="relative">
+                <input
+                  type={showOldPass ? "text" : "password"}
+                  required
+                  value={oldPassword}
+                  onChange={e => setOldPassword(e.target.value)}
+                  placeholder="Masukkan kata sandi lama (atau default: Lodoyo2026)"
+                  className="w-full text-xs p-2.5 pr-10 rounded-lg border-2 border-retro-border bg-white font-bold"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowOldPass(p => !p)}
+                  className="absolute right-2.5 top-1/2 -translate-y-1/2 p-1 text-slate-500 hover:text-retro-black"
+                  title={showOldPass ? "Sembunyikan" : "Intip kata sandi"}
+                >
+                  {showOldPass ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
+              </div>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -435,28 +450,48 @@ export default function ProfilGuruModal({
                 <label className="text-[11px] font-black text-retro-black uppercase block mb-1">
                   Kata Sandi Baru: <span className="text-red-500">*</span>
                 </label>
-                <input
-                  type="password"
-                  required
-                  value={newPassword}
-                  onChange={e => setNewPassword(e.target.value)}
-                  placeholder="Minimal 6 karakter"
-                  className="w-full text-xs p-2.5 rounded-lg border-2 border-retro-border bg-white font-bold"
-                />
+                <div className="relative">
+                  <input
+                    type={showNewPass ? "text" : "password"}
+                    required
+                    value={newPassword}
+                    onChange={e => setNewPassword(e.target.value)}
+                    placeholder="Minimal 6 karakter"
+                    className="w-full text-xs p-2.5 pr-10 rounded-lg border-2 border-retro-border bg-white font-bold"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowNewPass(p => !p)}
+                    className="absolute right-2.5 top-1/2 -translate-y-1/2 p-1 text-slate-500 hover:text-retro-black"
+                    title={showNewPass ? "Sembunyikan" : "Intip kata sandi"}
+                  >
+                    {showNewPass ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </button>
+                </div>
               </div>
 
               <div>
                 <label className="text-[11px] font-black text-retro-black uppercase block mb-1">
                   Konfirmasi Kata Sandi Baru: <span className="text-red-500">*</span>
                 </label>
-                <input
-                  type="password"
-                  required
-                  value={confirmPassword}
-                  onChange={e => setConfirmPassword(e.target.value)}
-                  placeholder="Ulangi kata sandi baru"
-                  className="w-full text-xs p-2.5 rounded-lg border-2 border-retro-border bg-white font-bold"
-                />
+                <div className="relative">
+                  <input
+                    type={showConfirmPass ? "text" : "password"}
+                    required
+                    value={confirmPassword}
+                    onChange={e => setConfirmPassword(e.target.value)}
+                    placeholder="Ulangi kata sandi baru"
+                    className="w-full text-xs p-2.5 pr-10 rounded-lg border-2 border-retro-border bg-white font-bold"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowConfirmPass(p => !p)}
+                    className="absolute right-2.5 top-1/2 -translate-y-1/2 p-1 text-slate-500 hover:text-retro-black"
+                    title={showConfirmPass ? "Sembunyikan" : "Intip kata sandi"}
+                  >
+                    {showConfirmPass ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </button>
+                </div>
               </div>
             </div>
 

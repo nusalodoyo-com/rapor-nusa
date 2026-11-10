@@ -42,6 +42,8 @@ import {
   Lock,
   X,
   Loader2,
+  Eye,
+  EyeOff,
 } from "lucide-react";
 
 export default function HomePage() {
@@ -52,6 +54,7 @@ export default function HomePage() {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [usernameInput, setUsernameInput] = useState("");
   const [passwordInput, setPasswordInput] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [loginError, setLoginError] = useState("");
   const [isLoggingIn, setIsLoggingIn] = useState(false);
 
@@ -60,6 +63,7 @@ export default function HomePage() {
   const [isSuperAdminModalOpen, setIsSuperAdminModalOpen] = useState(false);
   const [superAdminUsername, setSuperAdminUsername] = useState("admin");
   const [superAdminPassword, setSuperAdminPassword] = useState("");
+  const [showSuperAdminPassword, setShowSuperAdminPassword] = useState(false);
   const [superAdminError, setSuperAdminError] = useState("");
   const [isSuperAdminLoggingIn, setIsSuperAdminLoggingIn] = useState(false);
 
@@ -219,6 +223,8 @@ export default function HomePage() {
     setCurrentUser(null);
     setUsernameInput("");
     setPasswordInput("");
+    setShowPassword(false);
+    setShowSuperAdminPassword(false);
   };
 
   // Buka Modal Legger
@@ -475,14 +481,29 @@ export default function HomePage() {
                     <label className="text-xs font-black text-retro-black uppercase block mb-1">
                       Kata Sandi:
                     </label>
-                    <input
-                      type="password"
-                      required
-                      placeholder="Masukkan kata sandi admin"
-                      value={superAdminPassword}
-                      onChange={e => setSuperAdminPassword(e.target.value)}
-                      className="w-full px-3.5 py-2.5 rounded-lg border-2 border-retro-border bg-white text-xs font-bold text-retro-black shadow-retro-sm focus:outline-none focus:border-brand-500"
-                    />
+                    <div className="relative">
+                      <input
+                        type={showSuperAdminPassword ? "text" : "password"}
+                        required
+                        placeholder="Masukkan kata sandi admin"
+                        value={superAdminPassword}
+                        onChange={e => setSuperAdminPassword(e.target.value)}
+                        className="w-full px-3.5 py-2.5 pr-10 rounded-lg border-2 border-retro-border bg-white text-xs font-bold text-retro-black shadow-retro-sm focus:outline-none focus:border-brand-500"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowSuperAdminPassword(prev => !prev)}
+                        className="absolute right-2.5 top-1/2 -translate-y-1/2 p-1 text-slate-500 hover:text-retro-black focus:outline-none"
+                        title={showSuperAdminPassword ? "Sembunyikan kata sandi" : "Intip kata sandi"}
+                        aria-label={showSuperAdminPassword ? "Sembunyikan kata sandi" : "Intip kata sandi"}
+                      >
+                        {showSuperAdminPassword ? (
+                          <EyeOff className="w-4 h-4" />
+                        ) : (
+                          <Eye className="w-4 h-4" />
+                        )}
+                      </button>
+                    </div>
                   </div>
 
                   <button
@@ -591,14 +612,29 @@ export default function HomePage() {
                 <label className="text-xs font-black text-retro-black uppercase block mb-1">
                   Kata Sandi:
                 </label>
-                <input
-                  type="password"
-                  required
-                  placeholder="Masukkan kata sandi"
-                  value={passwordInput}
-                  onChange={e => setPasswordInput(e.target.value)}
-                  className="w-full px-3.5 py-2.5 rounded-lg border-2 border-retro-border bg-white text-xs font-bold text-retro-black shadow-retro-sm focus:outline-none focus:border-brand-500 focus:shadow-retro transition"
-                />
+                <div className="relative">
+                  <input
+                    type={showPassword ? "text" : "password"}
+                    required
+                    placeholder="Masukkan kata sandi"
+                    value={passwordInput}
+                    onChange={e => setPasswordInput(e.target.value)}
+                    className="w-full px-3.5 py-2.5 pr-10 rounded-lg border-2 border-retro-border bg-white text-xs font-bold text-retro-black shadow-retro-sm focus:outline-none focus:border-brand-500 focus:shadow-retro transition"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(prev => !prev)}
+                    className="absolute right-2.5 top-1/2 -translate-y-1/2 p-1 text-slate-500 hover:text-retro-black focus:outline-none"
+                    title={showPassword ? "Sembunyikan kata sandi" : "Intip kata sandi"}
+                    aria-label={showPassword ? "Sembunyikan kata sandi" : "Intip kata sandi"}
+                  >
+                    {showPassword ? (
+                      <EyeOff className="w-4 h-4" />
+                    ) : (
+                      <Eye className="w-4 h-4" />
+                    )}
+                  </button>
+                </div>
               </div>
 
               <button
