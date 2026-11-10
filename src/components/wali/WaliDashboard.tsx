@@ -96,7 +96,7 @@ export default function WaliDashboard({
   const [dataP5RA, setDataP5RA] = useState<NilaiP5RAItem[]>([]);
 
   // Tab 5: Ekstrakurikuler
-  const [selectedEkskul, setSelectedEkskul] = useState(allEkskul[0] || "Pramuka");
+  const [selectedEkskul, setSelectedEkskul] = useState(allEkskul[0] || "Sholawat & Banjari");
   const [dataEkskul, setDataEkskul] = useState<NilaiEkskulItem[]>([]);
 
   const [isSaving, setIsSaving] = useState(false);

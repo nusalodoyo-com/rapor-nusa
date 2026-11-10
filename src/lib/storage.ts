@@ -158,10 +158,8 @@ export function initializeLocalStorage(): void {
     // Mapel (Sesuai KMA 1503 Tahun 2025)
     setLocalData(keys.MAPEL, seedMapel);
 
-    // Ekskul
-    if (!localStorage.getItem(keys.EKSKUL)) {
-      setLocalData(keys.EKSKUL, seedEkskul);
-    }
+    // Ekskul (Selalu sinkron dengan daftar resmi terbaru)
+    setLocalData(keys.EKSKUL, seedEkskul);
   });
 }
 
