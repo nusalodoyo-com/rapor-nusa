@@ -82,6 +82,20 @@ export default function ProfilGuruModal({
         return;
       }
 
+      const cleanWaDigits = noWa.replace(/\D/g, "");
+      if (!noWa.trim() || cleanWaDigits.length < 9) {
+        setFeedback({ type: "error", message: "Nomor WhatsApp wajib diisi minimal 9 digit angka aktif!" });
+        setIsSubmitting(false);
+        return;
+      }
+
+      const cleanEmail = email.trim().toLowerCase();
+      if (!cleanEmail || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(cleanEmail)) {
+        setFeedback({ type: "error", message: "Alamat Email aktif wajib diisi dengan format yang valid!" });
+        setIsSubmitting(false);
+        return;
+      }
+
       const res = updateUserProfile(madrasahId, currentUser.id, {
         nama_user: namaUser.trim(),
         gelar_depan: gelarDepan.trim(),
@@ -92,7 +106,7 @@ export default function ProfilGuruModal({
         nip: nip.trim(),
         alamat: alamat.trim(),
         no_wa: noWa.trim(),
-        email: email.trim(),
+        email: cleanEmail,
       });
 
       if (res.success && res.user) {
@@ -343,36 +357,52 @@ export default function ProfilGuruModal({
 
               <div>
                 <label className="text-[11px] font-black text-retro-black uppercase block mb-1">
-                  Nomor WhatsApp:
+                  Nomor WhatsApp Aktif: <span className="text-red-500">*</span>
                 </label>
                 <div className="relative">
                   <input
                     type="tel"
+                    required
                     value={noWa}
                     onChange={e => setNoWa(e.target.value)}
-                    placeholder="Contoh: 0856-5112-6412"
-                    className="w-full text-xs p-2 pl-8 rounded-lg border-2 border-retro-border bg-white font-bold"
+                    placeholder="Contoh: 085651126412"
+                    className={`w-full text-xs p-2 pl-8 rounded-lg border-2 font-bold ${
+                      !noWa.trim()
+                        ? "border-amber-500 bg-amber-50/70"
+                        : "border-retro-border bg-white"
+                    }`}
                   />
                   <Phone className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-3" />
                 </div>
+                <p className="text-[10px] text-emerald-700 font-bold mt-0.5">
+                  ✓ Dapat dipakai untuk login selain username
+                </p>
               </div>
             </div>
 
             {/* Email & Alamat */}
             <div>
               <label className="text-[11px] font-black text-retro-black uppercase block mb-1">
-                Alamat Email Aktif:
+                Alamat Email Aktif: <span className="text-red-500">*</span>
               </label>
               <div className="relative">
                 <input
                   type="email"
+                  required
                   value={email}
                   onChange={e => setEmail(e.target.value)}
                   placeholder="nama@nusalodoyo.com"
-                  className="w-full text-xs p-2 pl-8 rounded-lg border-2 border-retro-border bg-white font-bold"
+                  className={`w-full text-xs p-2 pl-8 rounded-lg border-2 font-bold ${
+                    !email.trim()
+                      ? "border-amber-500 bg-amber-50/70"
+                      : "border-retro-border bg-white"
+                  }`}
                 />
                 <Mail className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-3" />
               </div>
+              <p className="text-[10px] text-emerald-700 font-bold mt-0.5">
+                ✓ Dapat dipakai untuk login selain username & pemulihan akun
+              </p>
             </div>
 
             <div>

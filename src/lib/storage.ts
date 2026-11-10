@@ -307,6 +307,15 @@ export function clearLoginLogs(madrasahId: MadrasahId): void {
 // =====================================================================
 // 1. OTENTIKASI PENGGUNA BERDASARKAN KREDENSIAL ASLI
 // =====================================================================
+export function normalizePhoneNumber(phone: string): string {
+  if (!phone) return "";
+  let digits = phone.replace(/\D/g, "");
+  if (digits.startsWith("62")) {
+    digits = "0" + digits.slice(2);
+  }
+  return digits;
+}
+
 export async function loginUser(
   madrasahId: MadrasahId,
   username: string,
@@ -361,14 +370,26 @@ export async function loginUser(
   const defUsers = madrasahId === "mts" ? SEED_USERS_MTS : SEED_USERS_MA;
   const users = getLocalData<User[]>(keys.USERS, defUsers);
 
-  const found = users.find(u => u.username.toLowerCase() === uInput);
+  const normalizedInputWa = normalizePhoneNumber(uInput);
+  const found = users.find(u => {
+    // 1. Cocokkan Username
+    if (u.username.toLowerCase() === uInput) return true;
+    // 2. Cocokkan Email (jika telah diisi di profil)
+    if (u.email && u.email.trim().toLowerCase() === uInput) return true;
+    // 3. Cocokkan Nomor WhatsApp (mendukung format 08... / 628... / +628... / pakai tanda strip)
+    if (u.no_wa && normalizedInputWa.length >= 9) {
+      const userWa = normalizePhoneNumber(u.no_wa);
+      if (userWa && userWa === normalizedInputWa) return true;
+    }
+    return false;
+  });
 
   if (!found) {
     const schoolName = madrasahId === "mts" ? "MTs Ma'arif NU 2" : "MA Ma'arif Nurus Salam";
     recordLoginLog(madrasahId, { nama_user: username, username, role: "unknown" }, "failed");
     return {
       success: false,
-      message: `Username "${username}" tidak terdaftar di ${schoolName}! Pastikan memilih madrasah yang sesuai atau minta akun ke Operator.`,
+      message: `Akun "${username}" (Username / Email / No. WhatsApp) tidak terdaftar di ${schoolName}! Jika belum mengisi Email/WA di profil, silakan login dengan Username Anda.`,
     };
   }
 
@@ -555,9 +576,32 @@ export function updateUserProfile(
   const idx = all.findIndex(u => u.id === userId);
   if (idx < 0) return { success: false, message: "Pengguna tidak ditemukan!" };
 
+  // Cek duplikasi Email
+  const cleanEmail = profile.email ? profile.email.trim().toLowerCase() : "";
+  if (cleanEmail) {
+    const dupEmail = all.find(
+      (u, i) => i !== idx && u.email && u.email.trim().toLowerCase() === cleanEmail
+    );
+    if (dupEmail) {
+      return { success: false, message: `Email "${cleanEmail}" sudah digunakan oleh akun guru lain!` };
+    }
+  }
+
+  // Cek duplikasi Nomor WhatsApp
+  const normWa = profile.no_wa ? normalizePhoneNumber(profile.no_wa) : "";
+  if (normWa && normWa.length >= 9) {
+    const dupWa = all.find(
+      (u, i) => i !== idx && u.no_wa && normalizePhoneNumber(u.no_wa) === normWa
+    );
+    if (dupWa) {
+      return { success: false, message: `Nomor WhatsApp "${profile.no_wa}" sudah terdaftar pada akun guru lain!` };
+    }
+  }
+
   all[idx] = {
     ...all[idx],
     ...profile,
+    email: cleanEmail || profile.email,
   };
   setLocalData(keys.USERS, all);
 

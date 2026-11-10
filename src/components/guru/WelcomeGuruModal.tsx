@@ -19,7 +19,10 @@ import {
   HelpCircle,
   GraduationCap,
   Layers,
-  Award
+  Award,
+  AlertTriangle,
+  Mail,
+  Phone,
 } from "lucide-react";
 
 interface Props {
@@ -27,6 +30,7 @@ interface Props {
   onClose: () => void;
   currentUser: User;
   config: SchoolConfig;
+  onOpenProfile?: () => void;
 }
 
 export default function WelcomeGuruModal({
@@ -34,11 +38,14 @@ export default function WelcomeGuruModal({
   onClose,
   currentUser,
   config,
+  onOpenProfile,
 }: Props) {
   const [currentStep, setCurrentStep] = useState(0);
   const [dontShowAgain, setDontShowAgain] = useState(false);
 
   if (!isOpen) return null;
+
+  const isMissingContact = !currentUser.email?.trim() || !currentUser.no_wa?.trim();
 
   const handleClose = () => {
     if (dontShowAgain && typeof window !== "undefined") {
@@ -64,6 +71,36 @@ export default function WelcomeGuruModal({
               Selamat datang di <strong>Portal Rapor Internal Nusalodoyo</strong> untuk lingkungan <strong>{config.nama_madrasah}</strong>. Sistem ini dirancang untuk mempermudah Bapak/Ibu Guru dalam mengelola penilaian Kurikulum Merdeka (KMA 1503 Tahun 2025), perumusan KKTP, sinkronisasi template RDM Kemenag, hingga pencetakan rapor tengah semester secara cepat, transparan, dan terintegrasi.
             </p>
           </div>
+
+          {/* Pemberitahuan Penting: Isi Email & Nomor WhatsApp saat pertama kali login */}
+          {isMissingContact && (
+            <div className="p-4 rounded-xl bg-amber-100 border-2 border-amber-600 shadow-retro-sm space-y-2.5">
+              <div className="flex items-start gap-2.5">
+                <AlertTriangle className="w-5 h-5 text-amber-800 shrink-0 mt-0.5" />
+                <div>
+                  <h5 className="text-xs font-black text-amber-950 uppercase">
+                    PENTING: Lengkapi Data Email & Nomor WhatsApp Anda!
+                  </h5>
+                  <p className="text-[11px] text-amber-900 font-medium mt-0.5 leading-snug">
+                    Anda belum mengisi {!currentUser.email?.trim() ? <strong>Alamat Email</strong> : ""}{!currentUser.email?.trim() && !currentUser.no_wa?.trim() ? " dan " : ""}{!currentUser.no_wa?.trim() ? <strong>Nomor WhatsApp</strong> : ""} di profil. Silakan lengkapi keduanya sekarang agar Bapak/Ibu dapat melakukan <strong>Login menggunakan Email atau Nomor WhatsApp</strong> selain Username!
+                  </p>
+                </div>
+              </div>
+              {onOpenProfile && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    onClose();
+                    onOpenProfile();
+                  }}
+                  className="btn-retro bg-retro-yellow hover:bg-amber-400 text-retro-black px-3.5 py-2 text-xs font-black flex items-center gap-1.5 shadow-retro-xs"
+                >
+                  <Mail className="w-3.5 h-3.5" />
+                  <span>Lengkapi Email & No. WhatsApp Sekarang →</span>
+                </button>
+              )}
+            </div>
+          )}
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
             <div className="p-3 bg-white rounded-xl border-2 border-retro-border shadow-retro-xs">

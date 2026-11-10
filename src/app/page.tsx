@@ -596,16 +596,19 @@ export default function HomePage() {
             <form onSubmit={handleLogin} className="space-y-3.5">
               <div>
                 <label className="text-xs font-black text-retro-black uppercase block mb-1">
-                  Username Akun:
+                  Username / Email / No. WhatsApp:
                 </label>
                 <input
                   type="text"
                   required
-                  placeholder="Isikan username"
+                  placeholder="Isikan username, email, atau nomor WhatsApp"
                   value={usernameInput}
                   onChange={e => setUsernameInput(e.target.value)}
                   className="w-full px-3.5 py-2.5 rounded-lg border-2 border-retro-border bg-white text-xs font-bold text-retro-black shadow-retro-sm focus:outline-none focus:border-brand-500 focus:shadow-retro transition"
                 />
+                <p className="text-[10px] text-slate-500 font-bold mt-1">
+                  💡 Bisa masuk memakai Username, Email, atau Nomor WhatsApp yang terdaftar di profil.
+                </p>
               </div>
 
               <div>

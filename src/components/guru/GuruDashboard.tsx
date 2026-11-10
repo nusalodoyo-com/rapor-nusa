@@ -561,6 +561,31 @@ export default function GuruDashboard({
         </div>
       </div>
 
+      {/* Banner Pemberitahuan Kelengkapan Email & Nomor WhatsApp Guru */}
+      {(!currentUser.email?.trim() || !currentUser.no_wa?.trim()) && (
+        <div className="p-4 rounded-xl bg-amber-100 border-2 border-amber-600 shadow-retro-sm flex flex-wrap items-center justify-between gap-3">
+          <div className="flex items-start gap-2.5">
+            <AlertCircle className="w-5 h-5 text-amber-800 shrink-0 mt-0.5" />
+            <div>
+              <h4 className="text-xs font-black text-amber-950 uppercase">
+                Pemberitahuan Penting: Lengkapi Email & Nomor WhatsApp Anda
+              </h4>
+              <p className="text-[11px] text-amber-900 font-medium leading-snug mt-0.5">
+                Bapak/Ibu belum mengisi {!currentUser.email?.trim() ? <strong>Alamat Email</strong> : ""}{!currentUser.email?.trim() && !currentUser.no_wa?.trim() ? " dan " : ""}{!currentUser.no_wa?.trim() ? <strong>Nomor WhatsApp</strong> : ""} pada biodata profil. Silakan lengkapi agar Anda dapat <strong>login memakai Email atau No. WhatsApp</strong> selain menggunakan Username!
+              </p>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={() => setIsProfileModalOpen(true)}
+            className="btn-retro bg-retro-yellow hover:bg-amber-400 text-retro-black px-3.5 py-2 text-xs font-black flex items-center gap-1.5 shadow-retro-xs shrink-0"
+          >
+            <UserCog className="w-4 h-4" />
+            <span>Isi Email & No. WhatsApp Sekarang →</span>
+          </button>
+        </div>
+      )}
+
       {/* Nav Tabs Alur Pengisian Nilai (Mata Pelajaran vs Ekstrakurikuler) */}
       <div className="flex flex-wrap items-center gap-2 bg-retro-cream p-2 rounded-xl border-2 border-retro-border shadow-retro-sm">
         <button
@@ -1133,6 +1158,7 @@ export default function GuruDashboard({
         onClose={() => setIsWelcomeOpen(false)}
         currentUser={currentUser}
         config={config}
+        onOpenProfile={() => setIsProfileModalOpen(true)}
       />
     </div>
   );
